@@ -9,6 +9,10 @@ psycopg2-binary>=2.9,<3.0
 argon2-cffi>=23.1           # Argon2 password hashing
 django-otp>=1.5,<2.0        # MFA: authenticator app (TOTP) and backup codes
 segno>=1.6,<2.0             # QR codes for MFA setup (pure Python)
+cryptography>=43            # AES-GCM encryption for the secret vault
+
+# Outgoing HTTP (provider connection tests and adapters)
+requests>=2.32,<3.0
 
 # Background jobs and cache
 celery>=5.4,<6.0

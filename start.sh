@@ -23,6 +23,17 @@ else
   echo ".env already exists, keeping it."
 fi
 
+if ! grep -Eq '^VAULT_MASTER_KEYS=[^[:space:]]+' .env; then
+  echo "Creating the secret vault master key..."
+  key="k1:$(openssl rand -base64 32)"
+  if grep -q '^VAULT_MASTER_KEYS=' .env; then
+    sed -i.bak "s|^VAULT_MASTER_KEYS=.*|VAULT_MASTER_KEYS=${key}|" .env && rm -f .env.bak
+  else
+    printf '\nVAULT_MASTER_KEYS=%s\n' "$key" >> .env
+  fi
+  echo "IMPORTANT: back up the VAULT_MASTER_KEYS line from .env (for example in a password manager)."
+fi
+
 echo "Pulling images (first time can take a few minutes)..."
 docker compose pull --ignore-pull-failures
 echo "Starting services..."

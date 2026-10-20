@@ -2,6 +2,8 @@
 
 Last updated: 21 October 2026
 
+> **Status:** the vault, settings page, test button and first providers were built in task 1.5. How it works: [13-developer-setup.md](13-developer-setup.md#secret-vault-and-integrations-task-15). How to use it: [user guide chapter 4](user-guide/04-integrations-and-api-keys.md). Card payments, the usage and cost meter and key health checks come later.
+
 ## Goal
 
 Each tenant (business) manages its own API keys and provider accounts from a **Settings** page. They can add, test, rotate and remove keys themselves. The platform never needs to know the tenant's keys in plain text, and the design lets us change or add providers later without rewriting modules.

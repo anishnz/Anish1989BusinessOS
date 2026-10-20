@@ -45,6 +45,25 @@ if (-not (Test-Path ".env")) {
     Write-Host ".env already exists, keeping it."
 }
 
+# 2b. Make sure there is a vault master key (also for older .env files).
+$envText = Get-Content ".env" -Raw
+if ($envText -notmatch "(?m)^VAULT_MASTER_KEYS=\S+") {
+    Write-Host "Creating the secret vault master key..."
+    $keyBytes = New-Object byte[] 32
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $rng.GetBytes($keyBytes)
+    $rng.Dispose()
+    $vaultKey = "k1:" + [Convert]::ToBase64String($keyBytes)
+    if ($envText -match "(?m)^VAULT_MASTER_KEYS=") {
+        $envText = $envText -replace "(?m)^VAULT_MASTER_KEYS=.*$", "VAULT_MASTER_KEYS=$vaultKey"
+    } else {
+        $envText = $envText.TrimEnd() + "`nVAULT_MASTER_KEYS=$vaultKey`n"
+    }
+    $envText = $envText -replace "`r`n", "`n"
+    [System.IO.File]::WriteAllText((Join-Path $PSScriptRoot ".env"), $envText, (New-Object System.Text.UTF8Encoding $false))
+    Write-Host "IMPORTANT: back up the VAULT_MASTER_KEYS line from .env (for example in a password manager)." -ForegroundColor Yellow
+}
+
 # 3. Get images: pull pre-built ones, build only what could not be pulled.
 Write-Host "Pulling images (first time can take a few minutes)..."
 docker compose pull --ignore-pull-failures

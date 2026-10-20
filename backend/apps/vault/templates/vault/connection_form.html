@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 640px;">
+  {% if provider.help %}<p>{{ provider.help }}</p>{% endif %}
+  {% if provider.docs_url %}<p>Where to get the key: <a href="{{ provider.docs_url }}" target="_blank" rel="noopener noreferrer">{{ provider.docs_url }}</a></p>{% endif %}
+  {% if connection and connection.secret_hints %}
+    <p>Saved keys: {% for name, hint in connection.secret_hints.items %}<code>{{ name }}: {{ hint }}</code> {% endfor %}</p>
+  {% endif %}
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.as_p }}
+    <div class="submit-row"><input type="submit" value="Save" class="default"> <a href="{% url 'vault:list' %}">Cancel</a></div>
+  </form>
+  <p><small>Keys are encrypted before they are stored and are never shown again.</small></p>
+</div>
+{% endblock %}

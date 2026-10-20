@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.4 are done. Next: **1.5 Settings and secret vault (encrypted keys, test connection)**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.5 are done. Next: **1.6 Products and customers**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -65,7 +65,16 @@ Open a new chat in the ERP CRM project and type:
   - Super Admin: create business with System Admin invitation, edit licence and modules, suspend (reason), reactivate, extend trial, mark paid; all audited
   - User guide chapter: docs/user-guide/03-businesses-licences-and-modules.md
   - 170 tests pass
-- [ ] 1.5 Settings and secret vault (encrypted keys, test connection)
+- [x] 1.5 Settings and secret vault (done 21 Oct 2026)
+  - Each business saves its own keys for AI (OpenAI, Anthropic, Gemini, Ollama), messaging (WhatsApp Cloud, Viber, Telegram), email (SMTP), SMS (Twilio), Google Places and bank transfer details
+  - AES-256-GCM envelope encryption, bound to business and connection; master key in `.env` (start scripts create it); `rotate_vault_key`
+  - Keys never shown again (last 4 only), never in API answers, audit log or error messages
+  - "Test connection" button with clear status; backup connection used when the main one fails
+  - Private-network (SSRF) guard, no redirects, 10-second timeout
+  - Permissions: view / configure / manage integrations
+  - Settings page `/settings/integrations/` and API `/api/integrations/`
+  - User guide chapter: docs/user-guide/04-integrations-and-api-keys.md
+  - 221 tests pass
 - [ ] 1.6 Products and customers
 - [ ] 1.7 Basic orders
 - [ ] 1.8 WhatsApp adapter and unified inbox

@@ -11,6 +11,7 @@ MODEL_MODULES = {
     "audit.auditevent": "audit",
     "rbac.role": "roles",
     "rbac.userrole": "roles",
+    "vault.connection": "integrations",  # "platform_settings" on the platform site
 }
 
 DJANGO_ACTIONS = {"view": "view", "add": "create", "change": "edit", "delete": "delete"}
@@ -27,6 +28,10 @@ def translate(perm: str) -> str | None:
         return None
     key = f"{app_label}.{model_name}"
     module = MODEL_MODULES.get(key)
+    if module == "integrations":
+        from django.db import connection
+
+        module = "platform_settings" if connection.schema_name == "public" else "integrations"
     action = DJANGO_ACTIONS.get(django_action)
     if not module or not action:
         return None
@@ -49,5 +54,7 @@ class RolePermissionBackend:
         if not user_obj.is_active or not user_obj.is_staff:
             return False
         modules = {module for key, module in MODEL_MODULES.items() if key.startswith(f"{app_label}.")}
+        if "integrations" in modules:
+            modules.add("platform_settings")
         codes = policy.effective_permissions(user_obj)
         return any(code.split(".", 1)[0] in modules for code in codes)

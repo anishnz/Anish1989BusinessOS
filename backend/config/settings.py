@@ -59,6 +59,7 @@ SHARED_APPS = [
     "apps.audit",
     "apps.rbac",
     "apps.licensing",
+    "apps.vault",
     "apps.core",
 ]
 
@@ -74,6 +75,7 @@ TENANT_APPS = [
     "apps.accounts",
     "apps.audit",
     "apps.rbac",
+    "apps.vault",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -162,6 +164,12 @@ def OTP_TOTP_ISSUER(device):  # noqa: N802 - Django settings must be uppercase
     return totp_issuer(device)
 
 LOGIN_URL = "admin:login"
+
+# Secret vault: master keys come only from the environment ("id:base64key,...", newest first).
+# Without it, development (DEBUG) derives a key from SECRET_KEY; production refuses to start the vault.
+VAULT_MASTER_KEYS = env("VAULT_MASTER_KEYS", default="")
+# Let connections call private-network addresses (e.g. a local Ollama). Development only.
+ALLOW_PRIVATE_NETWORK_URLS = env.bool("ALLOW_PRIVATE_NETWORK_URLS", default=False)
 
 # Licences: every new business starts with a trial (no automatic charge).
 LICENCE_TRIAL_DAYS = env.int("LICENCE_TRIAL_DAYS", default=30)
@@ -282,4 +290,6 @@ LOGGING = {
         "console": {"class": "logging.StreamHandler", "filters": ["tenant_context"], "formatter": "tenant"},
     },
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", default="INFO")},
+    # HTTP client debug logs can contain request URLs (some providers put tokens in URLs).
+    "loggers": {"urllib3": {"level": "WARNING"}, "requests": {"level": "WARNING"}},
 }

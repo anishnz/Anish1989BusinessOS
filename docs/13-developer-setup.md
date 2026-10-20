@@ -183,6 +183,32 @@ Until a staff user has passed MFA, every other `/api/...` path returns `403` wit
 
 These return 404 on the platform site.
 
+## Secret vault and integrations (task 1.5)
+
+- App `apps.vault` (in both shared and tenant apps): one `Connection` table per schema. The platform site uses it for platform-wide keys (permission module `platform_settings`); each business uses its own (module `integrations`).
+- **Encryption** (`apps/vault/crypto.py`): AES-256-GCM envelope encryption. Each connection's secrets are one JSON blob encrypted with a fresh random data key; the data key is encrypted ("wrapped") with the master key. Both use the associated data `"<schema>:<connection uid>"`, so a ciphertext copied to another row or another business cannot be opened.
+- **Master keys**: `VAULT_MASTER_KEYS="id:base64,..."` (32-byte keys, newest first). The start scripts create one. With `DEBUG=True` and no key, a development key is derived from `DJANGO_SECRET_KEY`; with `DEBUG=False` and no key, the app refuses to save or open secrets (`ImproperlyConfigured`).
+- **Rotation**: put the new key first, restart, run `python manage.py rotate_vault_key` (re-wraps every data key in every schema, audited), then remove the old key.
+- **What is stored**: the encrypted blob plus masked hints (`••••` + last 4 characters, only for values of 8+ characters). Secrets are never returned by the API or pages, never put back into form fields, and never written to the audit log (only field names).
+- **Providers** (`apps/vault/providers.py`): each provider declares its config fields, secret fields and a `test()` that makes one small read-only request (10-second timeout, no redirects). Error messages are generic, so tokens inside URLs (Telegram) never leak. Add a provider by adding a `Provider(...)` entry; set `available=False` for ones not built yet.
+- **Private network guard** (`apps/vault/netguard.py`): user-supplied URLs (Ollama `base_url`, SMTP host) must be http/https and must not resolve to private, loopback, link-local or reserved addresses. Set `ALLOW_PRIVATE_NETWORK_URLS=True` only on a laptop for a local Ollama. Known limit: DNS can change between the check and the request (DNS rebinding); redirects are off, which closes the common case.
+- **Backup connections**: `services.active_connection(category)` returns the main connection, or the backup when the main one is disabled or failed. The AI and messaging adapters will use this.
+- Pages: `/settings/integrations/` (staff, MFA required). The Django admin entry redirects there; add/change/delete in the admin are switched off.
+
+### Integrations API
+
+| Method | Path | Permission |
+|---|---|---|
+| GET | `/api/integrations/providers/` | `integrations.view` |
+| GET, POST | `/api/integrations/connections/` | `integrations.view`, `integrations.manage_integrations` |
+| GET | `/api/integrations/connections/<id>/` | `integrations.view` |
+| PATCH | `/api/integrations/connections/<id>/` | `integrations.configure` (+ `manage_integrations` when `secrets` is sent) |
+| DELETE | `/api/integrations/connections/<id>/` | `integrations.manage_integrations` |
+| POST | `/api/integrations/connections/<id>/test/` | `integrations.configure` |
+| POST | `/api/integrations/connections/<id>/disable/` `{"disabled": true}` | `integrations.configure` |
+
+Body for POST: `{"provider": "openai", "label": "Main AI", "config": {"model": "gpt-4o-mini"}, "secrets": {"api_key": "..."}, "is_backup": false}`. In PATCH, a blank secret keeps the saved value. On the platform site the module is `platform_settings`.
+
 ## Useful commands
 
 | Task | Command |
@@ -194,6 +220,7 @@ These return 404 on the platform site.
 | Give businesses without a licence a trial | `python manage.py sync_licences` |
 | Invite a business's System Admin | `python manage.py invite_admin --schema <slug> --email <email>` |
 | Check the audit log is untouched | `python manage.py verify_audit_chain` |
+| Re-encrypt saved keys with the newest master key | `python manage.py rotate_vault_key` |
 | Make migrations after model changes | `python manage.py makemigrations` |
 
 Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail`, `services`, `education_consultancy`, `e_learning`, `jobs`, `other`.

@@ -51,6 +51,12 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-043 | Modules | Two levels: the platform entitles modules (licence), the business switches entitled modules on or off; core modules always on; industry templates choose starting modules | Spec section 3 (Super Admin enables per tenant; System Admin chooses within limits) | Decided (21 Oct 2026) |
 | D-044 | Trial | 30 days, no automatic charge; reactivation restores the earlier status; marking as paid makes the licence active | D-018 and spec section 6 | Decided (21 Oct 2026) |
 | D-045 | First System Admin | Created by invitation: the account has no password until the person sets one through an emailed link on their own business site | No passwords are chosen or sent by the platform | Decided (21 Oct 2026) |
+| D-046 | Secret vault encryption | AES-256-GCM envelope encryption: a random data key per connection, wrapped by a master key from `VAULT_MASTER_KEYS`; ciphertext bound to `schema:uid`; rotation re-wraps data keys | Spec 4.4 and docs/04 (encrypted per-tenant keys); no extra service (KMS/Vault) needed for the pilot, can be swapped later | Decided (21 Oct 2026) |
+| D-047 | Master key location | Kept only in `.env` / server environment, never in the database or backups; created by the start scripts; the owner must back it up | A stolen database backup alone must not reveal keys | Decided (21 Oct 2026) |
+| D-048 | Showing saved keys | Never shown again after saving; only the last 4 characters; blank field on edit keeps the saved key | Spec "masked display"; stops shoulder-surfing and leaks through screenshots | Decided (21 Oct 2026) |
+| D-049 | Who can change keys | View / configure / manage split: configure can test and rename, only `manage_integrations` can add, replace or remove keys; IT Admin and System Admin have it by default | Least privilege; spec 4.3 IT Admin manages integrations | Decided (21 Oct 2026) |
+| D-050 | Outgoing test requests | One read-only request per test, 10-second timeout, no redirects, generic error messages; private-network addresses refused unless `ALLOW_PRIVATE_NETWORK_URLS` | Prevents the platform being used to reach internal services (SSRF) and stops tokens leaking in errors | Decided (21 Oct 2026) |
+| D-051 | Card payment providers | Stripe, Windcave and PayPal listed but "coming later"; bank transfer details available now | Pilot businesses take bank transfer / pay on pickup first; card payments need provider accounts and more testing | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

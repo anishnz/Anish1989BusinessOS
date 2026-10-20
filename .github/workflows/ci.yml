@@ -35,6 +35,7 @@ jobs:
       PLATFORM_DOMAIN: localhost
       DATABASE_URL: postgres://businessos:ci-password@localhost:5432/businessos
       REDIS_URL: redis://localhost:6379/0
+      VAULT_MASTER_KEYS: "ci:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="  # test-only key
     defaults:
       run:
         working-directory: backend
