@@ -16,6 +16,8 @@ MODEL_MODULES = {
     "catalog.category": "products",
     "customers.customer": "crm",
     "customers.consentrecord": "crm",
+    "orders.order": "orders",
+    "orders.orderline": "orders",
 }
 
 DJANGO_ACTIONS = {"view": "view", "add": "create", "change": "edit", "delete": "delete"}

@@ -183,7 +183,8 @@ class TestStaffMfaApi:
         body = response.json()
         assert body["mfa"]["verified"] is True and body["mfa"]["enabled"] is True
         assert len(body["backup_codes"]) == 10
-        assert client.get("/api/orders/").status_code == 404  # no longer blocked by MFA
+        response = client.get("/api/orders/")  # no longer blocked by MFA; refused only because the user has no role
+        assert response.status_code == 403 and response.json().get("code") != "mfa_required"
 
     def test_verify_with_authenticator_code(self, client_for, tenant_a):
         user = make_user("tenant_a", "manager@a.test", staff=True)

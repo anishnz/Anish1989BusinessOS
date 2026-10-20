@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.6 are done. Next: **1.7 Basic orders**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.7 are done. Next: **1.8 WhatsApp adapter and unified inbox**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -85,7 +85,16 @@ Open a new chat in the ERP CRM project and type:
   - User guide chapter: docs/user-guide/05-products-and-customers.md (and Gmail in chapter 4)
   - New default role **Shop Staff** for counter staff (products view, customers view/add/change, orders, tickets)
   - 306 tests pass
-- [ ] 1.7 Basic orders
+- [x] 1.7 Basic orders (done 21 Oct 2026)
+  - Orders #1001 onwards per business, with product lines that keep the price of the moment; prices only from products
+  - Amount rules (minimum and steps, e.g. 0.5 kg), unavailable products and removed customers refused
+  - Status flow from the WhatsApp plan: draft, awaiting confirmation, confirmed, being prepared, final price sent/accepted, ready, completed, cancelled (reason), expired
+  - Real weights entered while preparing; the customer accepts a changed price before "ready"
+  - Totals with GST; paid / not paid with method; paid orders must be refunded before cancelling
+  - Order history (who, when, why) and audit log; notes kept out of the audit log
+  - API `/api/orders/`, admin pages (add with lines, weights, "Status and payment"), CSV export, `expire_orders` command
+  - User guide chapter: docs/user-guide/06-orders.md
+  - 345 tests pass
 - [ ] 1.8 WhatsApp adapter and unified inbox
 - [ ] 1.9 Simple dashboard
 - [ ] 1.10 Tenant isolation and permission tests

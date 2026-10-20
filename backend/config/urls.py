@@ -7,6 +7,7 @@ from .urls_shared import shared_urlpatterns
 business_urlpatterns = [
     path("api/products/", include("apps.catalog.urls")),
     path("api/customers/", include("apps.customers.urls")),
+    path("api/orders/", include("apps.orders.urls")),
 ]
 
 urlpatterns = [

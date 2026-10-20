@@ -65,6 +65,12 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-057 | Marketing consent | Append-only consent history (who, when, how); consent changes only through one service; CSV and admin changes recorded too | Unsolicited Electronic Messages Act 2007 needs consent before marketing messages | Decided (21 Oct 2026) |
 | D-058 | CSV import/export | All-or-nothing imports with a "check only" step and row-numbered errors; exports guard against spreadsheet formulas and are audited; cost price only for editors | Owners will move existing lists in by spreadsheet; avoids half-imported files and CSV injection | Decided (21 Oct 2026) |
 | D-059 | Shop Staff role | New default role for counter and kitchen staff: products (view, no cost price), customers (view, add, change, record consent), orders (view, create, change), tickets (view, report); no export, import, archive or delete | Agreed by the owner on 21 Oct 2026; least privilege for the people who take orders | Decided (21 Oct 2026) |
+| D-060 | Order rules in one place | All order changes go through one service layer used by the API, the admin and later the WhatsApp AI; prices only from products | The AI must never set prices or skip steps (docs/05) | Decided (21 Oct 2026) |
+| D-061 | Price copy on each line | Each order line keeps the product name, unit, price and GST flag of the moment | Later price changes must not change old orders or reports | Decided (21 Oct 2026) |
+| D-062 | Order status flow | The states from docs/05 with fixed allowed moves; cancelling needs a reason; weight changes need "final price sent/accepted"; counter staff can record the customer's acceptance | Matches the agreed WhatsApp ordering workflow; customers accept the final price | Decided (21 Oct 2026) |
+| D-063 | Order numbers | Per business, starting at #1001, from a locked counter row (no duplicates) | Easy to say on the phone and WhatsApp | Decided (21 Oct 2026) |
+| D-064 | Payment in basic orders | Paid/not paid with method (cash, card, bank transfer, other); paid orders must be marked not paid (refund) before cancelling; full invoicing comes with finance in step 3 | Owners need "who has paid" now; refunds must not be forgotten | Decided (21 Oct 2026) |
+| D-065 | Deleting orders | Only drafts can be deleted; other orders are cancelled | Complete history for reports, disputes and the accountant | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

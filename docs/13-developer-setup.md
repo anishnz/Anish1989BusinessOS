@@ -248,6 +248,35 @@ Body for POST: `{"provider": "openai", "label": "Main AI", "config": {"model": "
 | POST | `/api/customers/import/` | `crm.import` |
 | GET | `/api/customers/export/` | `crm.export` |
 
+## Orders (task 1.7)
+
+- Business-only app `apps.orders` (module `orders`): `Order` (number from #1001 per business via `OrderCounter` with a row lock), `OrderLine` (copy of product name, unit, price and GST flag; ordered `quantity` and `final_quantity` for real weight), `OrderEvent` (status history).
+- All changes go through `apps/orders/services.py` (API, admin and later the WhatsApp AI use the same rules):
+  - prices come only from products; request prices are ignored;
+  - amounts must be >= `min_quantity` and go up in `quantity_step` (max 3 decimals);
+  - unavailable/archived products and removed customers are refused;
+  - lines change only in `draft` / `awaiting_confirmation` (a change while awaiting sends it back to `draft`);
+  - status moves: draft → awaiting_confirmation | confirmed; awaiting → confirmed | draft | expired; confirmed → preparing; preparing → final_price_sent | ready; final_price_sent → final_price_accepted | preparing; final_price_accepted → ready; ready → completed; cancel (customer/shop, reason required) from any open status;
+  - `ready` needs every kg line weighed, and `final_price_sent`/`accepted` when the weighed total differs from the estimate;
+  - paid orders cannot be cancelled until marked not paid; only confirmed orders can be paid;
+  - only drafts can be deleted.
+- Money: line total = unit price × (real weight or ordered amount), rounded half-up to cents; GST included = 3/23 of each GST line total.
+- Audit: `orders.create`, `orders.status`, `orders.lines_changed`, `orders.weights`, `orders.paid`/`unpaid`, `orders.delete_draft`, `orders.export`; the order's `notes` are personal data (not copied into the audit log).
+- `python manage.py expire_orders --minutes 60` expires unconfirmed orders in every business (to be scheduled with tenant-aware Celery tasks).
+
+### Orders API
+
+| Method | Path | Permission |
+|---|---|---|
+| GET, POST | `/api/orders/` (filters `status`, `open`, `customer`, `date=YYYY-MM-DD` local, `q=#number` or customer name) | `orders.view`, `orders.create` |
+| GET, PATCH, DELETE | `/api/orders/<id>/` (PATCH: `customer`, `notes`, `pickup_at`, `channel`, `lines`; DELETE drafts only) | `orders.view`, `orders.edit`, `orders.delete` |
+| POST | `/api/orders/<id>/status/` `{"to": "confirmed", "note": ""}` | `orders.edit` |
+| POST | `/api/orders/<id>/weights/` `{"weights": {"<line id>": "1.08"}}` | `orders.edit` |
+| POST | `/api/orders/<id>/payment/` `{"paid": true, "method": "cash"}` | `orders.edit` |
+| GET | `/api/orders/export/` (`date_from`, `date_to`) | `orders.export` |
+
+Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": null, "lines": [{"product": 5, "quantity": "1.5", "note": ""}]}`. Responses include `next_statuses` for the UI.
+
 ## Useful commands
 
 | Task | Command |
@@ -260,6 +289,7 @@ Body for POST: `{"provider": "openai", "label": "Main AI", "config": {"model": "
 | Invite a business's System Admin | `python manage.py invite_admin --schema <slug> --email <email>` |
 | Check the audit log is untouched | `python manage.py verify_audit_chain` |
 | Re-encrypt saved keys with the newest master key | `python manage.py rotate_vault_key` |
+| Expire orders not confirmed in time | `python manage.py expire_orders --minutes 60` |
 | Send a test email through the saved Gmail/SMTP connection | `python manage.py send_test_email --to you@example.com [--schema <slug>]` |
 | Make migrations after model changes | `python manage.py makemigrations` |
 

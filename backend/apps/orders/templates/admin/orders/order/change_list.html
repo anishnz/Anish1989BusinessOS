@@ -1,0 +1,5 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+  {% if can_export %}<li><a href="{% url 'admin:orders_order_export' %}">Export CSV</a></li>{% endif %}
+  {{ block.super }}
+{% endblock %}

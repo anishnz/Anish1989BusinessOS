@@ -1,0 +1,40 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 860px;">
+  <p><strong>Now:</strong> {{ order.get_status_display }} ·
+     <strong>Total:</strong> ${{ order.total }} (incl. GST ${{ order.gst_total }}){% if order.total != order.estimated_total %} · estimate was ${{ order.estimated_total }}{% endif %} ·
+     <strong>Paid:</strong> {% if order.is_paid %}yes ({{ order.get_payment_method_display }}){% else %}no{% endif %}</p>
+
+  {% if status_form.fields.to.choices %}
+    <h2>Change status</h2>
+    <form method="post">{% csrf_token %}
+      {{ status_form.as_p }}
+      <div class="submit-row"><input type="submit" name="move" value="Change status" class="default"></div>
+    </form>
+  {% else %}
+    <p>This order is closed.</p>
+  {% endif %}
+
+  <h2>Payment</h2>
+  <form method="post">{% csrf_token %}
+    {% if order.is_paid %}
+      <p>Use this when you give the money back (refund).</p>
+      <div class="submit-row"><input type="submit" name="unpay" value="Mark as not paid"></div>
+    {% else %}
+      {{ payment_form.as_p }}
+      <div class="submit-row"><input type="submit" name="pay" value="Mark as paid" class="default"></div>
+    {% endif %}
+  </form>
+
+  <h2>History</h2>
+  <table>
+    <thead><tr><th>When</th><th>From</th><th>To</th><th>By</th><th>Note</th></tr></thead>
+    <tbody>
+    {% for e in events %}
+      <tr><td>{{ e.at|date:"j M Y H:i" }}</td><td>{{ e.from }}</td><td>{{ e.to }}</td><td>{{ e.by }}</td><td>{{ e.note }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p><a href="{{ back }}">Back to the order</a></p>
+</div>
+{% endblock %}
