@@ -47,6 +47,10 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-039 | Permissions | Code-defined catalogue of module + action permissions; roles are sets of these; deny by default; checks run on the server for every API call and admin page; Django groups/per-user permissions are not used | Spec sections 4.1–4.4; one clear source of truth that tests can cover | Decided (21 Oct 2026) |
 | D-040 | Privilege escalation | You can only grant permissions you hold, cannot change your own roles, and only full admins can grant full access; role editing in the Django admin is superuser-only | Spec 4.3: "IT Admin cannot grant themselves additional privileges" | Decided (21 Oct 2026) |
 | D-041 | Audit log | Append-only, SHA-256 hash-chained events per schema, protected by a database trigger against UPDATE/DELETE/TRUNCATE; secrets redacted; login events and changes to users, roles and MFA recorded automatically | NFR-007 (tamper-resistant audit records) | Decided (21 Oct 2026) |
+| D-042 | Licences | One licence per business in the public schema: trial/paid dates, grace period (default 7 days), limits; access state worked out from business status and dates; blocked states stop every page and API | FR-005, spec 5.5; one place that decides if a business can work | Decided (21 Oct 2026) |
+| D-043 | Modules | Two levels: the platform entitles modules (licence), the business switches entitled modules on or off; core modules always on; industry templates choose starting modules | Spec section 3 (Super Admin enables per tenant; System Admin chooses within limits) | Decided (21 Oct 2026) |
+| D-044 | Trial | 30 days, no automatic charge; reactivation restores the earlier status; marking as paid makes the licence active | D-018 and spec section 6 | Decided (21 Oct 2026) |
+| D-045 | First System Admin | Created by invitation: the account has no password until the person sets one through an emailed link on their own business site | No passwords are chosen or sent by the platform | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

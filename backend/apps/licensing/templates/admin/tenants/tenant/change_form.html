@@ -1,0 +1,5 @@
+{% extends "admin/django_tenants/tenant/change_form.html" %}
+{% block object-tools-items %}
+  {% for url, label in tenant_links %}<li><a href="{{ url }}">{{ label }}</a></li>{% endfor %}
+  {{ block.super }}
+{% endblock %}

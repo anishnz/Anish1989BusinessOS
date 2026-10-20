@@ -2,8 +2,8 @@
 Permission checks. Deny unless every step allows (master spec 4.4):
 
   1. user is signed in and active
-  2. the business (tenant) is active or in trial
-  3. the module is enabled for the business       (licences arrive in task 1.4)
+  2. the business's licence allows access (trial, active or grace)
+  3. the module is licensed and switched on for the business
   4. one of the user's roles grants the permission
   5. record / department scope                     (added with departments)
   6. explicit restrictions and approvals           (added per module)
@@ -20,7 +20,6 @@ from apps.audit.services import audit
 
 from .catalogue import module_of, permissions_for
 
-ACTIVE_TENANT_STATUSES = {"trial", "active"}
 _CACHE_ATTR = "_rbac_permission_cache"
 
 
@@ -37,15 +36,17 @@ class Decision:
 
 
 def tenant_is_active() -> bool:
-    tenant = getattr(connection, "tenant", None)
-    if tenant is None or getattr(tenant, "schema_name", "public") == "public":
-        return True
-    return getattr(tenant, "status", "active") in ACTIVE_TENANT_STATUSES
+    """The business's licence allows access (trial, active or grace). The platform itself is always active."""
+    from apps.licensing.services import is_access_allowed
+
+    return is_access_allowed()
 
 
 def module_enabled(module: str) -> bool:
-    """Placeholder until licences and module entitlements (task 1.4)."""
-    return True
+    """The module is licensed for this business and switched on (core modules are always on)."""
+    from apps.licensing.services import module_is_active
+
+    return module_is_active(module)
 
 
 def effective_permissions(user) -> set[str]:

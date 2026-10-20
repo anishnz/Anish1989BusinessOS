@@ -11,5 +11,6 @@ shared_urlpatterns = [
     path("account/", include((web_urlpatterns, "accounts"))),
     path("api/auth/", include(api_urlpatterns)),
     path("api/rbac/", include("apps.rbac.urls")),
+    path("api/tenant/", include("apps.licensing.urls")),
     path("admin/", admin.site.urls),
 ]

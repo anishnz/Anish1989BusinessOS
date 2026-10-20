@@ -53,8 +53,11 @@ def create_tenant(name: str, slug: str, industry: str = Tenant.Industry.OTHER) -
     if Tenant.objects.filter(schema_name=slug).exists():
         raise ValidationError(f"A tenant with slug '{slug}' already exists.")
 
-    # Saving the tenant creates the schema and runs tenant migrations.
+    from apps.licensing.services import create_licence
+
+    # Saving the tenant creates the schema and runs tenant migrations (which also create the default roles).
     tenant = Tenant(schema_name=slug, name=name.strip(), industry=industry)
     tenant.save()
     Domain.objects.create(domain=subdomain_for(slug), tenant=tenant, is_primary=True)
+    create_licence(tenant)  # 30-day trial with the industry's modules
     return tenant

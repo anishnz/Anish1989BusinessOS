@@ -58,6 +58,7 @@ SHARED_APPS = [
     "apps.accounts",
     "apps.audit",
     "apps.rbac",
+    "apps.licensing",
     "apps.core",
 ]
 
@@ -87,6 +88,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "apps.licensing.middleware.LicenceMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django_otp.middleware.OTPMiddleware",
@@ -160,6 +162,10 @@ def OTP_TOTP_ISSUER(device):  # noqa: N802 - Django settings must be uppercase
     return totp_issuer(device)
 
 LOGIN_URL = "admin:login"
+
+# Licences: every new business starts with a trial (no automatic charge).
+LICENCE_TRIAL_DAYS = env.int("LICENCE_TRIAL_DAYS", default=30)
+LICENCE_TRIAL_MAX_USERS = env.int("LICENCE_TRIAL_MAX_USERS", default=10)
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=8 * 60 * 60)  # 8 hours
 
 AUTH_PASSWORD_VALIDATORS = [

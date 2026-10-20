@@ -164,6 +164,25 @@ Until a staff user has passed MFA, every other `/api/...` path returns `403` wit
 | GET, POST | `/api/rbac/users/<id>/roles/` | `roles.view`, `roles.assign` |
 | DELETE | `/api/rbac/users/<id>/roles/<role_id>/` | `roles.assign` |
 
+## Licences and modules (task 1.4)
+
+- App `apps.licensing` (public schema only): `Licence` (one per business: trial/paid dates, grace days, limits) and `TenantModule` (entitled by the platform, enabled by the business).
+- New businesses (`create_tenant`) get a 30-day trial (`LICENCE_TRIAL_DAYS`) and their industry's modules (`apps/licensing/templates_catalogue.py`). Existing businesses get one with `python manage.py sync_licences` (also run on container start).
+- Access state: trial, active, grace, expired, suspended, cancelled. `LicenceMiddleware` blocks every page and API (except `/health/` and static files) unless the state is trial, active or grace. In grace, responses carry `X-Account-Status: grace`.
+- The permission policy also checks the licence and whether the module is switched on (core modules: users, roles, settings, integrations, audit).
+- Active-user limit is enforced whenever a user is created or reactivated (`LimitReached`).
+- Super Admin: create a business (with an optional System Admin invitation), edit licence and modules, suspend (reason required), reactivate, extend trial, mark paid. All audited. Command: `python manage.py invite_admin --schema <slug> --email <email>`.
+
+### Business licence API
+
+| Method | Path | Permission |
+|---|---|---|
+| GET | `/api/tenant/licence/` | `settings.view` |
+| GET | `/api/tenant/modules/` | `settings.view` |
+| PATCH | `/api/tenant/modules/<code>/` `{"enabled": true}` | `settings.configure` |
+
+These return 404 on the platform site.
+
 ## Useful commands
 
 | Task | Command |
@@ -172,6 +191,8 @@ Until a staff user has passed MFA, every other `/api/...` path returns `403` wit
 | Run a command in one business's schema | `python manage.py tenant_command <command> --schema=<slug>` |
 | Migrate all schemas | `python manage.py migrate_schemas` |
 | Create missing default roles | `python manage.py sync_roles` |
+| Give businesses without a licence a trial | `python manage.py sync_licences` |
+| Invite a business's System Admin | `python manage.py invite_admin --schema <slug> --email <email>` |
 | Check the audit log is untouched | `python manage.py verify_audit_chain` |
 | Make migrations after model changes | `python manage.py makemigrations` |
 

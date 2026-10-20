@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.3 are done. Next: **1.4 Tenants, licences and module on/off**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.4 are done. Next: **1.5 Settings and secret vault (encrypted keys, test connection)**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -57,7 +57,14 @@ Open a new chat in the ERP CRM project and type:
   - User guide chapter: docs/user-guide/02-roles-permissions-and-audit-log.md
   - 133 tests pass
   - Later: department/branch scopes (with the departments module), module entitlements (1.4)
-- [ ] 1.4 Tenants, licences and module on/off
+- [x] 1.4 Tenants, licences and module on/off (done 21 Oct 2026)
+  - Licence per business (30-day trial, grace period, limits); states trial/active/grace/expired/suspended/cancelled
+  - Blocked businesses stopped on every page and API with a clear message; grace warning header
+  - Modules: entitled by the platform, switched on/off by the business; industry templates; permission policy checks them
+  - Active-user limit enforced; usage shown in the licence API
+  - Super Admin: create business with System Admin invitation, edit licence and modules, suspend (reason), reactivate, extend trial, mark paid; all audited
+  - User guide chapter: docs/user-guide/03-businesses-licences-and-modules.md
+  - 170 tests pass
 - [ ] 1.5 Settings and secret vault (encrypted keys, test connection)
 - [ ] 1.6 Products and customers
 - [ ] 1.7 Basic orders
