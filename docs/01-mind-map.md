@@ -95,6 +95,13 @@ mindmap
       Auckland job listings
       ATS resume builder
       Job alerts
+    12 Platform operations
+      Subdomains and custom domains
+      DNS check and SSL
+      Website content editor with AI
+      Ticket system
+      Check system button
+      Backups every 6 hours to Google Drive
 ```
 
 ## Branch summary
@@ -113,3 +120,4 @@ mindmap
 | 9 | Competitor intelligence | Weekly competitor reports | [Competitor intelligence](07-competitor-intelligence.md) |
 | 10 | Security and compliance | Protect data and follow NZ rules | [Feature catalogue](03-feature-catalogue.md) |
 | 11 | Learning and jobs | Courses, job board, resume builder | [Industry templates](09-industry-templates.md) |
+| 12 | Platform operations | Domains, content editor, tickets, health checks, backups | [Platform operations](11-platform-operations.md) |

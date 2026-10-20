@@ -23,6 +23,7 @@ Open a new chat in the ERP CRM project and type:
 - [x] Competitor intelligence
 - [x] Industry templates and job module
 - [x] Delivery plan and pilot order
+- [x] Platform operations (domains, content editor, tickets, health checks, backups)
 - [ ] Answer the remaining open questions (docs/08-open-questions.md)
 - [ ] Pilot agreement template
 
@@ -39,6 +40,10 @@ Open a new chat in the ERP CRM project and type:
 - [ ] 1.9 Simple dashboard
 - [ ] 1.10 Tenant isolation and permission tests
 - [ ] 1.11 React/Next.js frontend shell
+- [ ] 1.12 Tenant subdomains
+- [ ] 1.13 "Check system" health check button
+- [ ] 1.14 Backups every 6 hours to Google Drive (encrypted) and restore test
+- [ ] 1.15 Basic ticket system
 
 ## Step 2: Ordering flow
 

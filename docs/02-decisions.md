@@ -31,6 +31,11 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-023 | Working time | Full-time | Stated on 21 Oct 2026 | Decided |
 | D-024 | Job listing sources | Only employer-posted jobs, official feeds under their terms, and career pages that allow crawling | Big job sites restrict scraping and reuse of their listings | Decided (21 Oct 2026) |
 | D-025 | Pilot agreement | Sign a one-page agreement with each business before its pilot starts | Turns a verbal yes into clear expectations | Decided (21 Oct 2026) |
+| D-026 | Domains | Free tenant subdomains first; custom domains with DNS check and automatic SSL next; buying domains later | Subdomains are needed from day one; buying domains needs a registrar account | Decided (21 Oct 2026) |
+| D-027 | Website content | Title, headings, text and SEO editable from the backend; AI drafts, a person publishes | Owners can update their site without code; AI never publishes alone | Decided (21 Oct 2026) |
+| D-028 | Ticket system | Built-in issue reporting for staff, tenant admins and customers | Requested on 21 Oct 2026 | Decided |
+| D-029 | Health check | "Check system" button on each dashboard, plus scheduled checks | Quick way to confirm everything is working | Decided (21 Oct 2026) |
+| D-030 | Backups | Every 6 hours, encrypted, primary copy with the host plus off-site copy to Google Drive, monthly restore tests | Requested on 21 Oct 2026; encryption protects personal data | Decided |
 
 ## Why schema per tenant?
 

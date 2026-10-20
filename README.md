@@ -42,6 +42,7 @@ Pilot businesses (all agreed to pay after the pilot): Gorkha Butchery, a restaur
 | 08 | [Open questions](docs/08-open-questions.md) | Questions still to answer |
 | 09 | [Industry templates](docs/09-industry-templates.md) | Businesses the system serves, and the jobs module |
 | 10 | [Delivery plan](docs/10-delivery-plan.md) | Pilot order, steps, estimates and pilot agreement |
+| 11 | [Platform operations](docs/11-platform-operations.md) | Domains, website content with AI, tickets, health checks, backups |
 
 ### Reference specifications
 

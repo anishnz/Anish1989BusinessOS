@@ -26,6 +26,10 @@ Agreed on 21 October 2026. Work is full-time. All pilot businesses have said the
 - Simple dashboard: today's sales, orders, top products
 - Automated tests for login, permissions and tenant isolation
 - React/Next.js frontend shell
+- Tenant subdomains
+- "Check system" health check button (core checks)
+- Backups every 6 hours, encrypted, with an off-site copy to Google Drive and a first restore test
+- Basic ticket system (report an issue, assign, status)
 
 **Done when:** two test tenants exist, neither can see the other's data (proved by tests), and a WhatsApp test message reaches the inbox.
 
@@ -37,6 +41,8 @@ Agreed on 21 October 2026. Work is full-time. All pilot businesses have said the
 - Live order board for staff
 - Daily owner summary on WhatsApp
 - Post-order star feedback
+- Custom domains with DNS check and automatic SSL
+- Website content editor (title, headings, text, SEO) with "Generate with AI"
 
 **Done when:** Gorkha Butchery and the restaurant take real orders through WhatsApp for one week without staff re-typing orders.
 

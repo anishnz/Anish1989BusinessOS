@@ -124,7 +124,22 @@ See [09. Industry templates](09-industry-templates.md).
 | ATS-friendly resume builder | Simple templates, PDF and DOCX export, keyword check | P1 |
 | Applications and job alerts | Apply online; opt-in alerts by email or WhatsApp | P1 |
 
-## 10. Security and compliance
+## 10. Platform operations
+
+See [11. Platform operations](11-platform-operations.md).
+
+| Feature | Description | Phase |
+|---|---|---|
+| Tenant subdomains | Every tenant gets a free subdomain | P0 |
+| Custom domains and URLs | Link own domain, DNS check, automatic SSL, page slugs and redirects | P1 |
+| Domain availability and purchase | Through a registrar API | P2 |
+| Website content editor | Change site title, headings, text and SEO from the backend | P1 |
+| AI content generation | "Generate with AI" suggestions; a person publishes | P1 |
+| Ticket system | Report issues, assign, track, SLA, reports | P1 |
+| Health check button | "Check system" on each dashboard, with results history | P0 |
+| Backups every 6 hours | Encrypted backups, off-site copy to Google Drive, restore tests | P0 |
+
+## 11. Security and compliance
 
 | Feature | Description | Phase |
 |---|---|---|

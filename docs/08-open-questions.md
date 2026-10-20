@@ -39,6 +39,15 @@ Answer these before writing code. When a question is answered, move the answer t
 | Q-14 | Which job sources can we use legally? | Employer-posted jobs first; check each site's terms before using its data |
 | Q-15 | Who are the resume builder's main users? | For example students, new migrants, career changers in Auckland |
 
+## Platform operations
+
+| # | Question | Notes |
+|---|---|---|
+| Q-16 | Whose Google Drive receives backups? | Platform owner's Drive for the whole database; optionally each tenant's own Drive for its own data |
+| Q-17 | Backup retention? | Proposed: 6-hourly for 7 days, daily for 30 days, monthly for 12 months |
+| Q-18 | Platform domain name for tenant subdomains? | For example `<tenant>.<platform-domain>` |
+| Q-19 | Which registrar for domain search and purchase (later)? | Needs an account and API access |
+
 ## Answered
 
 | # | Question | Answer | Decision |
