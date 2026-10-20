@@ -31,3 +31,6 @@ Thumbs.db
 # Frontend (later)
 node_modules/
 .next/
+
+# Redis dump files
+dump.rdb
