@@ -1,9 +1,29 @@
-# Local development stack: PostgreSQL, Redis, Django web, Celery worker and scheduler.
-# Usage: copy .env.example to .env, then run `docker compose up --build`.
+# Runs the whole platform from pre-built images, so every laptop gets the same versions.
+#
+# Easiest start:  Windows  ->  .\start.ps1
+#                 Mac/Linux ->  ./start.sh
+# Manual start:   copy .env.example to .env, edit it, then `docker compose up -d`
+#
+# The app image is built and published by GitHub Actions on every push to main:
+#   ghcr.io/anishnz/anish1989businessos-backend
+# If it cannot be pulled, Docker builds it locally from ./backend instead.
+
+x-app: &app
+  image: ghcr.io/anishnz/anish1989businessos-backend:${APP_IMAGE_TAG:-latest}
+  build:
+    context: ./backend
+  env_file: .env
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
 
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-businessos}
       POSTGRES_USER: ${POSTGRES_USER:-businessos}
@@ -16,69 +36,40 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
 
   redis:
-    image: redis:7-alpine
-    ports:
-      - "127.0.0.1:6379:6379"
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
 
   web:
-    build:
-      context: ./backend
-      args:
-        REQUIREMENTS: dev.txt
-    env_file: .env
+    <<: *app
     environment:
       RUN_MIGRATIONS: "1"
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./backend:/app
     ports:
       - "127.0.0.1:8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fs", "-H", "Host: localhost", "http://localhost:8000/health/"]
       interval: 15s
       timeout: 5s
+      start_period: 60s
       retries: 5
 
   worker:
-    build:
-      context: ./backend
-      args:
-        REQUIREMENTS: dev.txt
-    env_file: .env
+    <<: *app
     command: celery -A config worker --loglevel=info
-    volumes:
-      - ./backend:/app
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
   scheduler:
-    build:
-      context: ./backend
-      args:
-        REQUIREMENTS: dev.txt
-    env_file: .env
+    <<: *app
     command: celery -A config beat --loglevel=info --schedule /tmp/celerybeat-schedule
-    volumes:
-      - ./backend:/app
-    depends_on:
-      redis:
-        condition: service_healthy
 
 volumes:
   postgres_data:
+  redis_data:

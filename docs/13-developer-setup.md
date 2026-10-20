@@ -23,40 +23,59 @@ Anish1989BusinessOS/
 └── docs/                     all planning documents
 ```
 
+## Same versions on every laptop
+
+- The app image is built by GitHub Actions on every push to `main` and published to
+  `ghcr.io/anishnz/anish1989businessos-backend` (for Intel/AMD and Apple Silicon/ARM).
+- Python packages are locked to exact versions with hashes in `backend/requirements/base.lock` and `dev.lock`.
+- PostgreSQL (16) and Redis (7.4) image versions are pinned in `docker-compose.yml`.
+- To use one exact build instead of the newest, set `APP_IMAGE_TAG=sha-<commit>` in `.env`.
+
+To change a package version: edit `requirements/base.txt` or `dev.txt`, then run
+`pip-compile --generate-hashes --allow-unsafe --strip-extras --output-file base.lock base.txt`
+(and the same for `dev.lock`), and commit both files.
+
 ## Option A: Docker (recommended)
 
-You need **Docker Desktop** (on Windows, with the WSL 2 backend).
+You need **Docker Desktop** (on Windows, with the WSL 2 backend). No Docker Hub login is needed.
 
-1. Copy the example settings file:
-   ```powershell
-   copy .env.example .env
-   ```
-2. Open `.env` and change:
-   - `DJANGO_SECRET_KEY` to a long random string
-   - `POSTGRES_PASSWORD` to a password, and the same password inside `DATABASE_URL`
-3. Start everything:
-   ```powershell
-   docker compose up --build
-   ```
-   The first start runs database migrations and creates the platform tenant.
-4. Create a platform admin (Super Admin) in another terminal:
+1. Start everything with one command from the project folder:
+   - Windows:
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File .\start.ps1
+     ```
+   - macOS/Linux:
+     ```bash
+     ./start.sh
+     ```
+   The script creates `.env` with random local passwords (first time only), pulls the images,
+   starts all services, runs database migrations, and waits until the platform is healthy.
+2. Create a platform admin (Super Admin). You type the password yourself:
    ```powershell
    docker compose exec web python manage.py createsuperuser
    ```
-5. Create a test business:
+3. Create a test business:
    ```powershell
    docker compose exec web python manage.py create_business --name "Gorkha Butchery" --slug gorkhabutchery --industry butchery
    ```
-6. Create a login for that business (its users live in its own schema):
+4. Create a login for that business (its users live in its own schema):
    ```powershell
    docker compose exec web python manage.py tenant_command createsuperuser --schema=gorkhabutchery
    ```
-7. Open in the browser:
+5. Open in the browser:
    - Platform admin: http://localhost:8000/admin/
    - Business admin: http://gorkhabutchery.localhost:8000/admin/
    - Health check: http://localhost:8000/health/
 
 `*.localhost` addresses work in Chrome, Edge and Firefox without changing DNS.
+
+Stop with `docker compose down` (data is kept in Docker volumes). `docker compose down -v` deletes all data.
+
+### Development mode (code changes reload automatically)
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
 
 ## Option B: Python on your computer
 
@@ -66,7 +85,7 @@ You need Python 3.13, PostgreSQL 16 and Redis running locally.
 cd backend
 python -m venv .venv
 .venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
-pip install -r requirements/dev.txt
+pip install --require-hashes --no-deps -r requirements/dev.lock
 ```
 
 In `.env`, use `localhost` instead of `db` and `redis` in `DATABASE_URL` and `REDIS_URL`. Then:

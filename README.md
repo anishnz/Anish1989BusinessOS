@@ -17,10 +17,18 @@ Anish1989 Business OS is a multi-tenant SaaS platform for small and medium busin
 
 ## Quick start
 
-```bash
-cp .env.example .env        # then edit the secret key and passwords
-docker compose up --build
+Install Docker Desktop, then from the project folder:
+
+```powershell
+# Windows
+powershell -ExecutionPolicy Bypass -File .\start.ps1
 ```
+```bash
+# macOS / Linux
+./start.sh
+```
+
+The script creates `.env` with random passwords, pulls the same pre-built image on every laptop, and starts everything. Open http://localhost:8000/health/ to check.
 
 Full instructions: [docs/13-developer-setup.md](docs/13-developer-setup.md).
 

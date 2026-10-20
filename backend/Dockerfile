@@ -1,4 +1,6 @@
-FROM python:3.13-slim
+# Python 3.13 on Debian 12 (bookworm). The minor version and OS release are pinned
+# so every build uses the same base. Python packages come from a lock file with hashes.
+FROM python:3.13-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -12,11 +14,15 @@ RUN apt-get update \
 
 WORKDIR /app
 
+# base.lock for production images, dev.lock for development images.
 COPY requirements/ requirements/
-ARG REQUIREMENTS=base.txt
-RUN pip install -r requirements/${REQUIREMENTS}
+ARG REQUIREMENTS=base.lock
+RUN pip install --require-hashes --no-deps -r requirements/${REQUIREMENTS}
 
 COPY . .
+
+# Make the entrypoint work even if it was checked out with Windows line endings.
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 # Run as a non-root user.
 RUN useradd --create-home --uid 1000 app \

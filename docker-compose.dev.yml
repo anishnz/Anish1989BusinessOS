@@ -1,0 +1,32 @@
+# Development override: builds the image locally with dev tools, mounts the code
+# so changes reload automatically, and uses Django's development server.
+#
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+x-dev-app: &dev-app
+  image: anish1989businessos-backend:dev
+  build:
+    context: ./backend
+    args:
+      REQUIREMENTS: dev.lock
+  volumes:
+    - ./backend:/app
+
+services:
+  web:
+    <<: *dev-app
+    command: python manage.py runserver 0.0.0.0:8000
+
+  worker:
+    <<: *dev-app
+
+  scheduler:
+    <<: *dev-app
+
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"
