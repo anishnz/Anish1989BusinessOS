@@ -38,7 +38,8 @@ Open a new chat in the ERP CRM project and type:
   - 40 tests pass against real PostgreSQL 16 and Redis (isolation, routing, login, admin access, health), with both development and production settings
   - GitHub Actions CI is green: tests + Docker image build
   - Same versions everywhere: locked Python packages with hashes, pinned PostgreSQL/Redis images, app image published to ghcr.io by CI (amd64 + arm64)
-  - One-command start: `start.ps1` (Windows) and `start.sh` (macOS/Linux)
+  - One-command start: `start.cmd` / `start.ps1` (Windows) and `start.sh` (macOS/Linux)
+  - Verified on Anish's Windows laptop (21 Oct 2026): image pulled from ghcr.io, all 5 containers started, platform healthy
   - Follow-up for later tasks: tenant-aware Celery tasks (run each job in the right schema) when the first tenant job is added
 - [ ] 1.2 Login, MFA for admins, user model
 - [ ] 1.3 Roles, permissions and audit log
