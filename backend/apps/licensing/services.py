@@ -5,6 +5,7 @@ invite the business's first System Admin).
 """
 from __future__ import annotations
 
+import smtplib
 from datetime import timedelta
 
 from django.conf import settings
@@ -267,10 +268,17 @@ def invite_system_admin(tenant, email: str, *, actor=None, request=None) -> None
         port = ":" + request.get_host().split(":", 1)[1]
     link = f"{protocol}://{domain}{port}/account/reset/{uid}/{token}/"
     context = {"business": tenant.name, "link": link, "email": email, "hours": settings.PASSWORD_RESET_TIMEOUT // 3600}
-    send_mail(
-        subject=f"You are the administrator of {tenant.name} on Anish1989 Business OS",
-        message=render_to_string("licensing/invite_admin_email.txt", context),
-        from_email=None,
-        recipient_list=[email],
-    )
+    try:
+        send_mail(
+            subject=f"You are the administrator of {tenant.name} on Anish1989 Business OS",
+            message=render_to_string("licensing/invite_admin_email.txt", context),
+            from_email=None,
+            recipient_list=[email],
+        )
+    except (smtplib.SMTPException, OSError):
+        audit("tenant.admin_invite_failed", target=tenant, actor=actor, metadata={"email": email})
+        raise ValidationError(
+            "The account was created, but the invitation email could not be sent. "
+            "Check the email connection on the Integrations page, then click Invite System Admin again."
+        ) from None
     audit("tenant.admin_invited", target=tenant, actor=actor, metadata={"email": email})

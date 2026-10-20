@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 860px;">
+  <p>Add or update many customers at once. A row with the same <strong>phone number</strong> as an existing customer updates it.
+     Without a phone number, a row updates the customer with the same email. Other rows are added.
+     <strong>Nothing is saved if any row has an error.</strong></p>
+  <p>Columns: <code>{{ columns|join:", " }}</code>. Only <code>name</code> is required. NZ numbers can be written like 021 123 4567;
+     numbers from other countries must start with + and the country code.
+     Only put <code>yes</code> in <code>marketing_consent</code> if the customer agreed to marketing messages.</p>
+
+  {% if result %}
+    {% if result.ok %}
+      <p class="{% if result.dry_run %}help{% else %}success{% endif %}"><strong>
+        {% if result.dry_run %}The file is OK. Importing it would add {{ result.created }} and update {{ result.updated }} customer(s).
+        {% else %}Done: {{ result.created }} added, {{ result.updated }} updated.{% endif %}
+      </strong></p>
+    {% else %}
+      <p class="errornote">Nothing was saved. Fix these rows and try again:</p>
+      <table><thead><tr><th>Row</th><th>Problem</th></tr></thead><tbody>
+        {% for e in result.errors %}<tr><td>{{ e.row }}</td><td>{{ e.error }}</td></tr>{% endfor %}
+      </tbody></table>
+    {% endif %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {{ form.as_p }}
+    <div class="submit-row">
+      <input type="submit" name="check" value="Check file only">
+      <input type="submit" name="import" value="Import" class="default">
+      <a href="{{ back }}">Back to customers</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

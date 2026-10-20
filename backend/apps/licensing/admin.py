@@ -106,8 +106,12 @@ class TenantAdmin(BaseTenantAdmin):
         obj.schema_name = tenant.schema_name
         email = form.cleaned_data.get("admin_email")
         if email:
-            services.invite_system_admin(tenant, email, actor=request.user, request=request)
-            self.message_user(request, f"Invitation sent to {email}.", messages.SUCCESS)
+            try:
+                services.invite_system_admin(tenant, email, actor=request.user, request=request)
+            except ValidationError as exc:
+                self.message_user(request, " ".join(exc.messages), messages.WARNING)
+            else:
+                self.message_user(request, f"Invitation sent to {email}.", messages.SUCCESS)
 
     def save_formset(self, request, form, formset, change):
         # Modules: an un-entitled module cannot stay enabled.

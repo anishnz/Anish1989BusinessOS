@@ -22,6 +22,8 @@ import requests
 from .netguard import UnsafeURL, check_url
 
 TIMEOUT = 10
+GMAIL_HOST = "smtp.gmail.com"
+GMAIL_PORT = 587
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,7 @@ class Field:
     required: bool = True
     help: str = ""
     default: str = ""
+    kind: str = "text"  # "text" or "email"
 
 
 @dataclass(frozen=True)
@@ -160,22 +163,42 @@ def test_twilio(s, c):
     return _from_status(r, "Connected to Twilio.")
 
 
-@_safe
-def test_smtp(s, c):
-    host, port = c["host"], int(c.get("port") or 587)
-    check_url(f"https://{host}")  # same private-network rule for the mail server
-    use_tls = str(c.get("use_tls", "true")).lower() in ("1", "true", "yes", "on")
+def _smtp_login(host: str, port: int, use_tls: bool, username: str, password: str, ok_message: str) -> TestResult:
     try:
         with smtplib.SMTP(host, port, timeout=TIMEOUT) as server:
             if use_tls:
                 server.starttls(context=ssl.create_default_context())
-            if c.get("username"):
-                server.login(c["username"], s.get("password", ""))
-        return TestResult(True, "Connected to the email server.")
+            if username:
+                server.login(username, password)
+        return TestResult(True, ok_message)
     except smtplib.SMTPAuthenticationError:
         return TestResult(False, "The email server refused the username or password.")
     except (smtplib.SMTPException, OSError):
         return TestResult(False, "Could not connect to the email server. Check the host, port and TLS setting.")
+
+
+def as_bool(value) -> bool:
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+
+def gmail_app_password(secrets: dict) -> str:
+    """Google shows app passwords in groups of 4 with spaces; the spaces are not part of it."""
+    return "".join(secrets.get("app_password", "").split())
+
+
+@_safe
+def test_smtp(s, c):
+    host, port = c["host"], int(c.get("port") or 587)
+    check_url(f"https://{host}")  # same private-network rule for the mail server
+    return _smtp_login(host, port, as_bool(c.get("use_tls", "true")), c.get("username", ""), s.get("password", ""), "Connected to the email server.")
+
+
+@_safe
+def test_gmail(s, c):
+    result = _smtp_login(GMAIL_HOST, GMAIL_PORT, True, c["email"], gmail_app_password(s), "Connected to Gmail.")
+    if not result.ok and "refused" in result.message:
+        return TestResult(False, "Gmail refused the address or app password. Use an app password (not your normal password); 2-Step Verification must be on.")
+    return result
 
 
 @_safe
@@ -213,8 +236,15 @@ PROVIDERS = {
         Provider("telegram", "Telegram bot", "messaging", (Field("bot_token", "Bot token"),), (), test_telegram, help="Create a bot with @BotFather to get a token."),
         Provider(
             "smtp", "Email (SMTP)", "email", (Field("password", "Password", False),),
-            (Field("host", "Server"), Field("port", "Port", False, default="587"), Field("username", "Username", False), Field("use_tls", "Use TLS (true/false)", False, default="true"), Field("from_email", "From address")),
+            (Field("host", "Server"), Field("port", "Port", False, default="587"), Field("username", "Username", False), Field("use_tls", "Use TLS (true/false)", False, default="true"), Field("from_email", "From address", kind="email")),
             test_smtp,
+        ),
+        Provider(
+            "gmail", "Gmail", "email",
+            (Field("app_password", "App password", help="16 letters from Google Account > Security > 2-Step Verification > App passwords. Not your normal Gmail password."),),
+            (Field("email", "Gmail address", kind="email"), Field("from_name", "Sender name", False, help="For example Gorkha Butchery")),
+            test_gmail, docs_url="https://myaccount.google.com/apppasswords",
+            help="Sends invitations, password resets and notices from a Gmail account (about 500 emails a day for a personal account).",
         ),
         Provider("twilio", "SMS (Twilio)", "sms", (Field("auth_token", "Auth token"),), (Field("account_sid", "Account SID"), Field("from_number", "Sending number")), test_twilio),
         Provider(

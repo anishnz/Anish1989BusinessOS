@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.5 are done. Next: **1.6 Products and customers**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.6 are done. Next: **1.7 Basic orders**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -75,7 +75,15 @@ Open a new chat in the ERP CRM project and type:
   - Settings page `/settings/integrations/` and API `/api/integrations/`
   - User guide chapter: docs/user-guide/04-integrations-and-api-keys.md
   - 221 tests pass
-- [ ] 1.6 Products and customers
+- [x] 1.6 Products and customers (done 21 Oct 2026)
+  - System emails (invitations, password resets) sent through Gmail with an app password; business Gmail first, then the platform's; `send_test_email`
+  - Products: categories, kg/each/pack, NZ$ prices incl. GST, cost price (editors only), min quantity and steps, other names for search and the AI, available/archived
+  - Customers: NZ and overseas phone numbers saved as +64..., no duplicate phone or email, tags, staff notes, marketing consent history (NZ law)
+  - Privacy: personal data never copied into the audit log; "remove personal data" keeps the record for orders and reports
+  - CSV import (check first, all-or-nothing) and export (formula-safe, audited) for products and customers
+  - APIs `/api/products/` and `/api/customers/`; admin pages; business-only (hidden on the platform site)
+  - User guide chapter: docs/user-guide/05-products-and-customers.md (and Gmail in chapter 4)
+  - 304 tests pass
 - [ ] 1.7 Basic orders
 - [ ] 1.8 WhatsApp adapter and unified inbox
 - [ ] 1.9 Simple dashboard

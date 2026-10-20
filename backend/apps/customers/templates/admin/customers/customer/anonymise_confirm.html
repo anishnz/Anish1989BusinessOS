@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 760px;">
+  <p>This removes the name, phone, email, address, notes and tags of these customers. Their past orders and sales totals stay, under "Removed customer #id".
+     <strong>This cannot be undone.</strong> Use it when a customer asks for their personal information to be removed.</p>
+  <ul>{% for c in customers %}<li>{{ c.name }}{% if c.phone %} ({{ c.phone }}){% endif %}</li>{% endfor %}</ul>
+  <form method="post">{% csrf_token %}
+    {% for c in customers %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ c.pk }}">{% endfor %}
+    <input type="hidden" name="action" value="anonymise">
+    <input type="hidden" name="confirm" value="yes">
+    <div class="submit-row">
+      <input type="submit" value="Yes, remove personal data" style="background:#ba2121">
+      <a href="{% url 'admin:customers_customer_changelist' %}">No, go back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -2,7 +2,7 @@
 
 *User guide, chapter 4 · Last updated 21 October 2026*
 
-**Who this is for:** each business's IT Admin and System Admin (sections 4.1–4.6), and the person who runs the server (section 4.7).
+**Who this is for:** each business's IT Admin and System Admin (sections 4.1–4.7), the platform Super Admin (section 4.7), and the person who runs the server (section 4.8).
 
 An **integration** connects your business to an outside service, for example an AI model, WhatsApp, email or SMS. Each business adds its own keys. Your keys are only used for your business, and nobody, not even the platform Super Admin, can see them again after you save them.
 
@@ -37,7 +37,7 @@ After saving, you only see the **last 4 characters** of each key, for example `�
 |---|---|
 | AI | OpenAI, Anthropic (Claude), Google Gemini, Ollama (your own AI server) |
 | Messaging | WhatsApp Cloud API, Viber, Telegram |
-| Email | Your own email server (SMTP) |
+| Email | Gmail, or your own email server (SMTP) |
 | SMS | Twilio |
 | Search | Google Places (for competitor reports) |
 | Payments | Bank transfer details |
@@ -78,7 +78,41 @@ People with **Configure** but not **Manage integrations** can change names and s
 - For your own safety, connections to private network addresses (such as `127.0.0.1` or `192.168.x.x`) are refused on the live platform. An Ollama server must have a public web address.
 - If you think a key has leaked, create a new key at the provider's website, paste it here with **Edit**, and then delete the old key at the provider.
 
-## 4.7 The master key (for the person who runs the server)
+## 4.7 Send emails with Gmail
+
+The platform sends invitations, password-reset links and notices by email. They go out through a Gmail account.
+
+**Which account is used:**
+1. If the business has saved its own Gmail (or SMTP) connection, its emails go out from that account.
+2. If not, they go out from the **platform's** Gmail, with a sender name like *Gorkha Butchery via Anish1989 Business OS*.
+3. Invitations to a new business's System Admin always use the platform's Gmail.
+
+**Step 1: create an app password at Google** (once per Gmail account)
+1. Sign in to the Gmail account at [myaccount.google.com](https://myaccount.google.com).
+2. Go to **Security** and turn on **2-Step Verification** if it is not on yet.
+3. Open [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+4. Type a name, for example *Business OS*, and click **Create**.
+5. Google shows a 16-letter password. Copy it. Google shows it only once.
+
+Use the app password, not your normal Gmail password. If you change your Gmail password later, Google removes your app passwords, so you will need to create a new one and save it here.
+
+**Step 2: save it on the Integrations page**
+1. Platform's Gmail: open the platform site (for example `http://localhost:8000/settings/integrations/`). A business's own Gmail: open that business's site.
+2. Under **Add a connection**, click **Gmail**.
+3. Enter the **Gmail address**, a **Sender name** (optional) and the **App password** (spaces are fine).
+4. Click **Save**, then **Test connection**. It should say *Connected to Gmail*.
+
+**Step 3: send yourself a test email** (the person who runs the server)
+
+```
+docker compose exec web python manage.py send_test_email --to you@example.com
+```
+
+Add `--schema gorkhabutchery` to test a business's own connection.
+
+**Limits:** a personal Gmail account can send about 500 emails a day. That is enough for invitations and password resets. Marketing emails will need a proper email service later.
+
+## 4.8 The master key (for the person who runs the server)
 
 All saved keys are protected by one **master key**. It is the `VAULT_MASTER_KEYS` line in the `.env` file.
 

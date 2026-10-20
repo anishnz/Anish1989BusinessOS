@@ -21,3 +21,5 @@ redis>=5.0,<9.0
 # Serving
 gunicorn>=23.0,<27.0
 whitenoise>=6.7,<7.0
+# Phone number checking and formatting (customers, WhatsApp)
+phonenumbers>=8.13,<10

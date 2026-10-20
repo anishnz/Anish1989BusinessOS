@@ -12,6 +12,10 @@ MODEL_MODULES = {
     "rbac.role": "roles",
     "rbac.userrole": "roles",
     "vault.connection": "integrations",  # "platform_settings" on the platform site
+    "catalog.product": "products",
+    "catalog.category": "products",
+    "customers.customer": "crm",
+    "customers.consentrecord": "crm",
 }
 
 DJANGO_ACTIONS = {"view": "view", "add": "create", "change": "edit", "delete": "delete"}

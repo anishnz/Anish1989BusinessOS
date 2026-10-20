@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.db import connection as db_connection
 from django.db import transaction
 from django.utils import timezone
@@ -32,6 +33,13 @@ def _validate(provider: providers.Provider, config: dict, secrets: dict, *, is_n
         value = str(config.get(f.name, "") or "").strip() or f.default
         if f.required and not value:
             raise ValidationError(f"'{f.label}' is required.")
+        if "\r" in value or "\n" in value:
+            raise ValidationError(f"'{f.label}' must be on one line.")
+        if value and f.kind == "email":
+            try:
+                validate_email(value)
+            except ValidationError:
+                raise ValidationError(f"'{f.label}' must be a valid email address.") from None
         if value:
             clean_config[f.name] = value[:500]
     clean_secrets = {}

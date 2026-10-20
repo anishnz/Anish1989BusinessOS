@@ -209,6 +209,45 @@ These return 404 on the platform site.
 
 Body for POST: `{"provider": "openai", "label": "Main AI", "config": {"model": "gpt-4o-mini"}, "secrets": {"api_key": "..."}, "is_backup": false}`. In PATCH, a blank secret keeps the saved value. On the platform site the module is `platform_settings`.
 
+## Email through Gmail (task 1.6)
+
+- `EMAIL_BACKEND` defaults to `apps.vault.mail.VaultEmailBackend`. For each email it uses, in order: the current business's own email connection (provider `gmail` or `smtp`, not disabled or failed); the platform's email connection (public schema), with the sender name "<Business> via <platform sender>"; then `EMAIL_FALLBACK_BACKEND` (console when `DEBUG=True`, otherwise Django's SMTP backend with the `EMAIL_HOST*` settings).
+- Gmail provider: `smtp.gmail.com:587` with STARTTLS, the Gmail address as username and a Google **app password** (needs 2-Step Verification; spaces are removed). The From address is always the connected account; a different `from_email` becomes Reply-To.
+- Invitation emails that fail raise a clear `ValidationError` (audited as `tenant.admin_invite_failed`); the account is already created, so "Invite System Admin" can be clicked again.
+- Check the real connection: `python manage.py send_test_email --to you@example.com [--schema <slug>]`.
+
+## Products and customers (task 1.6)
+
+- Business-only apps (in `TENANT_APPS` only; no tables in the public schema): `apps.catalog` (module `products`) and `apps.customers` (module `crm`). Their URLs are in `config/urls.py` (business sites only), and `BusinessOnlyAdminMixin` hides them in the platform admin.
+- **Products**: `Category`, `Product` (unit kg/each/pack, price NZ$ incl. GST, optional cost price, `gst_applies`, `min_quantity`, `quantity_step`, `search_terms`, `is_available`, `is_archived`). GST included = price × 3/23 at 15% (`GST_RATE`). Products are archived, never deleted. Cost price is only returned to users with `products.edit`.
+- **Customers**: `Customer` (phone saved as E.164 using `phonenumbers`, default region `PHONE_DEFAULT_REGION=NZ`; unique phone and unique email per business), `ConsentRecord` (append-only marketing consent history). Marketing consent changes only through `services.set_marketing_consent` (API `/consent/`, admin checkbox, CSV import).
+- **Privacy**: customer name, phone, email, address and notes are tracked with `track(..., personal=...)`, so the audit log records only that they changed; the audit label is "Customer #id". `services.anonymise` removes personal data (and the admin history label) but keeps the record for orders and reports.
+- **CSV** (`apps/core/csvtools.py`): UTF-8 (with or without BOM), 2 MB / 5,000 rows, unknown columns refused, all-or-nothing with row-numbered errors, "check only" mode. Exports prefix cells starting with `= + - @` with `'` (CSV injection) and the import removes it again. Exports are audited.
+
+### Products API
+
+| Method | Path | Permission |
+|---|---|---|
+| GET, POST | `/api/products/` (filters `q`, `category`, `available`, `archived`, `unit`; 50 per page) | `products.view`, `products.create` |
+| GET, PATCH, DELETE | `/api/products/<id>/` (DELETE archives) | `products.view`, `products.edit`, `products.delete` |
+| POST | `/api/products/<id>/restore/` | `products.edit` |
+| GET, POST | `/api/products/categories/` | `products.view`, `products.create` |
+| GET, PATCH, DELETE | `/api/products/categories/<id>/` | `products.view`, `products.edit`, `products.delete` |
+| POST | `/api/products/import/` (multipart `file`, `dry_run`) | `products.import` |
+| GET | `/api/products/export/` | `products.export` |
+
+### Customers API
+
+| Method | Path | Permission |
+|---|---|---|
+| GET, POST | `/api/customers/` (filters `q`, `tag`, `consent`, `archived`) | `crm.view`, `crm.create` |
+| GET, PATCH, DELETE | `/api/customers/<id>/` (DELETE archives; detail includes consent history) | `crm.view`, `crm.edit`, `crm.delete` |
+| POST | `/api/customers/<id>/restore/` | `crm.edit` |
+| POST | `/api/customers/<id>/anonymise/` | `crm.delete` |
+| POST | `/api/customers/<id>/consent/` `{"given": true, "channel": "all", "note": ""}` | `crm.edit` |
+| POST | `/api/customers/import/` | `crm.import` |
+| GET | `/api/customers/export/` | `crm.export` |
+
 ## Useful commands
 
 | Task | Command |
@@ -221,6 +260,7 @@ Body for POST: `{"provider": "openai", "label": "Main AI", "config": {"model": "
 | Invite a business's System Admin | `python manage.py invite_admin --schema <slug> --email <email>` |
 | Check the audit log is untouched | `python manage.py verify_audit_chain` |
 | Re-encrypt saved keys with the newest master key | `python manage.py rotate_vault_key` |
+| Send a test email through the saved Gmail/SMTP connection | `python manage.py send_test_email --to you@example.com [--schema <slug>]` |
 | Make migrations after model changes | `python manage.py makemigrations` |
 
 Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail`, `services`, `education_consultancy`, `e_learning`, `jobs`, `other`.

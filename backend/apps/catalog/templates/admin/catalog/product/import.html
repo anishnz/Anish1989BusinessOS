@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 860px;">
+  <p>Add or update many products at once. A row with the same <strong>SKU</strong> as an existing product updates it.
+     Without a SKU, a row updates the one product with the same name. Other rows are added.
+     <strong>Nothing is saved if any row has an error.</strong></p>
+  <p>Columns: <code>{{ columns|join:", " }}</code>. Only <code>name</code> and <code>price</code> are required.
+     <code>unit</code> is kg, each or pack. <code>price</code> includes GST. Tip: export first to get a file in the right format.</p>
+
+  {% if result %}
+    {% if result.ok %}
+      <p class="{% if result.dry_run %}help{% else %}success{% endif %}"><strong>
+        {% if result.dry_run %}The file is OK. Importing it would add {{ result.created }} and update {{ result.updated }} product(s).
+        {% else %}Done: {{ result.created }} added, {{ result.updated }} updated.{% endif %}
+      </strong></p>
+    {% else %}
+      <p class="errornote">Nothing was saved. Fix these rows and try again:</p>
+      <table><thead><tr><th>Row</th><th>Problem</th></tr></thead><tbody>
+        {% for e in result.errors %}<tr><td>{{ e.row }}</td><td>{{ e.error }}</td></tr>{% endfor %}
+      </tbody></table>
+    {% endif %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {{ form.as_p }}
+    <div class="submit-row">
+      <input type="submit" name="check" value="Check file only">
+      <input type="submit" name="import" value="Import" class="default">
+      <a href="{{ back }}">Back to products</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

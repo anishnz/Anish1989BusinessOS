@@ -76,6 +76,9 @@ TENANT_APPS = [
     "apps.audit",
     "apps.rbac",
     "apps.vault",
+    # Business data (only inside each business's schema)
+    "apps.catalog",
+    "apps.customers",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -223,7 +226,13 @@ REST_FRAMEWORK = {
 # ---------------------------------------------------------------------------
 # Email (password reset and notifications)
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+# Sends through the email connection saved on the Integrations page (see apps/vault/mail.py).
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="apps.vault.mail.VaultEmailBackend")
+# Used when no email connection is saved: the console in development, or the EMAIL_HOST settings below.
+EMAIL_FALLBACK_BACKEND = env(
+    "EMAIL_FALLBACK_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend" if DEBUG else "django.core.mail.backends.smtp.EmailBackend",
+)
 EMAIL_HOST = env("EMAIL_HOST", default="localhost")
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
@@ -236,6 +245,9 @@ PASSWORD_RESET_TIMEOUT = 60 * 60  # reset links work for 1 hour
 # Internationalisation
 # ---------------------------------------------------------------------------
 LANGUAGE_CODE = "en-nz"
+# Prices include GST. Phone numbers without a + are read as numbers from this country.
+GST_RATE = env("GST_RATE", default="0.15")
+PHONE_DEFAULT_REGION = env("PHONE_DEFAULT_REGION", default="NZ")
 TIME_ZONE = env("TIME_ZONE")
 USE_I18N = True
 USE_TZ = True

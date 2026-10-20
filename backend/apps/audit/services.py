@@ -91,7 +91,8 @@ def audit(
     if target is not None:
         target_type = target_type or f"{target._meta.app_label}.{target._meta.model_name}"
         target_id = target_id or (str(target.pk) if target.pk is not None else "")
-        target_repr = target_repr or str(target)
+        # Models holding personal data can give a neutral label (e.g. "Customer #12").
+        target_repr = target_repr or getattr(target, "audit_label", None) or str(target)
 
     event = AuditEvent(
         created_at=timezone.now(),

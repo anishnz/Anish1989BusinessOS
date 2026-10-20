@@ -43,6 +43,13 @@ def isolated_cache(settings):
 
 
 @pytest.fixture(autouse=True)
+def vault_master_key(settings):
+    """Every test gets a test-only vault master key (DEBUG is off in tests)."""
+    if not settings.VAULT_MASTER_KEYS:
+        settings.VAULT_MASTER_KEYS = "test:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="
+
+
+@pytest.fixture(autouse=True)
 def reset_schema_to_public():
     yield
     connection.set_schema_to_public()
