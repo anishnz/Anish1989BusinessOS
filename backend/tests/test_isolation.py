@@ -43,10 +43,14 @@ class TestHostRouting:
             assert response.wsgi_request.tenant.schema_name == tenant.schema_name
 
     def test_unknown_host_returns_404(self, db):
-        from django.test import Client
+        from tests.conftest import https_client
 
-        response = Client(HTTP_HOST="unknown.localhost", secure=True).get("/health/")
+        response = https_client("unknown.localhost").get("/health/")
         assert response.status_code == 404
+
+    def test_requests_are_really_https(self, client_for, tenant_a):
+        # Guards the test setup itself: production redirects plain HTTP.
+        assert client_for(tenant_a).get("/health/").wsgi_request.is_secure()
 
 
 @pytest.mark.django_db

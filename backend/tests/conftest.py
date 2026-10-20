@@ -52,11 +52,23 @@ def host_of(tenant) -> str:
     return tenant.get_primary_domain().domain
 
 
+class HttpsClient(Client):
+    """Test client that sends every request over HTTPS, like production."""
+
+    def generic(self, method, path, data="", content_type="application/octet-stream", secure=True, **kwargs):
+        return super().generic(method, path, data, content_type, secure=True, **kwargs)
+
+
+def https_client(host: str) -> Client:
+    """A test client whose requests go to `host` over HTTPS."""
+    return HttpsClient(HTTP_HOST=host)
+
+
 @pytest.fixture
 def client_for():
     """Return a test client that sends requests to a tenant's host name over HTTPS."""
 
     def _make(tenant) -> Client:
-        return Client(HTTP_HOST=host_of(tenant), secure=True)
+        return https_client(host_of(tenant))
 
     return _make
