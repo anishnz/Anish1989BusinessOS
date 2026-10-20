@@ -49,7 +49,7 @@ Open a new chat in the ERP CRM project and type:
   - User guide chapter: docs/user-guide/01-logging-in-and-two-step-verification.md
   - 83 tests pass (development and CI settings)
 - [x] 1.3 Roles, permissions and audit log (done 21 Oct 2026)
-  - Permission catalogue (module + 17 actions), 24 default business roles and 4 platform roles, custom roles
+  - Permission catalogue (module + 17 actions), 25 default business roles (Shop Staff added in 1.6) and 4 platform roles, custom roles
   - Deny-by-default policy checked on the server (user active → business active → module → role); admin pages follow roles
   - Escalation protection: grant only what you have, not your own roles, full access only from full admins
   - Tamper-proof audit log: hash chain + database trigger; secrets redacted; logins, user/role/MFA changes and denied requests recorded; `verify_audit_chain`
@@ -83,7 +83,8 @@ Open a new chat in the ERP CRM project and type:
   - CSV import (check first, all-or-nothing) and export (formula-safe, audited) for products and customers
   - APIs `/api/products/` and `/api/customers/`; admin pages; business-only (hidden on the platform site)
   - User guide chapter: docs/user-guide/05-products-and-customers.md (and Gmail in chapter 4)
-  - 304 tests pass
+  - New default role **Shop Staff** for counter staff (products view, customers view/add/change, orders, tickets)
+  - 306 tests pass
 - [ ] 1.7 Basic orders
 - [ ] 1.8 WhatsApp adapter and unified inbox
 - [ ] 1.9 Simple dashboard

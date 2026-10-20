@@ -64,6 +64,7 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-056 | Phone numbers | Saved in international E.164 format (+64...) using the `phonenumbers` library; NZ is the default country; one customer per phone number and per email in each business | WhatsApp uses E.164; avoids duplicate customers | Decided (21 Oct 2026) |
 | D-057 | Marketing consent | Append-only consent history (who, when, how); consent changes only through one service; CSV and admin changes recorded too | Unsolicited Electronic Messages Act 2007 needs consent before marketing messages | Decided (21 Oct 2026) |
 | D-058 | CSV import/export | All-or-nothing imports with a "check only" step and row-numbered errors; exports guard against spreadsheet formulas and are audited; cost price only for editors | Owners will move existing lists in by spreadsheet; avoids half-imported files and CSV injection | Decided (21 Oct 2026) |
+| D-059 | Shop Staff role | New default role for counter and kitchen staff: products (view, no cost price), customers (view, add, change, record consent), orders (view, create, change), tickets (view, report); no export, import, archive or delete | Agreed by the owner on 21 Oct 2026; least privilege for the people who take orders | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

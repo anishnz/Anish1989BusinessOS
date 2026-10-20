@@ -251,3 +251,44 @@ class TestCustomerAdmin:
         client = verified_staff_client(client_for, tenant_a, "agent@a.test", "support_agent")
         page = client.get("/admin/customers/customer/").content.decode()
         assert "Sita Sharma" in page and "anonymise" not in page
+
+
+@pytest.mark.django_db
+class TestShopStaffRole:
+    """Counter staff: products (view), customers (view/add/change), orders, tickets. Nothing else."""
+
+    def test_role_has_exactly_the_counter_permissions(self, tenant_a, tenant_b):
+        from apps.rbac.models import Role
+
+        expected = {
+            "products.view", "crm.view", "crm.create", "crm.edit",
+            "orders.view", "orders.create", "orders.edit", "tickets.view", "tickets.create",
+        }
+        for schema in ("tenant_a", "tenant_b"):
+            with schema_context(schema):
+                role = Role.objects.get(slug="shop_staff")
+                assert role.name == "Shop Staff" and not role.full_access
+                assert set(role.permissions.values_list("code", flat=True)) == expected
+
+    def test_shop_staff_at_the_counter(self, client_for, tenant_a):
+        from decimal import Decimal
+
+        from tests.test_catalog import make_product
+
+        product = make_product(cost_price=Decimal("15.00"))
+        customer = make_customer()
+        staff = user_client(client_for, tenant_a, "counter@a.test", "shop_staff")
+        # Can see products, but not the cost price, and cannot change them.
+        body = staff.get(f"/api/products/{product.pk}/").json()
+        assert body["name"] == "Goat curry cut" and "cost_price" not in body
+        assert staff.patch(f"/api/products/{product.pk}/", {"price": "1"}, content_type="application/json").status_code == 403
+        # Can look up and add customers, and record consent the customer gives at the counter.
+        assert staff.get("/api/customers/?q=021 123").json()["count"] == 1
+        assert staff.post("/api/customers/", {"name": "Walk-in", "phone": "022 333 4444"}, content_type="application/json").status_code == 201
+        assert staff.post(f"/api/customers/{customer.pk}/consent/", {"given": True}, content_type="application/json").status_code == 200
+        # Cannot export, import, archive or remove customer data.
+        assert staff.get("/api/customers/export/").status_code == 403
+        assert staff.delete(f"/api/customers/{customer.pk}/").status_code == 403
+        assert staff.post(f"/api/customers/{customer.pk}/anonymise/").status_code == 403
+        # Cannot see integrations or the audit log.
+        assert staff.get("/api/integrations/connections/").status_code == 403

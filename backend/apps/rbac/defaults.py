@@ -52,6 +52,11 @@ TENANT_ROLES = {
     "operations_manager": ("Operations Manager", "Orders, events, tickets and workflows.", _all("orders") | _all("events") | _all("tickets") | _only("inventory", "view") | _only("reports", "view")),
     "content_manager": ("Content Manager", "Websites, pages and publishing.", _all("websites") | _only("learning", "view", "create", "edit", "publish") | _only("jobs", "view", "create", "edit", "publish")),
     "ai_manager": ("AI Manager", "AI agents, budgets and approvals.", _all("ai") | _only("reports", "view")),
+    "shop_staff": (
+        "Shop Staff",
+        "Counter and kitchen staff: see products, look up and add customers, take and update orders.",
+        _only("products", "view") | _only("crm", "view", "create", "edit") | _only("orders", "view", "create", "edit") | _only("tickets", "view", "create"),
+    ),
     "support_agent": ("Support Agent", "Handles assigned customer tickets.", _only("tickets", "view", "create", "edit") | _only("orders", "view") | _only("crm", "view")),
     "employee": ("Employee", "Own profile, shifts and assigned tasks.", _only("tickets", "view", "create")),
     "auditor": ("Auditor", "Read-only access to records and the audit log.", VIEW_EVERYTHING | _all("audit")),

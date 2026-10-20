@@ -28,6 +28,7 @@ Every business starts with these roles. You can change their permissions, except
 | HR Manager / HR Staff | Employees, shifts, attendance |
 | Inventory Manager | Stock, suppliers, purchasing |
 | Operations Manager | Orders, events, tickets |
+| Shop Staff | Counter and kitchen staff: see products, look up and add customers, take and update orders, report issues |
 | Content Manager | Websites, courses, job posts |
 | AI Manager | AI agents and approvals |
 | Support Agent | Customer tickets |
