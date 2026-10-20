@@ -385,11 +385,55 @@ Docker: `backend/Dockerfile` has a Node stage (`frontend-build`) that runs `npm 
 
 Phone layout: below 760 px the menu becomes a drawer (☰); below 560 px order line tables (`table.stack`) turn into label/value blocks. Wide tables scroll inside their card, never the whole page.
 
+## Web addresses (task 1.12)
+
+Code: `apps/tenants/domains.py` (rules and changes), `apps/tenants/middleware.py` (routing), `apps/tenants/platform_pages.py` (Super Admin page), `apps/tenants/views.py` (unknown address page). Tests: `tests/test_domains.py`.
+
+| Piece | How it works |
+|---|---|
+| Routing | `TenantRoutingMiddleware` replaces django-tenants' `TenantMainMiddleware` (still first in `MIDDLEWARE`). Host names are matched in lower case, without the port, a trailing dot or `www.` |
+| Main address | `Domain.is_primary`. One per business (the library clears the others when one is saved). Careful: a new `Domain` is primary by default, so `add_subdomain` always sets `is_primary` itself |
+| Redirect | GET/HEAD on any other address of the business gets a **302** to the main address, same scheme, port, path and query. Not for `/api/`, `/webhooks/`, `/health/` and `/static/` (decision D-085) |
+| Unknown address | `DEFAULT_NOT_FOUND_TENANT_VIEW` renders `tenants/unknown_address.html` with status 404, without sessions, cookies or the database |
+| Rules | 3–63 characters, `a-z 0-9 -`, no hyphen at either end, no `xx--` (punycode), not only digits, not reserved (`RESERVED_LABELS`), unique; up to `MAX_SUBDOMAINS` = 5 per business |
+| Who changes | Super Admin page `/platform/businesses/<id>/addresses/`: `tenants.view` to look, `tenants.edit` to change. The Domain admin and the address list on the tenant page are read-only |
+| Audit | `tenant.address_added`, `tenant.main_address_changed`, `tenant.address_removed`: in the platform log and in the business's log (actor type `platform`) |
+| Links | `domains.site_url(host, request, path)`: https in production; on a laptop it keeps http and the port. Invitations use the main address |
+| API | `GET /api/tenant/licence/` now includes `web_addresses: [{address, main}]` |
+
+### Laptop
+
+`PLATFORM_DOMAIN=localhost`. Businesses open at `http://<name>.localhost:8000/`; browsers send `*.localhost` to your own computer. `DJANGO_ALLOWED_HOSTS` already has `.localhost`.
+
+### Real server (when hosting is chosen)
+
+For a platform domain such as `example.co.nz`:
+
+1. **DNS:** an `A` record for `example.co.nz` and a wildcard `A` record for `*.example.co.nz`, both to the server's IP address. One wildcard covers every business subdomain, so new businesses need no DNS change.
+2. **HTTPS:** one certificate for `example.co.nz` and `*.example.co.nz`. Let's Encrypt gives wildcard certificates only with the DNS-01 check, which needs an API key for the DNS provider (for example Cloudflare). Another option is a proxy such as Cloudflare in front of the server.
+   A wildcard covers one level only: `gorkha.example.co.nz` works, `www.gorkha.example.co.nz` does not, so do not give out `www.` business links.
+3. **`.env`:**
+   ```
+   PLATFORM_DOMAIN=example.co.nz
+   DJANGO_ALLOWED_HOSTS=example.co.nz,.example.co.nz
+   DJANGO_CSRF_TRUSTED_ORIGINS=https://example.co.nz,https://*.example.co.nz
+   ```
+4. **Move existing businesses** (for example data from a laptop pilot): see the changes first, then apply them:
+   ```bash
+   python manage.py change_platform_domain --from localhost --to example.co.nz
+   python manage.py change_platform_domain --from localhost --to example.co.nz --apply
+   ```
+   `bootstrap_platform` (run by the container at start) never adds a second platform address: if `PLATFORM_DOMAIN` differs from the saved one, it prints the command above and changes nothing.
+5. After moving, update the WhatsApp webhook URL in Meta for each business (it contains the business address).
+
+Own domains for businesses (`gorkhabutchery.co.nz`) come in Step 2, with a TXT ownership check and automatic certificates.
+
 ## Useful commands
 
 | Task | Command |
 |---|---|
-| Create a business | `python manage.py create_business --name "..." --slug ... --industry ...` |
+| Create a business | `python manage.py create_business --name "..." --slug ... --industry ... [--subdomain gorkha]` |
+| Move the platform and every business address to a new domain | `python manage.py change_platform_domain --from localhost --to example.co.nz [--apply]` |
 | Run a command in one business's schema | `python manage.py tenant_command <command> --schema=<slug>` |
 | Migrate all schemas | `python manage.py migrate_schemas` |
 | Create missing default roles | `python manage.py sync_roles` |

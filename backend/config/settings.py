@@ -89,10 +89,12 @@ INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_
 
 TENANT_MODEL = "tenants.Tenant"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
+# Shown (with status 404) when no business uses the requested address.
+DEFAULT_NOT_FOUND_TENANT_VIEW = "apps.tenants.views.unknown_address"
 PUBLIC_SCHEMA_NAME = "public"
 
 MIDDLEWARE = [
-    "django_tenants.middleware.main.TenantMainMiddleware",  # must be first
+    "apps.tenants.middleware.TenantRoutingMiddleware",  # must be first: finds the business from the address
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

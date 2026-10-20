@@ -42,6 +42,10 @@ class TenantModuleInline(admin.TabularInline):
 
 class TenantCreateForm(forms.ModelForm):
     schema_name = forms.CharField(label="Business id (slug)", help_text="Lowercase letters, numbers and underscores, e.g. gorkhabutchery.")
+    subdomain = forms.CharField(
+        required=False, max_length=63, label="Web address name",
+        help_text="Optional. Leave empty to use the business id with hyphens.",
+    )
     admin_email = forms.EmailField(required=False, label="System Admin email", help_text="Optional. They get an email to set their password.")
 
     class Meta:
@@ -55,6 +59,33 @@ class TenantCreateForm(forms.ModelForm):
         if Tenant.objects.filter(schema_name=slug).exists():
             raise ValidationError(f"A business with the id '{slug}' already exists.")
         return slug
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.tenants.domains import platform_domain
+
+        self.fields["subdomain"].help_text = (
+            f"Optional. The business opens at this name followed by .{platform_domain()} "
+            f"(for example gorkha.{platform_domain()}). Leave empty to use the business id with hyphens."
+        )
+
+    def clean_subdomain(self):
+        from apps.tenants.domains import validate_label
+
+        label = self.cleaned_data.get("subdomain", "").strip()
+        return validate_label(label) if label else ""
+
+    def clean(self):
+        cleaned = super().clean()
+        slug = cleaned.get("schema_name")
+        if slug and not cleaned.get("subdomain") and "subdomain" not in self.errors:
+            from apps.tenants.domains import label_from_slug, validate_label
+
+            try:
+                validate_label(label_from_slug(slug))
+            except ValidationError as exc:
+                self.add_error("subdomain", f"{' '.join(exc.messages)} Type a web address name.")
+        return cleaned
 
     def clean_industry(self):
         industry = self.cleaned_data["industry"]
@@ -87,7 +118,7 @@ class TenantAdmin(BaseTenantAdmin):
 
     def get_fields(self, request, obj=None):
         if obj is None:
-            return ["name", "schema_name", "industry", "admin_email"]
+            return ["name", "schema_name", "subdomain", "industry", "admin_email"]
         return super().get_fields(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
@@ -101,7 +132,10 @@ class TenantAdmin(BaseTenantAdmin):
             return super().save_model(request, obj, form, change)
         from apps.tenants.services import create_tenant
 
-        tenant = create_tenant(form.cleaned_data["name"], form.cleaned_data["schema_name"], form.cleaned_data["industry"])
+        tenant = create_tenant(
+            form.cleaned_data["name"], form.cleaned_data["schema_name"], form.cleaned_data["industry"],
+            subdomain=form.cleaned_data.get("subdomain", ""),
+        )
         obj.pk, obj.id = tenant.pk, tenant.pk
         obj.schema_name = tenant.schema_name
         email = form.cleaned_data.get("admin_email")
@@ -126,6 +160,26 @@ class TenantAdmin(BaseTenantAdmin):
     @admin.display(description="Access")
     def access(self, obj):
         return services.access_state(obj)
+
+    def get_list_display(self, request):
+        # A column built per request, so its links keep this site's http/https and port (thread-safe).
+        from django.utils.html import format_html
+
+        from apps.tenants.domains import site_url
+
+        @admin.display(description="Main web address")
+        def web_address(obj):
+            host = next((d.domain for d in obj.domains.all() if d.is_primary), "")
+            if not host:
+                return "–"
+            return format_html('<a href="{}" target="_blank" rel="noopener">{}</a>', site_url(host, request), host)
+
+        columns = list(super().get_list_display(request))
+        columns.insert(2, web_address)
+        return columns
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("domains")
 
     @admin.display(description="Trial ends")
     def trial_ends(self, obj):
@@ -178,6 +232,7 @@ class TenantAdmin(BaseTenantAdmin):
                 (reverse("admin:tenants_tenant_invite", args=[object_id]), "Invite System Admin"),
                 (reverse("admin:tenants_tenant_suspend", args=[object_id]), "Suspend business"),
                 (reverse("platform_people_list", args=[tenant.schema_name]), "Users and roles"),
+                (reverse("platform_addresses", args=[tenant.schema_name]), "Web addresses"),
             ]
         return super().change_view(request, object_id, form_url, extra_context)
 

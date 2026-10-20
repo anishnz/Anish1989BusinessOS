@@ -30,9 +30,25 @@ class PublicSchemaOnlyAdmin(admin.ModelAdmin):
         return False
 
 
-class DomainInline(admin.TabularInline):
+class ReadOnlyDomainMixin:
+    """Addresses are changed on the "Web addresses" page, which checks and audits every change."""
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class DomainInline(ReadOnlyDomainMixin, admin.TabularInline):
     model = Domain
     extra = 0
+    fields = ("domain", "is_primary", "created_at")
+    readonly_fields = fields
+    verbose_name_plural = "Web addresses (change them with the Web addresses button above)"
 
 
 @admin.register(Tenant)
@@ -49,9 +65,11 @@ class TenantAdmin(TenantAdminMixin, PublicSchemaOnlyAdmin):
 
 
 @admin.register(Domain)
-class DomainAdmin(PublicSchemaOnlyAdmin):
+class DomainAdmin(ReadOnlyDomainMixin, PublicSchemaOnlyAdmin):
     list_display = ("domain", "tenant", "is_primary", "created_at")
+    list_filter = ("is_primary",)
     search_fields = ("domain", "tenant__name")
+    readonly_fields = ("domain", "tenant", "is_primary", "created_at")
 
 
 admin.site.site_header = "Anish1989 Business OS"

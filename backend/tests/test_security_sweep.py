@@ -88,6 +88,7 @@ def test_route_lists_are_complete():
                      "admin/catalog/product/import/", "settings/integrations/", "api/reports/dashboard/"):
         assert expected in BUSINESS_ROUTES, expected
     assert "platform/people/<slug:schema>/<int:user_id>/" in PLATFORM_ROUTES
+    assert "platform/businesses/<slug:schema>/addresses/" in PLATFORM_ROUTES
     assert "api/products/" not in PLATFORM_ROUTES and "dashboard/" not in PLATFORM_ROUTES
     # Regex routes only exist inside Django's admin, which wraps every view in its login check.
     for urlconf in ("config.urls", "config.urls_public"):

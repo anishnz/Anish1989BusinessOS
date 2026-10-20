@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.urls import path
 
 from apps.accounts import platform_pages
+from apps.tenants import platform_pages as tenant_pages
 
 from .urls_shared import shared_urlpatterns
 
@@ -11,6 +12,7 @@ platform_urlpatterns = [
     path("platform/people/", admin.site.admin_view(platform_pages.people_index), name="platform_people"),
     path("platform/people/<slug:schema>/", admin.site.admin_view(platform_pages.people_list), name="platform_people_list"),
     path("platform/people/<slug:schema>/<int:user_id>/", admin.site.admin_view(platform_pages.person_detail), name="platform_person"),
+    path("platform/businesses/<slug:schema>/addresses/", admin.site.admin_view(tenant_pages.addresses), name="platform_addresses"),
 ]
 
 urlpatterns = [

@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.rbac.catalogue import TENANT_MODULES
+from apps.tenants.domains import addresses
 from apps.rbac.permissions import ModulePermission
 
 from . import services
@@ -49,6 +50,9 @@ class LicenceView(NotOnPlatform, APIView):
                 "ends_at": licence.ends_at,
                 "grace_ends_at": licence.grace_ends_at(),
                 "usage": services.usage(tenant),
+                "web_addresses": [
+                    {"address": d.domain, "main": d.is_primary} for d in addresses(tenant)
+                ],
             }
         )
 

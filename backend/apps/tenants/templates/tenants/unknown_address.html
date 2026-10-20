@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>No business at this address</title>
+  <style>
+    :root { --bg: #f6f7f9; --card: #fff; --text: #222; --muted: #555; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #16181c; --card: #22252b; --text: #eceef1; --muted: #a9afb8; } }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0 16px; }
+    main { max-width: 520px; margin: 12vh auto; background: var(--card); padding: 32px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    h1 { font-size: 1.4rem; margin-top: 0; }
+    p { line-height: 1.5; }
+    code { color: var(--muted); overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>No business at this address</h1>
+    <p>There is no business at <code>{{ address }}</code>.</p>
+    <p>Check the spelling of the address. If a business changed its web address, ask the business for the new one.</p>
+  </main>
+</body>
+</html>

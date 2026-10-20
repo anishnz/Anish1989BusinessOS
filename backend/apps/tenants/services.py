@@ -26,7 +26,9 @@ def validate_slug(slug: str) -> str:
 
 def subdomain_for(slug: str) -> str:
     """Subdomains use hyphens, schema names use underscores."""
-    return f"{slug.replace('_', '-')}.{settings.PLATFORM_DOMAIN}"
+    from .domains import label_from_slug, subdomain_host
+
+    return subdomain_host(label_from_slug(slug))
 
 
 @transaction.atomic
@@ -45,19 +47,26 @@ def create_public_tenant(domain: str | None = None) -> Tenant:
     return tenant
 
 
-def create_tenant(name: str, slug: str, industry: str = Tenant.Industry.OTHER) -> Tenant:
-    """Create a business tenant, its schema, and its platform subdomain."""
+def create_tenant(name: str, slug: str, industry: str = Tenant.Industry.OTHER, *, subdomain: str = "") -> Tenant:
+    """
+    Create a business tenant, its schema, and its platform subdomain.
+    `subdomain` is the web address name (default: the slug with hyphens).
+    """
+    from .domains import label_from_slug, subdomain_host, validate_label
+
     slug = validate_slug(slug)
     if industry not in Tenant.Industry.values or industry == Tenant.Industry.PLATFORM:
         raise ValidationError(f"Unknown industry '{industry}'.")
     if Tenant.objects.filter(schema_name=slug).exists():
         raise ValidationError(f"A tenant with slug '{slug}' already exists.")
+    # Check the address before the schema is created (creating a schema is slow and hard to undo).
+    label = validate_label(subdomain or label_from_slug(slug))
 
     from apps.licensing.services import create_licence
 
     # Saving the tenant creates the schema and runs tenant migrations (which also create the default roles).
     tenant = Tenant(schema_name=slug, name=name.strip(), industry=industry)
     tenant.save()
-    Domain.objects.create(domain=subdomain_for(slug), tenant=tenant, is_primary=True)
+    Domain.objects.create(domain=subdomain_host(label), tenant=tenant, is_primary=True)
     create_licence(tenant)  # 30-day trial with the industry's modules
     return tenant

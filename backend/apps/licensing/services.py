@@ -262,11 +262,9 @@ def invite_system_admin(tenant, email: str, *, actor=None, request=None) -> None
         UserRole.objects.get_or_create(user=user, role=Role.objects.get(slug="system_admin"))
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-    protocol = "https" if (request is None or request.is_secure() or not settings.DEBUG) else "http"
-    port = ""
-    if request is not None and ":" in request.get_host():
-        port = ":" + request.get_host().split(":", 1)[1]
-    link = f"{protocol}://{domain}{port}/account/reset/{uid}/{token}/"
+    from apps.tenants.domains import site_url
+
+    link = site_url(domain, request, f"/account/reset/{uid}/{token}/")
     context = {"business": tenant.name, "link": link, "email": email, "hours": settings.PASSWORD_RESET_TIMEOUT // 3600}
     try:
         send_mail(

@@ -9,7 +9,8 @@
 1. Open the platform admin (for example `https://<platform-domain>/admin/`) and go to **Tenants → Add tenant**.
 2. Enter:
    - **Name**, for example *Gorkha Butchery*
-   - **Business id**, for example `gorkhabutchery` (lowercase letters, numbers and underscores; it becomes the web address `gorkhabutchery.<platform-domain>`)
+   - **Business id**, for example `gorkhabutchery` (lowercase letters, numbers and underscores; it never changes)
+   - **Web address name** (optional), for example `gorkha`, so the business opens at `gorkha.<platform-domain>`. Leave it empty to use the business id. See chapter 10
    - **Industry**, which chooses the starting modules
    - **System Admin email** (optional), which sends them an invitation
 3. Click **Save**.

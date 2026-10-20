@@ -8,7 +8,7 @@ This document covers domains, website content editing, the ticket system, the he
 
 | Feature | How it works | Phase |
 |---|---|---|
-| Free subdomain | Every tenant gets a subdomain, for example `gorkhabutchery.<platform-domain>` | Step 1 |
+| Free subdomain | Every tenant gets a subdomain, for example `gorkhabutchery.<platform-domain>`; up to 5 addresses with one main address; the others redirect to it | Step 1 (done, task 1.12) |
 | Custom domain | Tenant links its own domain (for example `gorkhabutchery.co.nz`) | Step 2 |
 | DNS instructions | The system shows the exact CNAME or A record to add at the tenant's domain provider | Step 2 |
 | Ownership check | The tenant adds a TXT record; the system verifies it before going live | Step 2 |
@@ -20,7 +20,7 @@ This document covers domains, website content editing, the ticket system, the he
 
 Rules:
 - A domain can link to only one tenant.
-- Only roles with the "Manage websites" permission can add or change domains.
+- Only roles with the "Manage websites" permission can add or change domains (Step 2). In Step 1 only the Super Admin changes subdomains.
 - Domain changes are written to the audit log.
 
 ## 2. Website content editing (with AI)

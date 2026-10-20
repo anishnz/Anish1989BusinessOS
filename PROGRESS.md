@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.11 are done. Next: **1.12 Tenant subdomains**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.12 are done. Next: **1.13 "Check system" health check button**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -132,7 +132,16 @@ Open a new chat in the ERP CRM project and type:
   - Built by Vite; served by Django (no separate server); built inside the Docker image; CI job for type check, tests and build
   - Fixed: phone layout (menu drawer, no sideways scrolling, order lines as blocks); no 403 error in the browser before login
   - User guide chapter: docs/user-guide/09-staff-app.md
-- [ ] 1.12 Tenant subdomains
+- [x] 1.12 Tenant subdomains (done 21 Oct 2026)
+  - Each business: up to 5 web addresses on the platform domain, one main address; the others send visitors to it (302), while the API, webhooks and health checks work on every address
+  - Web address name can be chosen when creating a business (`--subdomain` in `create_business`)
+  - Super Admin page "Web addresses" (add, make main, remove), with rules (reserved names, format, unique) and both audit logs; Domain admin is now read-only
+  - Friendly "No business at this address" page; host names matched without case
+  - `change_platform_domain` moves the platform and every business address (laptop to real domain); `bootstrap_platform` no longer adds a second platform address
+  - Licence API lists the business's addresses; invitation links use the main address
+  - Server DNS and HTTPS steps documented (wildcard record and certificate; depends on the hosting choice)
+  - User guide chapter: docs/user-guide/10-web-addresses.md
+  - 509 tests pass
 - [ ] 1.13 "Check system" health check button
 - [ ] 1.14 Backups every 6 hours to Google Drive (encrypted) and restore test
 - [ ] 1.15 Basic ticket system

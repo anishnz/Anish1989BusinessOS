@@ -1,0 +1,48 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 860px;">
+  <p><a href="{{ back }}">← {{ tenant.name }}</a></p>
+  <p>The <strong>main address</strong> is the one people use and the one in emails. Visitors who open another address of this business
+     are sent to the main address. Webhooks (for example WhatsApp) still work on every address, so services do not break when the main address changes.</p>
+
+  <table style="width: 100%;">
+    <thead><tr><th>Address</th><th>Use</th><th>Added</th>{% if can_change %}<th>Change</th>{% endif %}</tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.domain.domain }}</a></td>
+        <td>{% if r.domain.is_primary %}<strong>Main address</strong>{% else %}Sends visitors to the main address{% endif %}</td>
+        <td>{{ r.domain.created_at|date:"j M Y" }}</td>
+        {% if can_change %}<td>
+          {% if not r.domain.is_primary %}
+            <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="main"><input type="hidden" name="domain" value="{{ r.domain.pk }}">
+              <input type="submit" value="Make main address" onclick="return confirm('Make {{ r.domain.domain|escapejs }} the main address? People who are signed in must sign in again on the new address.');"></form>
+            <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="domain" value="{{ r.domain.pk }}">
+              <input type="submit" value="Remove" style="background:#ba2121" onclick="return confirm('Remove {{ r.domain.domain|escapejs }}? Links, QR codes and webhooks that use it will stop working. Update the WhatsApp webhook first if it uses this address.');"></form>
+          {% else %}–{% endif %}
+        </td>{% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  {% if can_change %}
+    <h2 style="margin-top: 24px;">Add a web address</h2>
+    {% if rows|length >= max_addresses %}
+      <p>This business has {{ max_addresses }} addresses, the most allowed. Remove one to add another.</p>
+    {% else %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="add">
+        {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+        {{ form.label.errors }}
+        <p><label for="id_label">{{ form.label.label }}:</label>
+           <input type="text" name="label" id="id_label" maxlength="63" required value="{{ form.label.value|default:'' }}" autocomplete="off" spellcheck="false">
+           <span>{{ suffix }}</span></p>
+        <p class="help">{{ form.label.help_text }}</p>
+        <p><label><input type="checkbox" name="make_main" {% if form.make_main.value %}checked{% endif %}> {{ form.make_main.label }}</label></p>
+        <div class="submit-row"><input type="submit" value="Add address" class="default"></div>
+      </form>
+    {% endif %}
+    <p class="help">Own domains (for example gorkhabutchery.co.nz) come in a later step, with a DNS check and automatic HTTPS.</p>
+  {% endif %}
+</div>
+{% endblock %}
