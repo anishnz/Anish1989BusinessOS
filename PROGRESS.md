@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Task 1.1 is done. Next: **1.2 Login, MFA for admins, user model**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 and 1.2 are done. Next: **1.3 Roles, permissions and audit log**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -41,7 +41,13 @@ Open a new chat in the ERP CRM project and type:
   - One-command start: `start.cmd` / `start.ps1` (Windows) and `start.sh` (macOS/Linux)
   - Verified on Anish's Windows laptop (21 Oct 2026): image pulled from ghcr.io, all 5 containers started, platform healthy
   - Follow-up for later tasks: tenant-aware Celery tasks (run each job in the right schema) when the first tenant job is added
-- [ ] 1.2 Login, MFA for admins, user model
+- [x] 1.2 Login, MFA for admins, user model (done 21 Oct 2026)
+  - Email login per business, Argon2 hashing, lockout (5 tries / 15 min, per email per business)
+  - Authenticator-app MFA required for staff/admins, 10 backup codes, setup and verify pages, JSON auth API
+  - MFA cannot be bypassed with a password alone (tested); authenticator secrets hidden from admin; "Reset two-step verification" admin action
+  - Login history (read-only), password reset by email (link to the business's own site, 1 hour)
+  - User guide chapter: docs/user-guide/01-logging-in-and-two-step-verification.md
+  - 83 tests pass (development and CI settings)
 - [ ] 1.3 Roles, permissions and audit log
 - [ ] 1.4 Tenants, licences and module on/off
 - [ ] 1.5 Settings and secret vault (encrypted keys, test connection)

@@ -1,11 +1,12 @@
 """
-User model.
+User model and login history.
 
 This app is in both SHARED_APPS and TENANT_APPS, so there is one users table
 per schema: platform admins live in the public schema, and each business's
 staff live in that business's schema. A user in one business cannot log in
 to another business's site.
 """
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
@@ -34,6 +35,10 @@ class UserManager(BaseUserManager):
             raise ValueError("Superuser must have is_staff=True and is_superuser=True.")
         return self._create_user(email, password, **extra_fields)
 
+    def get_by_natural_key(self, username):
+        # Email login is case-insensitive.
+        return self.get(**{f"{self.model.USERNAME_FIELD}__iexact": username})
+
 
 class User(AbstractUser):
     username = None
@@ -50,3 +55,45 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.email
+
+    def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.strip().lower()
+        super().save(*args, **kwargs)
+
+    @property
+    def mfa_required(self) -> bool:
+        """Staff and admins must use MFA."""
+        return bool(self.is_staff and getattr(settings, "MFA_REQUIRED_FOR_STAFF", True))
+
+
+class LoginEvent(models.Model):
+    """
+    Login history: one row per login attempt, logout, MFA check or password reset.
+    Never stores passwords, codes or tokens.
+    """
+
+    class Event(models.TextChoices):
+        LOGIN_SUCCESS = "login_success", "Login success"
+        LOGIN_FAILED = "login_failed", "Login failed"
+        LOCKED_OUT = "locked_out", "Locked out"
+        LOGOUT = "logout", "Logout"
+        MFA_SUCCESS = "mfa_success", "MFA success"
+        MFA_FAILED = "mfa_failed", "MFA failed"
+        MFA_ENABLED = "mfa_enabled", "MFA enabled"
+        BACKUP_CODES_CREATED = "backup_codes_created", "Backup codes created"
+        PASSWORD_RESET_REQUESTED = "password_reset_requested", "Password reset requested"
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="login_events")
+    email = models.EmailField(blank=True, help_text="Email that was entered (kept even if no such user exists).")
+    event = models.CharField(max_length=40, choices=Event.choices)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["email", "-created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.created_at:%Y-%m-%d %H:%M} {self.event} {self.email}"

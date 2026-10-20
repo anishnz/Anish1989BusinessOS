@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 560px;">
+  <p>Admins must use an authenticator app to sign in. This protects your business if your password is ever stolen.</p>
+  <ol>
+    <li>Install an authenticator app on your phone, for example <strong>Microsoft Authenticator</strong> or <strong>Google Authenticator</strong>.</li>
+    <li>In the app, choose <strong>Add account</strong> and scan this QR code.</li>
+    <li>Type the 6-digit code that the app shows, then click <strong>Turn on</strong>.</li>
+  </ol>
+  <div style="margin: 16px 0; background: #fff; display: inline-block; padding: 8px;">{{ setup.qr_svg|safe }}</div>
+  <p>Can't scan? Enter this key in the app instead:<br><code style="font-size: 1.1em; letter-spacing: 1px;">{{ setup.secret }}</code></p>
+  {% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <label for="id_token">6-digit code</label><br>
+    <input id="id_token" name="token" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required autofocus style="font-size: 1.3em; width: 10em;">
+    <div class="submit-row" style="margin-top: 12px;"><input type="submit" value="Turn on"></div>
+  </form>
+  <p><a href="{% url 'admin:logout' %}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Log out</a></p>
+  <form id="logout-form" method="post" action="{% url 'admin:logout' %}">{% csrf_token %}</form>
+</div>
+{% endblock %}

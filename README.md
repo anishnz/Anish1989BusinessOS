@@ -7,13 +7,13 @@ Anish1989 Business OS is a multi-tenant SaaS platform for small and medium busin
 | Item | Value |
 |---|---|
 | Owner | Anish Shrestha |
-| Stage | Step 1 (shared core) in progress: task 1.1 done |
+| Stage | Step 1 (shared core) in progress: tasks 1.1 and 1.2 done |
 | Last updated | 21 October 2026 |
 | First pilot target | Gorkha Butchery, Auckland |
 
 ## Current stage
 
-**Step 1 (shared core) is in progress.** Task 1.1 (Django, PostgreSQL schema per tenant, Docker, tests) is done. See [PROGRESS.md](PROGRESS.md) for the live task list and how to continue in a new session.
+**Step 1 (shared core) is in progress.** Task 1.1 (Django, PostgreSQL schema per tenant, Docker, tests) and task 1.2 (secure login and two-step verification) are done. See [PROGRESS.md](PROGRESS.md) for the live task list and how to continue in a new session.
 
 ## Quick start
 
@@ -62,6 +62,7 @@ Pilot businesses (all agreed to pay after the pilot): Gorkha Butchery, a restaur
 | 11 | [Platform operations](docs/11-platform-operations.md) | Domains, website content with AI, tickets, health checks, backups |
 | 12 | [User guide](docs/12-user-guide.md) | Book-style in-app guide with screenshots for every dashboard |
 | 13 | [Developer setup](docs/13-developer-setup.md) | How to run the project and its tests |
+| – | [User guide](docs/user-guide/) | Chapters for users, written as features are built |
 
 ### Reference specifications
 

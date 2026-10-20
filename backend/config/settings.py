@@ -52,6 +52,9 @@ SHARED_APPS = [
     "django.contrib.admin",
     "django.contrib.staticfiles",
     "rest_framework",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     "apps.accounts",
     "apps.core",
 ]
@@ -62,6 +65,9 @@ TENANT_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.admin",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     "apps.accounts",
 ]
 
@@ -79,6 +85,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
+    "apps.accounts.middleware.StaffMFAMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -119,6 +127,33 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ---------------------------------------------------------------------------
 AUTH_USER_MODEL = "accounts.User"
 
+# Email login with lockout after repeated failures (see apps/accounts/backends.py).
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.LockoutEmailBackend"]
+LOGIN_LOCKOUT_ATTEMPTS = env.int("LOGIN_LOCKOUT_ATTEMPTS", default=5)
+LOGIN_LOCKOUT_SECONDS = env.int("LOGIN_LOCKOUT_SECONDS", default=15 * 60)
+
+# Argon2 first. Older hashes still work and are upgraded on the next login.
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
+# MFA (authenticator app). Staff and admins must use it.
+MFA_REQUIRED_FOR_STAFF = env.bool("MFA_REQUIRED_FOR_STAFF", default=True)
+MFA_BACKUP_CODE_COUNT = 10
+
+
+def OTP_TOTP_ISSUER(device):  # noqa: N802 - Django settings must be uppercase
+    """Name shown in the authenticator app, e.g. 'Anish1989 Business OS - Gorkha Butchery'."""
+    from apps.accounts.security import totp_issuer
+
+    return totp_issuer(device)
+
+LOGIN_URL = "admin:login"
+SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=8 * 60 * 60)  # 8 hours
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 12}},
@@ -156,7 +191,24 @@ REST_FRAMEWORK = {
     ],
     # Deny by default; each view opens access explicitly.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_THROTTLE_RATES": {
+        "login": env("THROTTLE_LOGIN", default="20/min"),
+        "password_reset": env("THROTTLE_PASSWORD_RESET", default="5/hour"),
+        "mfa": env("THROTTLE_MFA", default="20/min"),
+    },
 }
+
+# ---------------------------------------------------------------------------
+# Email (password reset and notifications)
+# ---------------------------------------------------------------------------
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Anish1989 Business OS <no-reply@localhost>")
+PASSWORD_RESET_TIMEOUT = 60 * 60  # reset links work for 1 hour
 
 # ---------------------------------------------------------------------------
 # Internationalisation

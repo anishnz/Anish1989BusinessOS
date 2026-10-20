@@ -1,0 +1,10 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 520px;">
+  <p><strong>Save these backup codes now.</strong> Each code works once. Use one if you lose your phone. They will not be shown again.</p>
+  <pre style="font-size: 1.2em; line-height: 1.8; padding: 12px; border: 1px solid #ccc;">{% for code in codes %}{{ code }}
+{% endfor %}</pre>
+  <p>Keep them somewhere safe, for example in a password manager or printed in a locked drawer.</p>
+  <p><a class="button" href="{{ next }}">I have saved my codes – continue</a></p>
+</div>
+{% endblock %}

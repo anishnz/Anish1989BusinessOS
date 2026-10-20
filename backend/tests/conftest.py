@@ -8,6 +8,9 @@ is rolled back, so data does not leak between tests.
 import pytest
 from django.db import connection
 from django.test import Client
+from django_tenants.utils import schema_context
+
+PASSWORD = "a-long-test-password-123"
 
 
 @pytest.fixture(scope="session")
@@ -19,6 +22,24 @@ def django_db_setup(django_db_setup, django_db_blocker):
         create_tenant("Tenant A Butchery", "tenant_a", "butchery")
         create_tenant("Tenant B Catering", "tenant_b", "catering")
     yield
+
+
+@pytest.fixture(autouse=True)
+def isolated_cache(settings):
+    """Use an in-memory cache per test (lockout counters, throttles), with tenant-prefixed keys."""
+    settings.CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "tests",
+            "KEY_FUNCTION": "django_tenants.cache.make_key",
+            "REVERSE_KEY_FUNCTION": "django_tenants.cache.reverse_key",
+        }
+    }
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture(autouse=True)
@@ -70,5 +91,52 @@ def client_for():
 
     def _make(tenant) -> Client:
         return https_client(host_of(tenant))
+
+    return _make
+
+
+# ---------------------------------------------------------------------------
+# Users and MFA helpers
+# ---------------------------------------------------------------------------
+def make_user(schema: str, email: str, *, staff=False, superuser=False, password=PASSWORD, **extra):
+    from apps.accounts.models import User
+
+    with schema_context(schema):
+        if superuser:
+            return User.objects.create_superuser(email, password, **extra)
+        return User.objects.create_user(email, password, is_staff=staff, **extra)
+
+
+def add_totp_device(schema: str, user):
+    from django_otp.plugins.otp_totp.models import TOTPDevice
+
+    with schema_context(schema):
+        return TOTPDevice.objects.create(user=user, name="Authenticator app", confirmed=True)
+
+
+def current_code(device) -> str:
+    """The code an authenticator app would show right now."""
+    from django_otp.oath import totp
+
+    return str(totp(device.bin_key, device.step, device.t0, device.digits, device.drift)).zfill(device.digits)
+
+
+def admin_login(client, email, password=PASSWORD):
+    return client.post("/admin/login/?next=/admin/", {"username": email, "password": password})
+
+
+@pytest.fixture
+def verified_admin_client(client_for):
+    """Log a new superuser in to `tenant`'s admin, with MFA verified. Returns the client."""
+
+    def _make(tenant, email="boss@site.test"):
+        user = make_user(tenant.schema_name, email, superuser=True)
+        device = add_totp_device(tenant.schema_name, user)
+        client = client_for(tenant)
+        admin_login(client, email)
+        response = client.post("/account/mfa/verify/", {"token": current_code(device), "next": "/admin/"})
+        assert response.status_code == 302 and response["Location"] == "/admin/", "MFA verification failed"
+        assert client.get("/admin/").status_code == 200
+        return client
 
     return _make

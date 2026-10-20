@@ -5,6 +5,11 @@ djangorestframework>=3.16,<4.0
 django-environ>=0.12,<1.0
 psycopg2-binary>=2.9,<3.0
 
+# Security
+argon2-cffi>=23.1           # Argon2 password hashing
+django-otp>=1.5,<2.0        # MFA: authenticator app (TOTP) and backup codes
+segno>=1.6,<2.0             # QR codes for MFA setup (pure Python)
+
 # Background jobs and cache
 celery>=5.4,<6.0
 redis>=5.0,<9.0

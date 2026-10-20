@@ -43,6 +43,7 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-035 | Tenant deletion | Schemas are never dropped automatically, and tenants cannot be deleted from the admin | Deletion must go through an audited offboarding process with a data export | Decided (21 Oct 2026) |
 | D-036 | Subdomain format | `<slug>.<platform-domain>`; slug uses lowercase letters, numbers and underscores (underscores become hyphens in the subdomain) | The slug is also the PostgreSQL schema name | Decided (21 Oct 2026) |
 | D-037 | Container images | App image built by GitHub Actions and published to GitHub Container Registry (ghcr.io), for amd64 and arm64; Python packages locked with hashes; PostgreSQL 16 and Redis 7.4 images pinned | Every laptop runs exactly the same versions, with no Docker Hub login needed | Decided (21 Oct 2026) |
+| D-038 | Login security | Email login per business; Argon2 password hashing; lockout after 5 failures per email per business for 15 minutes; authenticator-app MFA (TOTP) with 10 single-use backup codes, required for staff and admins; read-only login history; password reset links expire after 1 hour | NFR-003 (MFA for privileged accounts), NFR-004 (modern password hashing); protects businesses if a password is stolen | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

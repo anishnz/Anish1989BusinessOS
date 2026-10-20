@@ -113,6 +113,34 @@ The tests need PostgreSQL and Redis (Docker: `docker compose up -d db redis`). T
 
 GitHub Actions runs the same tests and a Docker build on every push to `main`.
 
+## Login and MFA (task 1.2)
+
+- Email + password login, case-insensitive, per business (users are stored in each schema).
+- Passwords are hashed with Argon2 (older hashes upgrade automatically on next login).
+- Lockout: 5 failed attempts per email, per business, locks that email for 15 minutes (`LOGIN_LOCKOUT_ATTEMPTS`, `LOGIN_LOCKOUT_SECONDS`).
+- MFA: staff and admins must use an authenticator app (TOTP) with 10 single-use backup codes. Anyone else who turns MFA on must use it too. Turn the staff requirement off only for local testing with `MFA_REQUIRED_FOR_STAFF=False`.
+- A user who already has MFA must verify before adding a new authenticator, so a stolen password alone is not enough.
+- Login history: `LoginEvent` (read-only in the admin). Passwords and codes are never stored.
+- Password reset by email; links use the business's own address and expire after 1 hour. Set `EMAIL_BACKEND`, `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` and `DEFAULT_FROM_EMAIL` for real email. The default prints emails to the console (`docker compose logs web`).
+
+### Auth API (for the React frontend)
+
+Session cookie + CSRF. Call `GET /api/auth/csrf/` first, then send the `X-CSRFToken` header on POST requests.
+
+| Method | Path | Body | Notes |
+|---|---|---|---|
+| GET | `/api/auth/csrf/` | – | Sets the `csrftoken` cookie |
+| POST | `/api/auth/login/` | `email`, `password` | 400 wrong details, 429 locked out. Response says if MFA is required or needs setup |
+| POST | `/api/auth/mfa/verify/` | `token` | 6-digit code or a backup code |
+| POST | `/api/auth/mfa/totp/setup/` | – | Returns `otpauth_url`, `secret`, `qr_svg` |
+| POST | `/api/auth/mfa/totp/confirm/` | `token` | Turns MFA on and returns 10 backup codes |
+| POST | `/api/auth/mfa/backup-codes/` | – | New backup codes (MFA-verified users only) |
+| GET | `/api/auth/me/` | – | Current user and MFA state |
+| POST | `/api/auth/logout/` | – | 204 |
+| POST | `/api/auth/password/reset/` | `email` | Always the same answer |
+
+Until a staff user has passed MFA, every other `/api/...` path returns `403` with `"code": "mfa_required"`.
+
 ## Useful commands
 
 | Task | Command |

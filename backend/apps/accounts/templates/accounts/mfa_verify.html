@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 480px;">
+  <p>Open your authenticator app and enter the 6-digit code for this account. Lost your phone? Enter one of your backup codes instead.</p>
+  {% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <label for="id_token">Code</label><br>
+    <input id="id_token" name="token" inputmode="numeric" autocomplete="one-time-code" maxlength="20" required autofocus style="font-size: 1.3em; width: 10em;">
+    <div class="submit-row" style="margin-top: 12px;"><input type="submit" value="Verify"></div>
+  </form>
+  <p><a href="{% url 'admin:logout' %}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Log out</a></p>
+  <form id="logout-form" method="post" action="{% url 'admin:logout' %}">{% csrf_token %}</form>
+</div>
+{% endblock %}
