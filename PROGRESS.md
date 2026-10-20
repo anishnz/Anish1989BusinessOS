@@ -35,9 +35,9 @@ Open a new chat in the ERP CRM project and type:
   - Apps: `tenants` (Tenant, Domain), `accounts` (email-login User, one table per schema), `core` (health endpoint)
   - Commands: `bootstrap_platform`, `create_business`
   - Docker: Dockerfile, docker-entrypoint.sh, docker-compose.yml (db, redis, web, worker, scheduler)
-  - 39 tests pass against real PostgreSQL 16 and Redis (isolation, routing, login, admin access, health)
-  - GitHub Actions CI: tests + Docker image build
-  - Not yet verified: building the Docker image (Docker Hub was blocked in the build workspace; CI builds it on GitHub)
+  - 40 tests pass against real PostgreSQL 16 and Redis (isolation, routing, login, admin access, health), with both development and production settings
+  - GitHub Actions CI is green: tests + Docker image build
+  - Not yet tried: running the full `docker compose up` stack on your laptop (please try it with docs/13-developer-setup.md)
   - Follow-up for later tasks: tenant-aware Celery tasks (run each job in the right schema) when the first tenant job is added
 - [ ] 1.2 Login, MFA for admins, user model
 - [ ] 1.3 Roles, permissions and audit log
