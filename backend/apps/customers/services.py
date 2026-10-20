@@ -122,6 +122,10 @@ def anonymise(customer: Customer, *, actor=None) -> Customer:
     LogEntry.objects.filter(content_type=ContentType.objects.get_for_model(Customer), object_id=str(customer.pk)).update(
         object_repr=customer.audit_label, change_message=""
     )
+    # Other modules (for example the inbox) remove their copies too.
+    from .signals import customer_anonymised
+
+    customer_anonymised.send(sender=Customer, customer=customer)
     audit("crm.customer_anonymise", target=customer, actor=actor)
     return customer
 

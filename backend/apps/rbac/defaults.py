@@ -49,7 +49,12 @@ TENANT_ROLES = {
     "hr_manager": ("HR Manager", "Employees, attendance, leave and rosters.", _all("hr") | _only("users", "view") | _only("reports", "view")),
     "hr_staff": ("HR Staff", "Day-to-day HR tasks.", _only("hr", "view", "create", "edit")),
     "inventory_manager": ("Inventory Manager", "Stock, suppliers and purchasing.", _all("inventory") | _all("products") | _only("reports", "view", "export")),
-    "operations_manager": ("Operations Manager", "Orders, events, tickets and workflows.", _all("orders") | _all("events") | _all("tickets") | _only("inventory", "view") | _only("reports", "view")),
+    "operations_manager": (
+        "Operations Manager",
+        "Orders, events, tickets and workflows.",
+        _all("orders") | _all("events") | _all("tickets") | _only("inventory", "view") | _only("reports", "view")
+        | _only("products", "view") | _only("crm", "view"),
+    ),
     "content_manager": ("Content Manager", "Websites, pages and publishing.", _all("websites") | _only("learning", "view", "create", "edit", "publish") | _only("jobs", "view", "create", "edit", "publish")),
     "ai_manager": ("AI Manager", "AI agents, budgets and approvals.", _all("ai") | _only("reports", "view")),
     "shop_staff": (

@@ -7,6 +7,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import connection
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_POST
@@ -58,11 +59,13 @@ def connection_list(request):
     for conn in Connection.objects.all():
         by_category.setdefault(providers.CATEGORIES.get(conn.category, conn.category), []).append(conn)
     available = [p for p in providers.PROVIDERS.values()]
+    on_business_site = connection.schema_name != "public"
+    webhook_url = request.build_absolute_uri("/webhooks/whatsapp/").replace("http://", "https://", 1) if on_business_site else ""
     return render(
         request,
         "vault/connection_list.html",
         _context(request, title="Integrations and API keys", by_category=by_category, available=available, categories=providers.CATEGORIES,
-                 can_manage=access.allowed(request, "manage"), can_configure=access.allowed(request, "configure")),
+                 can_manage=access.allowed(request, "manage"), can_configure=access.allowed(request, "configure"), webhook_url=webhook_url),
     )
 
 

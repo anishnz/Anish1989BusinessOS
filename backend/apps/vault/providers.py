@@ -22,6 +22,7 @@ import requests
 from .netguard import UnsafeURL, check_url
 
 TIMEOUT = 10
+GRAPH_API_VERSION = "v25.0"  # Meta Graph API; supported until July 2028
 GMAIL_HOST = "smtp.gmail.com"
 GMAIL_PORT = 587
 
@@ -33,7 +34,7 @@ class Field:
     required: bool = True
     help: str = ""
     default: str = ""
-    kind: str = "text"  # "text" or "email"
+    kind: str = "text"  # "text", "email", "digits" or "graph_version"
 
 
 @dataclass(frozen=True)
@@ -131,7 +132,7 @@ def test_ollama(s, c):
 
 @_safe
 def test_whatsapp(s, c):
-    version = c.get("graph_api_version") or "v21.0"
+    version = c.get("graph_api_version") or GRAPH_API_VERSION
     r = _http(
         "GET",
         f"https://graph.facebook.com/{version}/{c['phone_number_id']}",
@@ -228,8 +229,16 @@ PROVIDERS = {
         Provider("ollama", "Local / open model (Ollama)", "ai", (), (Field("base_url", "Server address", help="For example https://ollama.example.com"), Field("model", "Model", False)), test_ollama, help="A model you run yourself. Must be reachable from the platform."),
         Provider(
             "whatsapp_cloud", "WhatsApp Business (Cloud API)", "messaging",
-            (Field("access_token", "Access token"), Field("app_secret", "App secret", False, "Used to check that incoming webhooks really come from Meta.")),
-            (Field("phone_number_id", "Phone number id"), Field("business_account_id", "WhatsApp Business account id", False), Field("graph_api_version", "Graph API version", False, default="v21.0")),
+            (
+                Field("access_token", "Access token", help="A permanent System User token from Meta Business Settings."),
+                Field("app_secret", "App secret", help="Meta app > App settings > Basic. Used to check that incoming messages really come from Meta."),
+            ),
+            (
+                Field("phone_number_id", "Phone number ID", kind="digits"),
+                Field("business_account_id", "WhatsApp Business account ID", False, kind="digits"),
+                Field("graph_api_version", "Graph API version", False, default=GRAPH_API_VERSION, kind="graph_version"),
+                Field("webhook_verify_token", "Webhook verify token", False, help="Leave empty to create one. Paste it into Meta's webhook settings."),
+            ),
             test_whatsapp, docs_url="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
         ),
         Provider("viber", "Viber bot", "messaging", (Field("auth_token", "Bot auth token"),), (), test_viber),

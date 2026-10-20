@@ -18,6 +18,7 @@ MODEL_MODULES = {
     "customers.consentrecord": "crm",
     "orders.order": "orders",
     "orders.orderline": "orders",
+    "inbox.conversation": "crm",
 }
 
 DJANGO_ACTIONS = {"view": "view", "add": "create", "change": "edit", "delete": "delete"}

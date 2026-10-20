@@ -71,6 +71,12 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-063 | Order numbers | Per business, starting at #1001, from a locked counter row (no duplicates) | Easy to say on the phone and WhatsApp | Decided (21 Oct 2026) |
 | D-064 | Payment in basic orders | Paid/not paid with method (cash, card, bank transfer, other); paid orders must be marked not paid (refund) before cancelling; full invoicing comes with finance in step 3 | Owners need "who has paid" now; refunds must not be forgotten | Decided (21 Oct 2026) |
 | D-065 | Deleting orders | Only drafts can be deleted; other orders are cancelled | Complete history for reports, disputes and the accountant | Decided (21 Oct 2026) |
+| D-066 | WhatsApp connection | Each business connects its own number through the official WhatsApp Business Platform (Cloud API); Graph API v25.0 (supported until July 2028); app secret required | Official API only (no unofficial WhatsApp Web tools, which risk bans); per-business keys as agreed | Decided (21 Oct 2026) |
+| D-067 | Webhook security | Per-business callback URL on the business's own address; HMAC-SHA256 signature with the app secret; phone number ID must match; duplicates ignored; always 200 after a valid signature | Stops fake messages and cross-business mix-ups; Meta resends events | Decided (21 Oct 2026) |
+| D-068 | Inbox permissions | The inbox uses the CRM module: view to read, edit to reply/close, assign to assign | Conversations are with customers; no new module or licence change needed | Decided (21 Oct 2026) |
+| D-069 | 24-hour rule and templates | Free replies only within 24 hours of the customer's last message; otherwise approved templates; marketing templates only with consent; STOP opts out | WhatsApp policy and the NZ Unsolicited Electronic Messages Act | Decided (21 Oct 2026) |
+| D-070 | Messages and privacy | Message text never goes into the audit log; removing a customer's data deletes their messages | Messages are personal data; the audit log cannot be edited | Decided (21 Oct 2026) |
+| D-071 | Operations Manager defaults | Default role now also sees products and customers | Needed to pick products and customers in orders; agreed 21 Oct 2026 | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

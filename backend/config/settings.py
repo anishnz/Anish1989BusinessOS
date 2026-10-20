@@ -80,6 +80,7 @@ TENANT_APPS = [
     "apps.catalog",
     "apps.customers",
     "apps.orders",
+    "apps.inbox",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]

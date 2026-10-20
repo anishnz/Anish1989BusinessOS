@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.7 are done. Next: **1.8 WhatsApp adapter and unified inbox**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.8 are done. Next: **1.9 Simple dashboard (today's sales, orders, top products)**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -95,7 +95,18 @@ Open a new chat in the ERP CRM project and type:
   - API `/api/orders/`, admin pages (add with lines, weights, "Status and payment"), CSV export, `expire_orders` command
   - User guide chapter: docs/user-guide/06-orders.md
   - 345 tests pass
-- [ ] 1.8 WhatsApp adapter and unified inbox
+- [x] 1.8 WhatsApp adapter and unified inbox (done 21 Oct 2026)
+  - Each business connects its own WhatsApp Business number (official Cloud API, Graph API v25.0)
+  - Webhook per business: verify token, signature check with the app secret, own phone number only, duplicates ignored
+  - Incoming messages create or link customers; text, images, buttons, locations; STOP opts out (consent history)
+  - Inbox: conversations with unread counts, chat page, reply within 24 hours, approved templates (marketing only with consent), assign, close/reopen
+  - Delivery status: sent, delivered, read, failed (with reason)
+  - Messages kept out of the audit log and deleted when a customer's data is removed
+  - Webhook URL and verify token shown on the Integrations page; `whatsapp_simulate` for laptop tests
+  - Operations Manager default role now also sees products and customers
+  - User guide chapter: docs/user-guide/07-whatsapp-and-inbox.md
+  - 385 tests pass
+  - Still to do for the Step 1 "done" check: a real WhatsApp message from Meta (needs a public https address: a server, or the Cloudflare tunnel in guide 7.7)
 - [ ] 1.9 Simple dashboard
 - [ ] 1.10 Tenant isolation and permission tests
 - [ ] 1.11 React/Next.js frontend shell

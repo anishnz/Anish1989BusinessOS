@@ -1,6 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% block content %}
-<div style="max-width: 980px;">
+<div style="max-width: 980px; overflow-x: auto;">
   <p>Connect your own accounts for AI, messaging, email, SMS and payments. Keys are encrypted and never shown again after saving; only the last 4 characters are displayed.</p>
 
   {% for category, connections in by_category.items %}
@@ -10,12 +10,13 @@
       <tbody>
       {% for c in connections %}
         <tr>
-          <td>{{ c.label }}{% if c.is_backup %} <em>(backup)</em>{% endif %}</td>
+          <td>{{ c.label }}{% if c.is_backup %} <em>(backup)</em>{% endif %}
+            {% if c.provider == "whatsapp_cloud" and webhook_url %}<br><small>Meta webhook callback URL: <code>{{ webhook_url }}</code><br>Verify token: <code>{{ c.config.webhook_verify_token }}</code></small>{% endif %}</td>
           <td>{{ c.provider }}</td>
           <td>{% for name, hint in c.secret_hints.items %}<code>{{ name }}: {{ hint }}</code><br>{% empty %}–{% endfor %}</td>
           <td>{{ c.get_status_display }}</td>
           <td>{% if c.last_tested_at %}{{ c.last_tested_at|date:"j M Y H:i" }}<br><small>{{ c.last_test_message }}</small>{% else %}–{% endif %}</td>
-          <td style="white-space: nowrap;">
+          <td style="min-width: 160px;">
             {% if can_configure %}
               <form method="post" action="{% url 'vault:test' c.pk %}" style="display:inline">{% csrf_token %}<button type="submit" class="button">Test connection</button></form>
               <a class="button" href="{% url 'vault:edit' c.pk %}">Edit</a>

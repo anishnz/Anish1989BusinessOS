@@ -277,6 +277,31 @@ Body for POST: `{"provider": "openai", "label": "Main AI", "config": {"model": "
 
 Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": null, "lines": [{"product": 5, "quantity": "1.5", "note": ""}]}`. Responses include `next_statuses` for the UI.
 
+## WhatsApp and the inbox (task 1.8)
+
+- Business-only app `apps.inbox` (permissions: module `crm`): `Conversation` (one per channel + contact id, linked to a `Customer`), `Message` (direction, kind, text, media id, provider message id unique, status), `WebhookDelivery` (log without message content).
+- Webhook `/webhooks/whatsapp/` (business sites only, CSRF-exempt, in `apps/inbox/whatsapp.py`):
+  - GET: answers `hub.challenge` when `hub.mode=subscribe` and `hub.verify_token` equals the connection's `webhook_verify_token` (created automatically).
+  - POST: refuses unless `X-Hub-Signature-256` is HMAC-SHA256(body, app secret) (constant-time compare); ignores items whose `metadata.phone_number_id` is not the business's own; stores messages once (provider id unique); applies statuses forward only (sent < delivered < read; failed always). Always answers 200 after a valid signature so Meta does not retry.
+- Incoming messages create or link the customer by E.164 phone; text `STOP` (and similar) records a consent withdrawal (`source=stop`, `channel=whatsapp`).
+- Sending (`apps/inbox/services.py`): `send_text` only within 24 hours of the customer's last message; `send_template` (name `[a-z0-9_]`, language `en` / `en_US`, body parameters) any time, but `category=marketing` needs marketing consent; Graph API `v25.0` by default (`GRAPH_API_VERSION`); 10-second timeout, no redirects; errors are generic and never include the token. Sends are synchronous for now (one HTTP call); move to Celery when volume grows.
+- WhatsApp connection: `app_secret` is now required; `phone_number_id` / `business_account_id` must be digits and `graph_api_version` must look like `v25.0`, because they are part of request URLs.
+- Privacy: message text is never written to the audit log (only `inbox.send` with kind/template/ok, `inbox.assign`, `inbox.close`); removing a customer's personal data deletes their messages (`customer_anonymised` signal).
+- Testing without Meta: `python manage.py whatsapp_simulate --schema <slug> --from "021 123 4567" --text "..."` signs a payload with the saved app secret and posts it to the real webhook.
+
+### Inbox API
+
+| Method | Path | Permission |
+|---|---|---|
+| GET | `/api/inbox/conversations/` (filters `status`, `mine`, `unread`, `q`) | `crm.view` |
+| GET | `/api/inbox/conversations/<id>/` (latest 200 messages, `can_reply_freely`) | `crm.view` |
+| POST | `/api/inbox/conversations/<id>/read/` | `crm.view` |
+| POST | `/api/inbox/conversations/<id>/reply/` `{"text": "..."}` | `crm.edit` |
+| POST | `/api/inbox/conversations/<id>/template/` `{"name", "language", "params": [], "category"}` | `crm.edit` |
+| POST | `/api/inbox/conversations/<id>/assign/` `{"user": id or null}` | `crm.assign` |
+| POST | `/api/inbox/conversations/<id>/close/` `{"closed": true}` | `crm.edit` |
+| POST | `/api/inbox/start/` `{"customer": id, "name", "language", "params", "category"}` | `crm.edit` |
+
 ## Useful commands
 
 | Task | Command |
@@ -289,6 +314,7 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": nu
 | Invite a business's System Admin | `python manage.py invite_admin --schema <slug> --email <email>` |
 | Check the audit log is untouched | `python manage.py verify_audit_chain` |
 | Re-encrypt saved keys with the newest master key | `python manage.py rotate_vault_key` |
+| Pretend a customer sent a WhatsApp message (testing) | `python manage.py whatsapp_simulate --schema <slug> --from "021 123 4567" --text "hi"` |
 | Expire orders not confirmed in time | `python manage.py expire_orders --minutes 60` |
 | Send a test email through the saved Gmail/SMTP connection | `python manage.py send_test_email --to you@example.com [--schema <slug>]` |
 | Make migrations after model changes | `python manage.py makemigrations` |

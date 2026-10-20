@@ -272,9 +272,15 @@ class TestConnectionTests:
     def test_whatsapp_uses_the_phone_number_id(self, tenant_a, fake_http):
         calls = fake_http(200)
         with schema_context("tenant_a"):
-            conn = services.create_connection(provider_code="whatsapp_cloud", label="Shop", config={"phone_number_id": "1098765"}, secrets={"access_token": "EAAG-secret-token-xyz"})
+            conn = services.create_connection(provider_code="whatsapp_cloud", label="Shop", config={"phone_number_id": "1098765"}, secrets={"access_token": "EAAG-secret-token-xyz", "app_secret": "app-secret-123"})
             assert services.test_connection(conn).ok
-        assert calls[0]["url"] == "https://graph.facebook.com/v21.0/1098765"
+            assert len(conn.config["webhook_verify_token"]) >= 24  # created automatically
+        assert calls[0]["url"] == "https://graph.facebook.com/v25.0/1098765"
+
+    @pytest.mark.parametrize("config", [{"phone_number_id": "123/../../me"}, {"phone_number_id": "1", "graph_api_version": "v25.0/../x"}])
+    def test_whatsapp_ids_cannot_change_the_address(self, tenant_a, config):
+        with schema_context("tenant_a"), pytest.raises(ValidationError):
+            services.create_connection(provider_code="whatsapp_cloud", label="Shop", config=config, secrets={"access_token": "EAAG-token-123456", "app_secret": "s3cret-123"})
 
 
 @pytest.mark.django_db

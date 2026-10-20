@@ -1,0 +1,64 @@
+{% extends "admin/base_site.html" %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .thread { max-width: 760px; display: flex; flex-direction: column; gap: 8px; margin: 12px 0 20px; }
+  .bubble { max-width: 75%; padding: 8px 12px; border-radius: 10px; line-height: 1.4; word-wrap: break-word; }
+  .bubble .t { white-space: pre-wrap; }
+  .bubble.in { align-self: flex-start; background: var(--darkened-bg); border: 1px solid var(--hairline-color); }
+  .bubble.out { align-self: flex-end; background: #dcf8c6; color: #1b1b1b; }
+  .bubble small { display: block; margin-top: 4px; opacity: .7; font-size: 11px; }
+  .bubble.failed { border: 1px solid #ba2121; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px; }
+  .bar form { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+  .window { padding: 8px 12px; border-radius: 6px; background: var(--message-warning-bg); margin: 8px 0; max-width: 736px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="bar">
+  {% if conversation.customer %}<a href="{{ customer_url }}">{{ conversation.customer.name }}</a> · {{ conversation.customer.phone }}{% else %}+{{ conversation.external_id }}{% endif %}
+  · {{ conversation.get_status_display }}
+  {% if conversation.customer and conversation.customer.marketing_consent %} · agreed to marketing{% endif %}
+  {% if can_assign %}
+    <form method="post">{% csrf_token %}
+      <label>Assigned to</label>
+      <select name="user"><option value="">Nobody</option>{% for u in staff %}<option value="{{ u.pk }}" {% if u.pk == conversation.assigned_to_id %}selected{% endif %}>{{ u.email }}</option>{% endfor %}</select>
+      <input type="submit" name="assign" value="Assign">
+    </form>
+  {% elif conversation.assigned_to %} · Assigned to {{ conversation.assigned_to.email }}{% endif %}
+  {% if can_edit %}
+    <form method="post">{% csrf_token %}
+      {% if conversation.status == "open" %}<input type="submit" name="close" value="Close conversation">{% else %}<input type="submit" name="reopen" value="Reopen">{% endif %}
+    </form>
+  {% endif %}
+</div>
+
+<div class="thread">
+  {% for m in thread %}
+    <div class="bubble {{ m.direction }}{% if m.status == 'failed' %} failed{% endif %}">
+      <div class="t">{% if m.kind != "text" %}<em>[{{ m.kind }}]</em> {% endif %}{{ m.text }}</div>
+      <small>{{ m.created_at|date:"j M H:i" }}{% if m.direction == "out" %} · {{ m.get_status_display }}{% if m.sent_by %} · {{ m.sent_by.email }}{% endif %}{% if m.error %} · {{ m.error }}{% endif %}{% endif %}</small>
+    </div>
+  {% empty %}
+    <p>No messages yet.</p>
+  {% endfor %}
+</div>
+
+{% if can_edit %}
+  {% if can_reply_freely %}
+    <form method="post" style="max-width:760px">{% csrf_token %}
+      {{ reply_form.as_p }}
+      <div class="submit-row"><input type="submit" name="reply" value="Send reply" class="default"></div>
+    </form>
+  {% else %}
+    <p class="window">More than 24 hours have passed since the customer's last message (or they have not written yet). WhatsApp only allows an approved template now.</p>
+  {% endif %}
+  <details {% if not can_reply_freely %}open{% endif %} style="max-width:760px">
+    <summary><strong>Send an approved template</strong></summary>
+    <form method="post">{% csrf_token %}
+      {{ template_form.as_p }}
+      <div class="submit-row"><input type="submit" name="template" value="Send template"></div>
+    </form>
+  </details>
+{% endif %}
+<p><a href="{{ back }}">Back to the inbox</a></p>
+{% endblock %}

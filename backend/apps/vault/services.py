@@ -5,6 +5,8 @@ test, disable and delete. Every change and test is audited, without secrets.
 from __future__ import annotations
 
 import json
+import re
+import secrets as secrets_module
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -35,6 +37,10 @@ def _validate(provider: providers.Provider, config: dict, secrets: dict, *, is_n
             raise ValidationError(f"'{f.label}' is required.")
         if "\r" in value or "\n" in value:
             raise ValidationError(f"'{f.label}' must be on one line.")
+        if value and f.kind == "digits" and not value.isdigit():
+            raise ValidationError(f"'{f.label}' must contain only numbers.")
+        if value and f.kind == "graph_version" and not re.fullmatch(r"v\d{1,3}\.\d", value):
+            raise ValidationError(f"'{f.label}' must look like v25.0.")
         if value and f.kind == "email":
             try:
                 validate_email(value)
@@ -49,6 +55,8 @@ def _validate(provider: providers.Provider, config: dict, secrets: dict, *, is_n
             clean_secrets[f.name] = value[:4000]
         elif f.required and is_new:
             raise ValidationError(f"'{f.label}' is required.")
+    if provider.code == "whatsapp_cloud" and not clean_config.get("webhook_verify_token"):
+        clean_config["webhook_verify_token"] = secrets_module.token_urlsafe(24)
     unknown = set(secrets) - {f.name for f in provider.secret_fields}
     if unknown:
         raise ValidationError(f"Unknown secret field(s): {', '.join(sorted(unknown))}")

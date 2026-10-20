@@ -15,6 +15,7 @@ You find both in your business admin, for example `https://gorkhabutchery.<platf
 | Sales Manager | View | Everything |
 | Sales Representative | View | View, add, change |
 | Shop Staff | View (no cost price) | View, add, change |
+| Operations Manager | View (no cost price) | View |
 | Department Manager | View | View, add, change |
 | Support Agent | – | View |
 | Marketing Manager | – | View, export |
