@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 and 1.2 are done. Next: **1.3 Roles, permissions and audit log**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.3 are done. Next: **1.4 Tenants, licences and module on/off**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -48,7 +48,15 @@ Open a new chat in the ERP CRM project and type:
   - Login history (read-only), password reset by email (link to the business's own site, 1 hour)
   - User guide chapter: docs/user-guide/01-logging-in-and-two-step-verification.md
   - 83 tests pass (development and CI settings)
-- [ ] 1.3 Roles, permissions and audit log
+- [x] 1.3 Roles, permissions and audit log (done 21 Oct 2026)
+  - Permission catalogue (module + 17 actions), 24 default business roles and 4 platform roles, custom roles
+  - Deny-by-default policy checked on the server (user active → business active → module → role); admin pages follow roles
+  - Escalation protection: grant only what you have, not your own roles, full access only from full admins
+  - Tamper-proof audit log: hash chain + database trigger; secrets redacted; logins, user/role/MFA changes and denied requests recorded; `verify_audit_chain`
+  - Roles API for the React frontend; role editor in the admin
+  - User guide chapter: docs/user-guide/02-roles-permissions-and-audit-log.md
+  - 133 tests pass
+  - Later: department/branch scopes (with the departments module), module entitlements (1.4)
 - [ ] 1.4 Tenants, licences and module on/off
 - [ ] 1.5 Settings and secret vault (encrypted keys, test connection)
 - [ ] 1.6 Products and customers

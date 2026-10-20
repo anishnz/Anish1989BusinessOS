@@ -35,9 +35,27 @@ def user_agent(request) -> str:
     return (request.META.get("HTTP_USER_AGENT", "") if request is not None else "")[:300]
 
 
+_AUDIT_OUTCOMES = {
+    LoginEvent.Event.LOGIN_FAILED: "failed",
+    LoginEvent.Event.MFA_FAILED: "failed",
+    LoginEvent.Event.LOCKED_OUT: "denied",
+}
+
+
 def record_event(event: str, request=None, user=None, email: str = "") -> LoginEvent:
+    """Write to the login history and to the audit log."""
+    from apps.audit.services import audit
+
     if user is not None and not email:
         email = user.email
+    audit(
+        f"auth.{event}",
+        request=request,
+        actor=user,
+        actor_email=(email or "").lower(),
+        target=user if (user is not None and user.pk) else None,
+        outcome=_AUDIT_OUTCOMES.get(event, "success"),
+    )
     return LoginEvent.objects.create(
         user=user if (user is not None and user.pk) else None,
         email=(email or "")[:254].lower(),

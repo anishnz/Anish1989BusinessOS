@@ -1,0 +1,4 @@
+/* Permission matrix: one row per module, its actions side by side. */
+#id_permission_codes > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px; padding: 8px 0; border-bottom: 1px solid var(--hairline-color, #eee); }
+#id_permission_codes > div > label { flex: 0 0 230px; font-weight: 600; }
+#id_permission_codes > div > div { white-space: nowrap; }

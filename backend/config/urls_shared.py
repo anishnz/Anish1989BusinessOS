@@ -10,5 +10,6 @@ shared_urlpatterns = [
     *password_reset_urlpatterns,
     path("account/", include((web_urlpatterns, "accounts"))),
     path("api/auth/", include(api_urlpatterns)),
+    path("api/rbac/", include("apps.rbac.urls")),
     path("admin/", admin.site.urls),
 ]

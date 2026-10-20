@@ -1,0 +1,53 @@
+"""
+Lets the Django admin respect our roles: a Django model permission such as
+"accounts.view_user" is translated to our catalogue code "users.view".
+Models not listed here stay superuser-only in the admin.
+"""
+from . import policy
+
+MODEL_MODULES = {
+    "accounts.user": "users",
+    "accounts.loginevent": "audit",
+    "audit.auditevent": "audit",
+    "rbac.role": "roles",
+    "rbac.userrole": "roles",
+}
+
+DJANGO_ACTIONS = {"view": "view", "add": "create", "change": "edit", "delete": "delete"}
+
+# Read-only logs use view_audit instead of view.
+VIEW_AUDIT_MODELS = {"accounts.loginevent", "audit.auditevent"}
+
+
+def translate(perm: str) -> str | None:
+    try:
+        app_label, codename = perm.split(".", 1)
+        django_action, model_name = codename.split("_", 1)
+    except ValueError:
+        return None
+    key = f"{app_label}.{model_name}"
+    module = MODEL_MODULES.get(key)
+    action = DJANGO_ACTIONS.get(django_action)
+    if not module or not action:
+        return None
+    if key in VIEW_AUDIT_MODELS:
+        return f"{module}.view_audit" if action == "view" else None
+    return f"{module}.{action}"
+
+
+class RolePermissionBackend:
+    def authenticate(self, request, **credentials):
+        return None  # permissions only; login is handled by LockoutEmailBackend
+
+    def has_perm(self, user_obj, perm, obj=None):
+        if not user_obj.is_active or not user_obj.is_staff:
+            return False
+        code = translate(perm)
+        return bool(code) and policy.has_perm(user_obj, code)
+
+    def has_module_perms(self, user_obj, app_label):
+        if not user_obj.is_active or not user_obj.is_staff:
+            return False
+        modules = {module for key, module in MODEL_MODULES.items() if key.startswith(f"{app_label}.")}
+        codes = policy.effective_permissions(user_obj)
+        return any(code.split(".", 1)[0] in modules for code in codes)

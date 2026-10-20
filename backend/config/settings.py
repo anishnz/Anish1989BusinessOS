@@ -56,6 +56,8 @@ SHARED_APPS = [
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
     "apps.accounts",
+    "apps.audit",
+    "apps.rbac",
     "apps.core",
 ]
 
@@ -69,6 +71,8 @@ TENANT_APPS = [
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
     "apps.accounts",
+    "apps.audit",
+    "apps.rbac",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -87,6 +91,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django_otp.middleware.OTPMiddleware",
     "apps.accounts.middleware.StaffMFAMiddleware",
+    "apps.audit.middleware.AuditContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -128,7 +133,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 # Email login with lockout after repeated failures (see apps/accounts/backends.py).
-AUTHENTICATION_BACKENDS = ["apps.accounts.backends.LockoutEmailBackend"]
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.backends.LockoutEmailBackend",  # login
+    "apps.rbac.backends.RolePermissionBackend",  # permissions from roles (also used by the admin)
+]
 LOGIN_LOCKOUT_ATTEMPTS = env.int("LOGIN_LOCKOUT_ATTEMPTS", default=5)
 LOGIN_LOCKOUT_SECONDS = env.int("LOGIN_LOCKOUT_SECONDS", default=15 * 60)
 

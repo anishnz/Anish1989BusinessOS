@@ -14,6 +14,7 @@ if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
   echo "Migrating tenant schemas..."
   python manage.py migrate_schemas --tenant --noinput
   python manage.py bootstrap_platform
+  python manage.py sync_roles
   python manage.py collectstatic --noinput
 fi
 

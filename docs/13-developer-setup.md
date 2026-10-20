@@ -141,6 +141,29 @@ Session cookie + CSRF. Call `GET /api/auth/csrf/` first, then send the `X-CSRFTo
 
 Until a staff user has passed MFA, every other `/api/...` path returns `403` with `"code": "mfa_required"`.
 
+## Roles, permissions and audit log (task 1.3)
+
+- Permission catalogue: `backend/apps/rbac/catalogue.py` (module + action, using the 17 actions from the spec). Business modules and platform modules are separate.
+- Default roles: `backend/apps/rbac/defaults.py`. Created automatically in every new or migrated schema, and by `python manage.py sync_roles`. Admins' later changes are never overwritten.
+- Checks: `apps.rbac.policy.check(user, "orders.approve")` → deny unless the user is active, the business is active or in trial, the module is enabled (task 1.4), and a role grants it. Superusers have everything in their own schema.
+- In API views use `permission_classes = [ModulePermission]` with `permission_module = "orders"` (GET→view, POST→create, PUT/PATCH→edit, DELETE→delete) or `requires("finance.approve")`. Denied requests are audited.
+- Django admin permissions are translated to role permissions (`apps/rbac/backends.py`). Django groups and per-user permissions are ignored.
+- Escalation rules (`apps/rbac/services.py`): grant only what you have; never change your own roles; only full admins give full access; default roles cannot be deleted.
+- Audit log: `apps.audit.services.audit("action.name", target=obj, changes={...})`. Hash-chained, append-only, and protected by a database trigger in every schema. Secrets are redacted. Changes to users, roles, role permissions, role assignments and MFA devices are recorded automatically (`apps/audit/tracking.py`).
+- Check the audit chain: `python manage.py verify_audit_chain` (all schemas) or `--schema=<slug>`.
+
+### Roles API
+
+| Method | Path | Permission |
+|---|---|---|
+| GET | `/api/rbac/me/permissions/` | signed in |
+| GET | `/api/rbac/catalogue/` | `roles.view` |
+| GET, POST | `/api/rbac/roles/` | `roles.view`, `roles.create` |
+| GET, DELETE | `/api/rbac/roles/<id>/` | `roles.view`, `roles.delete` |
+| PUT | `/api/rbac/roles/<id>/permissions/` | `roles.manage_permissions` |
+| GET, POST | `/api/rbac/users/<id>/roles/` | `roles.view`, `roles.assign` |
+| DELETE | `/api/rbac/users/<id>/roles/<role_id>/` | `roles.assign` |
+
 ## Useful commands
 
 | Task | Command |
@@ -148,6 +171,8 @@ Until a staff user has passed MFA, every other `/api/...` path returns `403` wit
 | Create a business | `python manage.py create_business --name "..." --slug ... --industry ...` |
 | Run a command in one business's schema | `python manage.py tenant_command <command> --schema=<slug>` |
 | Migrate all schemas | `python manage.py migrate_schemas` |
+| Create missing default roles | `python manage.py sync_roles` |
+| Check the audit log is untouched | `python manage.py verify_audit_chain` |
 | Make migrations after model changes | `python manage.py makemigrations` |
 
 Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail`, `services`, `education_consultancy`, `e_learning`, `jobs`, `other`.
