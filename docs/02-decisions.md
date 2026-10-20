@@ -36,6 +36,12 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-028 | Ticket system | Built-in issue reporting for staff, tenant admins and customers | Requested on 21 Oct 2026 | Decided |
 | D-029 | Health check | "Check system" button on each dashboard, plus scheduled checks | Quick way to confirm everything is working | Decided (21 Oct 2026) |
 | D-030 | Backups | Every 6 hours, encrypted, primary copy with the host plus off-site copy to Google Drive, monthly restore tests | Requested on 21 Oct 2026; encryption protects personal data | Decided |
+| D-031 | Tenant backups | Each business also gets encrypted backups of its own data in its own Google Drive; the IT admin connects it in a first-login wizard | Requested on 21 Oct 2026; the business keeps its own copy | Decided |
+| D-032 | User guide | In-app, book-style user guide for every dashboard, with automatic screenshots; a feature is not done until its guide page exists | Requested on 21 Oct 2026 | Decided |
+| D-033 | Django version | Django 5.2 LTS | Long-term support until April 2028; best for a stable base | Decided (21 Oct 2026) |
+| D-034 | Where users are stored | One users table per schema: platform admins in `public`, each business's users in its own schema; login is by email | Strong isolation: a user of one business cannot log in to another. People who need several businesses (for example affiliates or job seekers) will be handled with a separate design later | Decided (21 Oct 2026) |
+| D-035 | Tenant deletion | Schemas are never dropped automatically, and tenants cannot be deleted from the admin | Deletion must go through an audited offboarding process with a data export | Decided (21 Oct 2026) |
+| D-036 | Subdomain format | `<slug>.<platform-domain>`; slug uses lowercase letters, numbers and underscores (underscores become hyphens in the subdomain) | The slug is also the PostgreSQL schema name | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

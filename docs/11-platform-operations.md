@@ -92,7 +92,32 @@ Rules:
 | Retention | For example: keep 6-hourly backups for 7 days, daily for 30 days, monthly for 12 months (to confirm) |
 | Monitoring | Each run is logged (time, size, checksum, status). A failed backup alerts an admin and can create a ticket. |
 | Restore tests | Restore a backup to a test server regularly (for example monthly) and record the result |
-| Per-tenant export | A tenant admin can download its own data at any time. Optionally, a tenant can send its own backups to its own Google Drive. |
+| Per-tenant export | A tenant admin can download its own data at any time |
+| Per-tenant Google Drive | Each business sends backups of its own data to its own Google Drive (see below) |
+
+### Per-tenant Google Drive backups
+
+Decided on 21 October 2026: each business gets backups of its own data in its own Google Drive.
+
+**First-login setup (tenant IT admin)**
+
+1. The first time the tenant's IT admin (or System Admin) logs in, a setup wizard opens.
+2. One step asks: "Where should we send your backups?"
+3. The admin clicks **Connect Google Drive** and signs in to Google (OAuth). The platform asks only for access to files it creates (Google Drive `drive.file` scope), not the whole Drive.
+4. The admin chooses or creates a backup folder name, for example `Anish1989 Backups - Gorkha Butchery`.
+5. The admin sets a **backup passphrase**, or lets the system generate one and shows it once to save. It is needed to restore. Without it, the backup cannot be opened.
+6. The system runs a test backup and shows "Backup working".
+7. The admin can skip this step, but a reminder banner stays on the dashboard until backups are set up.
+
+**What is sent:** that tenant's database schema plus its uploaded files, encrypted with the tenant's passphrase, every 6 hours (setting).
+
+**Status and control (Settings → Backups):** connected Google account, folder, last backup time, size, next run, "Back up now", "Test restore", "Disconnect". A failed upload alerts the IT admin, can create a ticket, and shows in the "Check system" results.
+
+**Rules**
+- The platform still keeps its own full backups. The tenant's Drive copy is extra, not a replacement.
+- The Google refresh token is stored encrypted in the secret vault, like other keys.
+- If the admin disconnects Google Drive or the token stops working, backups to Drive pause and the admin is alerted.
+- A Google OAuth app used by the public needs Google's app verification and branding review before launch.
 
 Notes:
 - Backups contain customers' personal information, so encryption and access control are required (NZ Privacy Act).

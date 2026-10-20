@@ -138,6 +138,9 @@ See [11. Platform operations](11-platform-operations.md).
 | Ticket system | Report issues, assign, track, SLA, reports | P1 |
 | Health check button | "Check system" on each dashboard, with results history | P0 |
 | Backups every 6 hours | Encrypted backups, off-site copy to Google Drive, restore tests | P0 |
+| Per-tenant Google Drive backups | IT admin connects the business's own Google Drive at first login | P1 |
+| First-login setup wizard | Guides the IT admin through backups, keys and basics | P1 |
+| In-app user guide | Book-style guide per dashboard with screenshots, search and PDF export | P1 |
 
 ## 11. Security and compliance
 

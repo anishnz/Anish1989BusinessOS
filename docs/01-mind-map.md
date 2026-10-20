@@ -102,6 +102,9 @@ mindmap
       Ticket system
       Check system button
       Backups every 6 hours to Google Drive
+      Each business backs up to own Drive
+      First-login setup wizard
+      In-app user guide with screenshots
 ```
 
 ## Branch summary

@@ -30,6 +30,8 @@ Agreed on 21 October 2026. Work is full-time. All pilot businesses have said the
 - "Check system" health check button (core checks)
 - Backups every 6 hours, encrypted, with an off-site copy to Google Drive and a first restore test
 - Basic ticket system (report an issue, assign, status)
+- First-login setup wizard with per-tenant Google Drive backup connection
+- In-app user guide framework (table of contents, search, automatic screenshots) with the "Getting started" chapters
 
 **Done when:** two test tenants exist, neither can see the other's data (proved by tests), and a WhatsApp test message reaches the inbox.
 
@@ -63,6 +65,10 @@ Agreed on 21 October 2026. Work is full-time. All pilot businesses have said the
 - Legal job sources only (see [Industry templates](09-industry-templates.md))
 
 **Done when:** students enrol and complete a lesson, and job seekers build a resume and apply to a posted job.
+
+## Definition of done (every feature)
+
+A feature is done only when its screen, backend, database rules, permission checks, error handling, audit log, automated tests **and user guide page** all work together.
 
 ## Before each pilot starts
 

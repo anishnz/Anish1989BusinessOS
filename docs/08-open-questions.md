@@ -43,7 +43,7 @@ Answer these before writing code. When a question is answered, move the answer t
 
 | # | Question | Notes |
 |---|---|---|
-| Q-16 | Whose Google Drive receives backups? | Platform owner's Drive for the whole database; optionally each tenant's own Drive for its own data |
+| Q-16 | Whose Google Drive receives backups? | **Answered:** both. Platform owner's Drive for the whole database, and each tenant's own Drive for its own data (D-031) |
 | Q-17 | Backup retention? | Proposed: 6-hourly for 7 days, daily for 30 days, monthly for 12 months |
 | Q-18 | Platform domain name for tenant subdomains? | For example `<tenant>.<platform-domain>` |
 | Q-19 | Which registrar for domain search and purchase (later)? | Needs an account and API access |
