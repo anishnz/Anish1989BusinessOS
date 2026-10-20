@@ -111,7 +111,20 @@ See [07. Competitor intelligence](07-competitor-intelligence.md).
 | Weekly report | Automatic report showing changes since last week | P2 |
 | Logs and history | Every search, crawl, result and report saved | P2 |
 
-## 9. Security and compliance
+## 9. Learning and jobs
+
+See [09. Industry templates](09-industry-templates.md).
+
+| Feature | Description | Phase |
+|---|---|---|
+| Courses and lessons | Lessons with embedded YouTube videos, links and PDFs | P1 |
+| Quizzes and progress | Assessments, completion tracking, certificates | P1 |
+| Job board | Employers post jobs with location, type and pay range | P1 |
+| Job listings by location | Auckland jobs on a map and list, from legal sources only | P1 |
+| ATS-friendly resume builder | Simple templates, PDF and DOCX export, keyword check | P1 |
+| Applications and job alerts | Apply online; opt-in alerts by email or WhatsApp | P1 |
+
+## 10. Security and compliance
 
 | Feature | Description | Phase |
 |---|---|---|

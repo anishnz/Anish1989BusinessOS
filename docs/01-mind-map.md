@@ -88,6 +88,13 @@ mindmap
       Consent log and STOP
       Backups and tests
       Monitoring
+    11 Learning and jobs
+      Courses and YouTube lessons
+      Quizzes and certificates
+      Job board
+      Auckland job listings
+      ATS resume builder
+      Job alerts
 ```
 
 ## Branch summary
@@ -105,3 +112,4 @@ mindmap
 | 8 | Business intelligence | Charts and customer response | [Business intelligence](06-business-intelligence.md) |
 | 9 | Competitor intelligence | Weekly competitor reports | [Competitor intelligence](07-competitor-intelligence.md) |
 | 10 | Security and compliance | Protect data and follow NZ rules | [Feature catalogue](03-feature-catalogue.md) |
+| 11 | Learning and jobs | Courses, job board, resume builder | [Industry templates](09-industry-templates.md) |

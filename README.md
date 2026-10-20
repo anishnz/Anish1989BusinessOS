@@ -7,13 +7,15 @@ Anish1989 Business OS is a multi-tenant SaaS platform for small and medium busin
 | Item | Value |
 |---|---|
 | Owner | Anish Shrestha |
-| Stage | Brainstorming and documentation (no code yet) |
+| Stage | Documentation complete; Step 1 (shared core) next |
 | Last updated | 21 October 2026 |
 | First pilot target | Gorkha Butchery, Auckland |
 
 ## Current stage
 
-We are in **brainstorming and documentation only**. No application code will be written until the documents below are reviewed and the open questions are answered.
+**Brainstorming and documentation is complete.** The next step is Step 1, the shared core. See [PROGRESS.md](PROGRESS.md) for the live task list and how to continue in a new session.
+
+Pilot businesses (all agreed to pay after the pilot): Gorkha Butchery, a restaurant, a catering business, an events business, an education platform and a job platform.
 
 ## Tech stack (decided)
 
@@ -38,6 +40,8 @@ We are in **brainstorming and documentation only**. No application code will be 
 | 06 | [Business intelligence](docs/06-business-intelligence.md) | Charts, customer response and analytics |
 | 07 | [Competitor intelligence](docs/07-competitor-intelligence.md) | Crawl competitors and weekly reports |
 | 08 | [Open questions](docs/08-open-questions.md) | Questions still to answer |
+| 09 | [Industry templates](docs/09-industry-templates.md) | Businesses the system serves, and the jobs module |
+| 10 | [Delivery plan](docs/10-delivery-plan.md) | Pilot order, steps, estimates and pilot agreement |
 
 ### Reference specifications
 
@@ -49,5 +53,6 @@ The original specifications that shaped this project are kept in [`docs/referenc
 4. [Business brainstorm](docs/reference/04-business-brainstorm.md): the Anish1989 growth ecosystem idea
 5. [Business blueprint v1.0](docs/reference/05-business-blueprint-v1.0.md): the MVP, pilot and 12-week plan
 6. [Referral and rewards engine](docs/reference/06-referral-rewards-engine.md)
+7. [Businesses that can use the system](docs/reference/07-businesses-that-can-use-the-system.md)
 
 When documents disagree, **Master specification v2.0** and the **Decisions** document take priority.

@@ -29,3 +29,21 @@ Answer these before writing code. When a question is answered, move the answer t
 | Q-09 | Which places or search API for finding competitors? | Check terms, cost and data storage rules |
 | Q-10 | First industry template? | The blueprint suggests a butchery or small food retailer |
 | Q-11 | Domain name for the platform? | anish1989.com.np is the personal brand site |
+
+## Pilots and jobs module
+
+| # | Question | Notes |
+|---|---|---|
+| Q-12 | Monthly price for each pilot business after the pilot? | Write it in the pilot agreement |
+| Q-13 | Pilot length? | For example 4 or 8 weeks |
+| Q-14 | Which job sources can we use legally? | Employer-posted jobs first; check each site's terms before using its data |
+| Q-15 | Who are the resume builder's main users? | For example students, new migrants, career changers in Auckland |
+
+## Answered
+
+| # | Question | Answer | Decision |
+|---|---|---|---|
+| — | Pilot order | Core, then butchery + restaurant, then catering + events, then education + jobs | D-020 |
+| — | Job tools: separate or same platform? | Module in the same platform | D-021 |
+| — | What did businesses agree to? | Pay after the pilot | D-022 |
+| — | Working time | Full-time | D-023 |

@@ -24,7 +24,13 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-016 | Documentation | One shareable document plus Markdown files in this repository | Easy to share and easy to keep with the code | Decided |
 | D-017 | Default currency | NZD | From Master spec v2.0 | Decided |
 | D-018 | Trial | 30 days, no unannounced charge at the end | From Master spec v2.0 | Decided |
-| D-019 | Architecture style | Modular monolith first (one Django project, separate apps per module) | Easier to build and run part-time than microservices | Proposed |
+| D-019 | Architecture style | Modular monolith first (one Django project, separate apps per module) | Easier to build and maintain than microservices | Proposed |
+| D-020 | Pilot order | 1 shared core, 2 butchery + restaurant, 3 catering + events, 4 education + jobs | Businesses that share a flow are built together; each step reuses the last | Decided (21 Oct 2026) |
+| D-021 | Job tools | Job board, ATS resume builder and job listings are a module in the same platform | Reuses users, roles, CRM, AI, BI and website builder | Decided (21 Oct 2026) |
+| D-022 | Pilot commercial model | Pilot first, then the business pays a monthly fee | All pilot businesses agreed to pay after the pilot | Decided (21 Oct 2026) |
+| D-023 | Working time | Full-time | Stated on 21 Oct 2026 | Decided |
+| D-024 | Job listing sources | Only employer-posted jobs, official feeds under their terms, and career pages that allow crawling | Big job sites restrict scraping and reuse of their listings | Decided (21 Oct 2026) |
+| D-025 | Pilot agreement | Sign a one-page agreement with each business before its pilot starts | Turns a verbal yes into clear expectations | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 
