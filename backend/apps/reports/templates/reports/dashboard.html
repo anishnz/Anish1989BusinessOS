@@ -1,0 +1,155 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .dash { --surface: var(--body-bg); --ink: var(--body-fg); --ink-2: var(--body-quiet-color); --grid: var(--hairline-color);
+          --series-1: #2a78d6; --good: #0ca30c; --critical: #d03b3b; max-width: 1040px; color: var(--ink); }
+  @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .dash { --series-1: #3987e5; } }
+  :root[data-theme="dark"] .dash { --series-1: #3987e5; }
+  .dash .note { color: var(--ink-2); font-size: 12px; margin: 4px 0 16px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .tile { border: 1px solid var(--grid); border-radius: 8px; padding: 12px 14px; background: var(--surface); }
+  .tile .label { color: var(--ink-2); font-size: 13px; }
+  .tile .value { font-size: 28px; font-weight: 600; margin-top: 4px; }
+  .tile.hero { grid-column: span 2; }
+  .tile.hero .value { font-size: 48px; line-height: 1.1; }
+  @media (max-width: 520px) { .tile.hero { grid-column: auto; } .tile.hero .value { font-size: 36px; } }
+  .tile .delta { font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+  .tile .delta .up { color: var(--good); } .tile .delta .down { color: var(--critical); }
+  .grid2 { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .panel { border: 1px solid var(--grid); border-radius: 8px; padding: 12px 14px; background: var(--surface); margin-bottom: 16px; position: relative; }
+  .panel h2 { font-size: 15px; margin: 0 0 2px; background: none; color: var(--ink); padding: 0; text-transform: none; letter-spacing: 0; }
+  svg.chart { width: 100%; height: auto; display: block; }
+  svg.chart .gridline { stroke: var(--grid); stroke-width: 1; }
+  svg.chart text { fill: var(--ink-2); font-size: 11px; font-variant-numeric: tabular-nums; }
+  svg.chart .bar { fill: var(--series-1); }
+  svg.chart .hit { fill: transparent; cursor: default; outline: none; }
+  svg.chart .hit:hover + .bar-hover, svg.chart .hit:focus + .bar-hover { stroke: var(--ink); stroke-width: 1; }
+  svg.chart text.today-value { fill: var(--ink); font-weight: 600; }
+  .tip { position: absolute; pointer-events: none; background: var(--body-bg); border: 1px solid var(--grid); border-radius: 6px;
+         padding: 6px 8px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); display: none; white-space: nowrap; }
+  .tip strong { display: block; font-size: 14px; color: var(--ink); }
+  .tip span { color: var(--ink-2); }
+  .top-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; margin: 10px 0; }
+  .top-row .name { font-weight: 600; }
+  .top-row .amount { font-variant-numeric: tabular-nums; text-align: right; }
+  .top-row .track { grid-column: 1 / 3; height: 10px; }
+  .top-row .fill { height: 10px; background: var(--series-1); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .top-row .sub { grid-column: 1 / 3; color: var(--ink-2); font-size: 12px; }
+  .attention td, .attention th { padding: 6px 8px; }
+  .attention td.n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  details summary { cursor: pointer; color: var(--ink-2); font-size: 12px; margin-top: 6px; }
+  .daybar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dash">
+  <form class="daybar" method="get">
+    <label>Day <input type="date" name="date" value="{{ data.date }}"></label>
+    <input type="submit" value="Show">
+    {% if not is_today %}<a href="?">Back to today</a>{% endif %}
+  </form>
+  <p class="note">{{ data.definitions.sales }} Orders: {{ data.definitions.orders }} Compared with the same day last week ({{ data.definitions.compared_with }}).</p>
+
+  <div class="tiles">
+    <div class="tile hero">
+      <div class="label">Sales {% if is_today %}today{% else %}on {{ data.date }}{% endif %}</div>
+      <div class="value">${{ data.sales.total|floatformat:2|intcomma }}</div>
+      <div class="delta">{% if sales_change.direction == "up" %}<span class="up" aria-hidden="true">▲</span> {% elif sales_change.direction == "down" %}<span class="down" aria-hidden="true">▼</span> {% endif %}{{ sales_change.text }} vs last week
+        · GST included ${{ data.sales.gst|floatformat:2 }}</div>
+    </div>
+    <div class="tile">
+      <div class="label">Orders confirmed</div>
+      <div class="value">{{ data.orders.count }}</div>
+      <div class="delta">{% if orders_change.direction == "up" %}<span class="up" aria-hidden="true">▲</span> {% elif orders_change.direction == "down" %}<span class="down" aria-hidden="true">▼</span> {% endif %}{{ orders_change.text }} {% if data.orders.change.difference %}vs{% endif %} last week ({{ data.orders.change.before }})</div>
+    </div>
+    <div class="tile">
+      <div class="label">Average sale</div>
+      <div class="value">${{ data.sales.average|floatformat:2|intcomma }}</div>
+      <div class="delta">{{ data.sales.count }} completed order{{ data.sales.count|pluralize }}</div>
+    </div>
+    <div class="tile">
+      <div class="label">Completed, not paid yet</div>
+      <div class="value">${{ data.sales.unpaid|floatformat:2|intcomma }}</div>
+      <div class="delta">Mark payments on each order</div>
+    </div>
+    {% if data.unread_conversations is not None %}
+    <div class="tile">
+      <div class="label">Unread WhatsApp chats</div>
+      <div class="value"><a href="{% url 'admin:inbox_conversation_changelist' %}?status__exact=open">{{ data.unread_conversations }}</a></div>
+      <div class="delta">Open conversations with new messages</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="grid2">
+    <div>
+      <div class="panel" id="week-panel">
+        <h2>Sales, last 7 days</h2>
+        <p class="note" style="margin-bottom:6px">Total ${{ data.week_total|floatformat:2|intcomma }}</p>
+        <svg class="chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="Sales per day for the last 7 days. The table below has the same numbers.">
+          {% for g in chart.grid %}
+            <line class="gridline" x1="{{ chart.pad_l }}" x2="{{ chart.plot_right }}" y1="{{ g.y }}" y2="{{ g.y }}"></line>
+            <text x="{{ chart.pad_l|add:'-8' }}" y="{{ g.y }}" text-anchor="end" dominant-baseline="middle">{{ g.label }}</text>
+          {% endfor %}
+          {% for b in chart.bars %}
+            {% if b.path %}<path class="bar" d="{{ b.path }}"></path>{% endif %}
+            <text x="{{ b.cx }}" y="{{ chart.label_y }}" text-anchor="middle">{{ b.label }}</text>
+            {% if b.is_today and b.path %}<text class="today-value" x="{{ b.cx }}" y="{{ b.y|add:'-6' }}" text-anchor="middle">${{ b.total|floatformat:0|intcomma }}</text>{% endif %}
+            <rect class="hit" x="{{ b.hit_x }}" y="{{ chart.hit_y }}" width="{{ b.hit_w }}" height="{{ chart.hit_h }}" tabindex="0"
+                  data-label="{{ b.label }}" data-value="${{ b.total|floatformat:2|intcomma }}"></rect>
+          {% endfor %}
+        </svg>
+        <div class="tip" id="tip"><strong></strong><span></span></div>
+        <details><summary>Show as a table</summary>
+          <table><thead><tr><th>Day</th><th style="text-align:right">Sales</th></tr></thead><tbody>
+          {% for w in data.week %}<tr><td>{{ w.label }}</td><td style="text-align:right">${{ w.total|floatformat:2|intcomma }}</td></tr>{% endfor %}
+          </tbody></table>
+        </details>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <h2>Top products, last 7 days</h2>
+        <p class="note" style="margin-bottom:0">By sales from completed orders</p>
+        {% for p in data.top_products %}
+          <div class="top-row">
+            <div class="name">{{ p.name }}</div><div class="amount">${{ p.sales|floatformat:2|intcomma }}</div>
+            <div class="track"><div class="fill" style="width: {{ p.width }}%"></div></div>
+            <div class="sub">{{ p.quantity }} {% if p.unit == "kg" %}kg{% elif p.unit == "pack" %}pack{{ p.quantity|pluralize }}{% else %}sold{% endif %} · {{ p.orders }} order{{ p.orders|pluralize }}</div>
+          </div>
+        {% empty %}
+          <p>No completed orders in the last 7 days.</p>
+        {% endfor %}
+      </div>
+      <div class="panel">
+        <h2>Orders needing attention</h2>
+        <table class="attention" style="width:100%"><tbody>
+          {% for a in data.attention %}
+            <tr><td>{% if can_see_orders %}<a href="{% url 'admin:orders_order_changelist' %}?status__exact={{ a.status }}">{{ a.label }}</a>{% else %}{{ a.label }}{% endif %}</td><td class="n">{{ a.count }}</td></tr>
+          {% endfor %}
+          <tr><td>Pickups due {% if is_today %}today{% else %}that day{% endif %} (not completed)</td><td class="n">{{ data.pickups_due_today }}</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var panel = document.getElementById("week-panel"), tip = document.getElementById("tip");
+    function show(e) {
+      var t = e.target; tip.querySelector("strong").textContent = t.dataset.value; tip.querySelector("span").textContent = t.dataset.label;
+      var box = t.getBoundingClientRect(), p = panel.getBoundingClientRect();
+      tip.style.display = "block";
+      tip.style.left = Math.min(box.left - p.left + box.width / 2 - tip.offsetWidth / 2, p.width - tip.offsetWidth - 4) + "px";
+      tip.style.top = (box.top - p.top + 10) + "px";
+    }
+    function hide() { tip.style.display = "none"; }
+    panel.querySelectorAll(".hit").forEach(function (r) {
+      r.addEventListener("pointerenter", show); r.addEventListener("focus", show);
+      r.addEventListener("pointerleave", hide); r.addEventListener("blur", hide);
+    });
+  })();
+</script>
+{% endblock %}

@@ -313,6 +313,13 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": nu
 - Bug fix: links from business-only tables to users use `apps.core.business.SET_NULL_IN_BUSINESS` (lazy), so deleting a platform user no longer touches business tables that do not exist in the public schema.
 - `backend/templates/admin/base_site.html` adds the "Two-step verification" and (platform) "Businesses and users" links.
 
+## Dashboard (task 1.9)
+
+- App `apps.reports` (module `reports`, no tables). `apps/reports/dashboard.py` `summary(day)` returns: sales (completed orders by `completed_at`: total, GST, count, average, unpaid) with the change against the same weekday last week; orders confirmed (by `confirmed_at`, not cancelled/expired); sales per day for 7 days; top 5 products by line totals of completed orders in those 7 days; counts of open orders per status; pickups due that day; unread open conversations (if the user has `crm.view`).
+- Days are midnight to midnight in `TIME_ZONE` (Pacific/Auckland), including `TruncDate(..., tzinfo=...)`.
+- API `GET /api/reports/dashboard/?date=YYYY-MM-DD` (`reports.view`); money values are exact strings.
+- Page `/dashboard/` (business sites, `admin.site.admin_view`, `reports.view`): stat tiles, an inline SVG column chart (single series `#2a78d6` light / `#3987e5` dark, validated with the dataviz palette checker; per-bar tooltip on hover/focus; table view), top-product bars, attention list linking to filtered orders. Header link "Dashboard" on business sites.
+
 ## Useful commands
 
 | Task | Command |

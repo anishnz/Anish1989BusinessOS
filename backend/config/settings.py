@@ -51,6 +51,7 @@ SHARED_APPS = [
     "django.contrib.messages",
     "django.contrib.admin",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "rest_framework",
     "django_otp",
     "django_otp.plugins.otp_totp",
@@ -81,6 +82,7 @@ TENANT_APPS = [
     "apps.customers",
     "apps.orders",
     "apps.inbox",
+    "apps.reports",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]

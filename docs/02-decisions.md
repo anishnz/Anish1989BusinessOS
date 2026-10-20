@@ -81,6 +81,9 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-073 | Switching MFA off | The Super Admin can switch MFA off for one user with a required reason; shown in red; recorded in both audit logs; "switch on again" and "reset" available. Not recommended for admins | Chosen by the owner on 21 Oct 2026 after the risk was explained | Decided (21 Oct 2026) |
 | D-074 | Super Admin and business users | Super Admin can see every business's users and change roles, reset or switch off MFA, lock and unlock; recorded in the business's audit log as the platform administrator | Spec: Super Admin views and changes roles across tenants with an audit trail | Decided (21 Oct 2026) |
 | D-075 | Locked-out Super Admin | Recovery is the `reset_mfa` server command (needs server access); a second Super Admin is recommended | No password-only backdoor in the web app | Decided (21 Oct 2026) |
+| D-076 | What counts as a sale | Sales = totals of orders completed (picked up) that day, incl. GST; orders = confirmed that day and not cancelled; compared with the same weekday last week | Simple and matches cash in hand for pickup businesses; the same weekday is a fairer comparison than yesterday | Decided (21 Oct 2026) |
+| D-077 | Dashboard days | Midnight to midnight in the business's time zone (Pacific/Auckland) | Owners think in local days; UTC days would mix evenings into the next day | Decided (21 Oct 2026) |
+| D-078 | Dashboard access | Needs Reports – View; unread chats only for people who can see customers | Sales figures are sensitive; least privilege | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

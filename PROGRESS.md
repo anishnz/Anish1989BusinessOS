@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.8 are done. Next: **1.9 Simple dashboard (today's sales, orders, top products)**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.9 are done. Next: **1.10 Automated tests for login, permissions and tenant isolation (review and fill gaps)**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -114,7 +114,13 @@ Open a new chat in the ERP CRM project and type:
   - Fixed: deleting a platform user failed
   - User guide: chapter 1 (1.4, 1.5) and chapter 3 (3.7)
   - 410 tests pass
-- [ ] 1.9 Simple dashboard
+- [x] 1.9 Simple dashboard (done 21 Oct 2026)
+  - Sales today (completed orders, incl. GST) compared with the same day last week; orders confirmed; average sale; completed but not paid; unread WhatsApp chats
+  - Sales for the last 7 days (bar chart with hover values and a table), top 5 products, orders needing attention, pickups due today
+  - Choose another day; days follow New Zealand time
+  - Page `/dashboard/` (header link) and API `/api/reports/dashboard/`; needs Reports – View
+  - User guide chapter: docs/user-guide/08-dashboard.md
+  - 422 tests pass
 - [ ] 1.10 Tenant isolation and permission tests
 - [ ] 1.11 React/Next.js frontend shell
 - [ ] 1.12 Tenant subdomains

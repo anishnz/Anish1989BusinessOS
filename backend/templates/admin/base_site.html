@@ -12,7 +12,7 @@
 
 {% block userlinks %}
   {% if user.is_active and user.is_staff %}
-    {% if request.tenant.schema_name == "public" %}<a href="{% url 'platform_people' %}">Businesses and users</a> /{% endif %}
+    {% if request.tenant.schema_name == "public" %}<a href="{% url 'platform_people' %}">Businesses and users</a> /{% else %}<a href="{% url 'dashboard' %}">Dashboard</a> /{% endif %}
     <a href="{% url 'accounts:mfa_manage' %}">Two-step verification</a> /
   {% endif %}
   {{ block.super }}
