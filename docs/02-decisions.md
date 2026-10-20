@@ -7,7 +7,7 @@ This document records each decision, the reason for it, and its status. A decisi
 | ID | Area | Decision | Reason | Status |
 |---|---|---|---|---|
 | D-001 | Backend | Python, Django + Django REST Framework | Mature, secure defaults, built-in admin, large ecosystem, easy to maintain | Decided |
-| D-002 | Frontend | React / Next.js as a separate app that calls the Django API | Rich dashboards and BI charts, flexible later, mobile-friendly | Decided |
+| D-002 | Frontend | React as a separate app that calls the Django API (see D-082: Vite, served by Django) | Rich dashboards and BI charts, flexible later, mobile-friendly | Decided |
 | D-003 | Database | PostgreSQL | Safe money maths (decimal), JSON fields, full-text and vector search, scales well | Decided |
 | D-004 | Tenancy | One PostgreSQL schema per tenant (django-tenants) | Strong separation between businesses; easy per-tenant backup and export | Decided |
 | D-005 | Background jobs | Celery + Redis | Crawling, weekly reports, AI jobs and messaging must not block the website | Proposed |
@@ -87,6 +87,8 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-079 | Security tests sweep every URL | Tests discover all pages and APIs automatically and check login, deny-by-default, MFA, cross-business data, module-off and suspension rules | New pages are covered without remembering to write tests; checked by breaking protections on purpose | Decided (21 Oct 2026) |
 | D-080 | CSRF token for the React app | `GET /api/auth/csrf/` returns the token; the cookie stays HttpOnly; the app sends `X-CSRFToken` | Scripts cannot read the cookie, so the token must come from a same-origin API call | Decided (21 Oct 2026) |
 | D-081 | HSTS preload | Not enabled (HSTS with subdomains is on); the Django warning is silenced on purpose | Preload is very hard to undo and businesses will add their own domains; revisit when the platform domain is final | Decided (21 Oct 2026) |
+| D-082 | Staff app technology | React SPA built with Vite, served by Django at `/app/` on each business address (not a separate Next.js server) | Same origin, so session cookies and CSRF work without CORS or tokens in the browser; no extra server to run on laptops or hosting; one Docker image. Staff screens need no search-engine pages. Revisit for the public websites (Step 5) | Decided (21 Oct 2026) |
+| D-083 | Building the app in Docker | A Node stage in the backend Dockerfile builds the app; the frontend folder is a second build context (`frontend-src`) | The image always contains the matching app; backend paths and the dev volume mount stay the same | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

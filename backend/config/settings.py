@@ -261,6 +261,11 @@ USE_TZ = True
 # ---------------------------------------------------------------------------
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Staff screens (React, task 1.11). Built by `npm run build` in frontend/ (or in the Docker image)
+# and served at /app/; its files are collected under /static/app/.
+FRONTEND_DIST = Path(env("FRONTEND_DIST", default=str(BASE_DIR.parent / "frontend" / "dist")))
+STATICFILES_DIRS = [("app", FRONTEND_DIST)] if FRONTEND_DIST.is_dir() else []
 MEDIA_URL = "media/"
 MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")
 STORAGES = {

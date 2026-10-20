@@ -66,7 +66,20 @@ class MyPermissionsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response({"permissions": sorted(policy.effective_permissions(request.user))})
+        """
+        permissions: everything the person's roles give them;
+        usable: the part they can use right now (module switched on, licence active) - use this for menus;
+        business: the current business (null on the platform site).
+        """
+        from django.db import connection
+
+        codes = policy.effective_permissions(request.user)
+        usable = sorted(c for c in codes if policy.check(request.user, c))
+        tenant = getattr(connection, "tenant", None)
+        business = None
+        if connection.schema_name != "public" and tenant is not None:
+            business = {"name": getattr(tenant, "name", ""), "id": connection.schema_name}
+        return Response({"permissions": sorted(codes), "usable": usable, "business": business})
 
 
 class CatalogueView(APIView):

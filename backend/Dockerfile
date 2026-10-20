@@ -1,3 +1,18 @@
+# Two stages:
+#   1. "frontend-build" builds the React staff app (frontend/) with Node.
+#   2. The Python image runs Django and serves that built app at /app/.
+# The frontend folder arrives as a second build context called "frontend-src"
+# (docker-compose.yml and CI pass it with additional_contexts / build-contexts).
+
+# Node 24 LTS on Debian 12. npm ci installs the exact versions in package-lock.json.
+FROM node:24-bookworm-slim AS frontend-build
+WORKDIR /frontend
+COPY --from=frontend-src package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY --from=frontend-src index.html tsconfig.json vite.config.ts ./
+COPY --from=frontend-src src/ src/
+RUN npm run build
+
 # Python 3.13 on Debian 12 (bookworm). The minor version and OS release are pinned
 # so every build uses the same base. Python packages come from a lock file with hashes.
 FROM python:3.13-slim-bookworm
@@ -20,6 +35,11 @@ ARG REQUIREMENTS=base.lock
 RUN pip install --require-hashes --no-deps -r requirements/${REQUIREMENTS}
 
 COPY . .
+
+# The built React app. Django serves index.html at /app/ and collectstatic
+# copies the rest to /static/app/.
+COPY --from=frontend-build /frontend/dist /opt/frontend-dist
+ENV FRONTEND_DIST=/opt/frontend-dist
 
 # Make the entrypoint work even if it was checked out with Windows line endings.
 RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh

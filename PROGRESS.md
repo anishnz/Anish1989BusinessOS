@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.10 are done. Next: **1.11 React/Next.js frontend shell**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.11 are done. Next: **1.12 Tenant subdomains**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -126,7 +126,12 @@ Open a new chat in the ERP CRM project and type:
   - CSRF and cookie tests; Django production checks in CI
   - Fixed 4 bugs found by the sweeps (a crashing roles API, a crashing view-only role page, a crashing tenant page on business sites, CSRF token not readable by the future React app)
   - 440 tests pass
-- [ ] 1.11 React/Next.js frontend shell
+- [x] 1.11 React staff app (done 21 Oct 2026)
+  - React app at `/app/` on each business address: login with two-step code, menu that shows only what your role and modules allow, light/dark theme, works on phones
+  - Screens: Dashboard, Orders (list, new order, order page with weights, next step, cancel, payment, history), Inbox (read and reply, 24-hour rule), Products and Customers (search)
+  - Built by Vite; served by Django (no separate server); built inside the Docker image; CI job for type check, tests and build
+  - Fixed: phone layout (menu drawer, no sideways scrolling, order lines as blocks); no 403 error in the browser before login
+  - User guide chapter: docs/user-guide/09-staff-app.md
 - [ ] 1.12 Tenant subdomains
 - [ ] 1.13 "Check system" health check button
 - [ ] 1.14 Backups every 6 hours to Google Drive (encrypted) and restore test

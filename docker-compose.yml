@@ -6,12 +6,14 @@
 #
 # The app image is built and published by GitHub Actions on every push to main:
 #   ghcr.io/anishnz/anish1989businessos-backend
-# If it cannot be pulled, Docker builds it locally from ./backend instead.
+# If it cannot be pulled, Docker builds it locally from ./backend and ./frontend instead.
 
 x-app: &app
   image: ghcr.io/anishnz/anish1989businessos-backend:${APP_IMAGE_TAG:-latest}
   build:
     context: ./backend
+    additional_contexts:
+      frontend-src: ./frontend   # the React staff app, built inside the image
   env_file: .env
   restart: unless-stopped
   depends_on:

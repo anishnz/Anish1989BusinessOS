@@ -40,6 +40,8 @@ PUBLIC_ROUTES = {
     "account/reset/<uidb64>/<token>/",
     "account/reset/done/",
     "webhooks/whatsapp/",  # checked by the Meta signature instead (test_inbox.py)
+    "app/",  # the React page itself holds no data; its API calls are checked
+    "app/<path:rest>",
 }
 # Pages about the logged-in person themselves.
 SELF_ROUTES = {r for r in [
@@ -82,7 +84,7 @@ PLATFORM_ROUTES = [r for r in routes("config.urls_public") if not is_regex(r)]
 
 def test_route_lists_are_complete():
     """The sweeps really see the pages (guards against the sweep silently testing nothing)."""
-    for expected in ("api/products/", "api/orders/<int:pk>/status/", "api/inbox/conversations/<int:pk>/reply/", "dashboard/",
+    for expected in ("app/", "api/products/", "api/orders/<int:pk>/status/", "api/inbox/conversations/<int:pk>/reply/", "dashboard/",
                      "admin/catalog/product/import/", "settings/integrations/", "api/reports/dashboard/"):
         assert expected in BUSINESS_ROUTES, expected
     assert "platform/people/<slug:schema>/<int:user_id>/" in PLATFORM_ROUTES

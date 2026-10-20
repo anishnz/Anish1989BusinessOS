@@ -341,6 +341,50 @@ When adding a page that anyone may open, add it to `PUBLIC_ROUTES` with a commen
 
 Bugs the sweeps found and fixed: `GET /api/rbac/users/<id>/roles/<role_id>/` crashed (now a delete-only view); a view-only role page in the admin crashed; the platform's tenant admin page crashed on business sites before refusing; the CSRF token could not be read by the React app.
 
+## Staff app, React (task 1.11)
+
+The staff screens are a React single-page app in `frontend/`: Vite 8, React 19, React Router 7, TypeScript, with tests in Vitest. Django serves it on every business site at **`/app/`**, on the same address as the API.
+
+| Piece | Where |
+|---|---|
+| Source | `frontend/src/` (pages, components, `api.ts`, `auth.tsx`, `nav.ts`, `styles.css`) |
+| Built files | `frontend/dist/` (not in git). `FRONTEND_DIST` setting; in Docker `/opt/frontend-dist` |
+| Page | `apps/core/spa.py`: `/app/` and `/app/<anything>` return `index.html` with a strict CSP; 503 page if not built; GET only; not on the platform site |
+| Assets | collected under `/static/app/` (`STATICFILES_DIRS`), so WhiteNoise/collectstatic serve them |
+
+How it talks to Django:
+
+- Session login, same origin, no CORS and no tokens in browser storage.
+- `GET /api/auth/csrf/` returns `csrfToken` (the cookie is HttpOnly) and `authenticated` (so the app skips `/api/auth/me/` when nobody is logged in). The app sends `X-CSRFToken` on POST/PATCH/DELETE, fetches a new token after login and logout, and retries once on a CSRF failure.
+- `GET /api/rbac/me/permissions/` returns `usable`: permissions the role has **and** whose module is switched on. The menu (`nav.ts`) shows only usable pages. The server still checks every request; hiding menu items is not security.
+- If two-step verification is required but not set up, the app sends the person to the Django page `/account/mfa/setup/`.
+
+Run it while developing (two terminals):
+
+```bash
+# 1. Django (Docker or local), on port 8000
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+# 2. Vite with hot reload; it forwards /api, /account, /admin, /static, /dashboard and /settings to port 8000
+cd frontend
+npm ci
+npm run dev
+# open http://gorkhabutchery.localhost:5173/app/
+```
+
+Checks (CI runs the same in the `frontend` job):
+
+```bash
+cd frontend
+npm run typecheck
+npm test
+npm run build
+```
+
+Docker: `backend/Dockerfile` has a Node stage (`frontend-build`) that runs `npm ci` and `npm run build`. The frontend folder is passed as a second build context named `frontend-src` (`additional_contexts` in the compose files, `build-contexts` in CI), so the backend build context stays `./backend`. Needs Docker Compose 2.17 or newer (Docker Desktop is fine).
+
+Phone layout: below 760 px the menu becomes a drawer (☰); below 560 px order line tables (`table.stack`) turn into label/value blocks. Wide tables scroll inside their card, never the whole page.
+
 ## Useful commands
 
 | Task | Command |

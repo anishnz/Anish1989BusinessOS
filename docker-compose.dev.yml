@@ -7,6 +7,8 @@ x-dev-app: &dev-app
   image: anish1989businessos-backend:dev
   build:
     context: ./backend
+    additional_contexts:
+      frontend-src: ./frontend   # the React staff app, built inside the image
     args:
       REQUIREMENTS: dev.lock
   volumes:

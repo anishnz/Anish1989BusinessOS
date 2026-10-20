@@ -74,7 +74,12 @@ class CsrfView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        return Response({"detail": "CSRF cookie set.", "csrfToken": get_token(request._request)})
+        return Response({
+            "detail": "CSRF cookie set.",
+            "csrfToken": get_token(request._request),
+            # Lets the app skip /api/auth/me/ (and its 403) when nobody is logged in.
+            "authenticated": bool(request.user and request.user.is_authenticated),
+        })
 
 
 @method_decorator(csrf_protect, name="dispatch")
