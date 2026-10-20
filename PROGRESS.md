@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.12 are done. Next: **1.13 "Check system" health check button**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.13 are done. Next: **1.14 Backups every 6 hours to Google Drive (encrypted) and restore test**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -142,7 +142,14 @@ Open a new chat in the ERP CRM project and type:
   - Server DNS and HTTPS steps documented (wildcard record and certificate; depends on the hosting choice)
   - User guide chapter: docs/user-guide/10-web-addresses.md
   - 509 tests pass
-- [ ] 1.13 "Check system" health check button
+- [x] 1.13 "Check system" health check button (done 21 Oct 2026)
+  - Business checks: database and updates, cache, background worker, scheduled jobs (heartbeat), licence, web address, every saved connection tested live (in parallel), email sending, WhatsApp webhook, staff two-step verification, audit log, backups (not set up yet)
+  - Platform checks: also every business's database, disk space, licences needing attention, businesses with failed connections or checks, vault master key, production security settings
+  - Results OK / Needs attention / Failed / Not set up, with plain messages (no secrets or error details); history of runs (last 500); button limited to once a minute
+  - Runs every hour by itself (Celery beat); email to admins when a scheduled check turns red; `check_system` command
+  - Page `/system-check/` and API `/api/system-check/`; "Check system" link in the admin header
+  - User guide chapter: docs/user-guide/11-check-system.md
+  - 546 tests pass
 - [ ] 1.14 Backups every 6 hours to Google Drive (encrypted) and restore test
 - [ ] 1.15 Basic ticket system
 - [ ] 1.16 First-login setup wizard with per-tenant Google Drive backup connection

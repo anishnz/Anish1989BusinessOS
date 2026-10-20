@@ -64,6 +64,8 @@ AI content generation:
 
 Each dashboard has a **Check system** button. One click runs the checks for that dashboard and shows the results as green (OK), amber (warning) or red (failed).
 
+Done in task 1.13 for the Super Admin and tenant admin rows below (core checks; user guide chapter 11). Backups, SSL certificates and the error rate are added with their features. The other dashboards get their checks with their modules.
+
 | Dashboard | What it checks |
 |---|---|
 | Super Admin | Database, background workers, queue length, storage, last backups, SSL certificates, error rate, all tenants' integration status |

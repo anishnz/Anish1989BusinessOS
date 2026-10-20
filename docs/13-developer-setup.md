@@ -428,6 +428,26 @@ For a platform domain such as `example.co.nz`:
 
 Own domains for businesses (`gorkhabutchery.co.nz`) come in Step 2, with a TXT ownership check and automatic certificates.
 
+## Check system (task 1.13)
+
+Code: `apps/health/` (in both SHARED_APPS and TENANT_APPS, so every schema has its own `CheckRun` history). Tests: `tests/test_system_check.py`.
+
+| Piece | Where |
+|---|---|
+| Checks | `apps/health/checks.py`: `business_checks()` and `platform_checks()`. Each returns `Result(code, area, label, status, message)`; status `ok`, `warning`, `failed` or `not_set_up` |
+| Safety | `_safe()` turns any error inside a check into a red result with a plain message; details go to the log only |
+| Connections | `test_connections()` reads secrets in the request thread, then runs the provider tests in a thread pool (no database work in the threads); saves Connected/Failed; audits `integration.status_changed` only when the status changes |
+| Runs | `services.run(trigger, user=...)` saves a `CheckRun` (results JSON, counts), audits `system_check.run`, keeps the last 500. The button is limited to once a minute per site (cache key, so per schema) |
+| Page / API | `/system-check/`, `/system-check/<id>/`, `GET /api/system-check/`, `POST /api/system-check/run/` (201, or 429 if too soon). Permission: `settings.view` on business sites, `platform_settings.view` on the platform |
+| Schedule | `CELERY_BEAT_SCHEDULE`: `health.heartbeat` every 5 minutes, `health.scheduled_checks` every `SYSTEM_CHECK_EVERY_MINUTES` (default 60). The scheduled run goes through every business that may use the system (skips suspended and expired), then the platform |
+| Heartbeat | Stored under the platform's cache prefix (`health:heartbeat`), so every business reads the same value. Older than 15 minutes = amber |
+| Alerts | A **scheduled** run that turns red (previous run not red) emails System Admins and IT Admins (business) or Super Admins (platform) |
+| Command | `python manage.py check_system [--schema <id>] [--all] [--no-live]`; exits with code 1 when red |
+
+Tests replace `ping_workers` (conftest) so no test waits for a Celery reply.
+
+Adding a check: write a function that returns a `Result` (or a list), and add it to `business_checks()` or `platform_checks()` through `_safe()`. Messages must say what to do, in plain words, and never include secrets, host names or exception text.
+
 ## Useful commands
 
 | Task | Command |
@@ -445,6 +465,7 @@ Own domains for businesses (`gorkhabutchery.co.nz`) come in Step 2, with a TXT o
 | Pretend a customer sent a WhatsApp message (testing) | `python manage.py whatsapp_simulate --schema <slug> --from "021 123 4567" --text "hi"` |
 | Expire orders not confirmed in time | `python manage.py expire_orders --minutes 60` |
 | Send a test email through the saved Gmail/SMTP connection | `python manage.py send_test_email --to you@example.com [--schema <slug>]` |
+| Run the system checks (platform, one business, or all) | `python manage.py check_system [--schema <slug>] [--all] [--no-live]` |
 | Make migrations after model changes | `python manage.py makemigrations` |
 
 Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail`, `services`, `education_consultancy`, `e_learning`, `jobs`, `other`.

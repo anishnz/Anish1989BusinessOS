@@ -7,13 +7,13 @@ Anish1989 Business OS is a multi-tenant SaaS platform for small and medium busin
 | Item | Value |
 |---|---|
 | Owner | Anish Shrestha |
-| Stage | Step 1 (shared core) in progress: tasks 1.1 to 1.12 done |
+| Stage | Step 1 (shared core) in progress: tasks 1.1 to 1.13 done |
 | Last updated | 21 October 2026 |
 | First pilot target | Gorkha Butchery, Auckland |
 
 ## Current stage
 
-**Step 1 (shared core) is in progress.** Tasks 1.1 to 1.12 are done: setup, login and two-step verification, roles and audit log, licences, the secret vault, products and customers, orders, WhatsApp and the inbox, the dashboard, security tests, the React staff app and business web addresses. See [PROGRESS.md](PROGRESS.md) for the live task list and how to continue in a new session.
+**Step 1 (shared core) is in progress.** Tasks 1.1 to 1.13 are done: setup, login and two-step verification, roles and audit log, licences, the secret vault, products and customers, orders, WhatsApp and the inbox, the dashboard, security tests, the React staff app, business web addresses and the Check system button. See [PROGRESS.md](PROGRESS.md) for the live task list and how to continue in a new session.
 
 ## Quick start
 

@@ -61,6 +61,7 @@ SHARED_APPS = [
     "apps.rbac",
     "apps.licensing",
     "apps.vault",
+    "apps.health",
     "apps.core",
 ]
 
@@ -77,6 +78,7 @@ TENANT_APPS = [
     "apps.audit",
     "apps.rbac",
     "apps.vault",
+    "apps.health",
     # Business data (only inside each business's schema)
     "apps.catalog",
     "apps.customers",
@@ -212,6 +214,11 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=REDIS_URL)
 CELERY_TIMEZONE = env("TIME_ZONE")
 CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+# Scheduled jobs (run by the `scheduler` service). See apps/health/tasks.py.
+CELERY_BEAT_SCHEDULE = {
+    "heartbeat": {"task": "health.heartbeat", "schedule": 5 * 60},
+    "system-checks": {"task": "health.scheduled_checks", "schedule": env.int("SYSTEM_CHECK_EVERY_MINUTES", default=60) * 60},
+}
 
 # ---------------------------------------------------------------------------
 # REST API

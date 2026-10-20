@@ -147,3 +147,11 @@ def verified_admin_client(client_for):
         return client
 
     return _make
+
+
+@pytest.fixture(autouse=True)
+def no_worker_ping(monkeypatch):
+    """Tests have no Celery worker; asking for one would wait 1.5 seconds per check run."""
+    import apps.health.checks as health_checks
+
+    monkeypatch.setattr(health_checks, "ping_workers", lambda: 0)

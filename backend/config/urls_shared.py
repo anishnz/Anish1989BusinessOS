@@ -4,6 +4,8 @@ from django.urls import include, path
 
 from apps.accounts.urls import api_urlpatterns, password_reset_urlpatterns, web_urlpatterns
 from apps.core.views import health
+from apps.health.urls import api_urlpatterns as check_api_urlpatterns
+from apps.health.urls import web_urlpatterns as check_web_urlpatterns
 from apps.vault.urls import api_urlpatterns as vault_api_urlpatterns
 from apps.vault.urls import web_urlpatterns as vault_web_urlpatterns
 
@@ -16,5 +18,7 @@ shared_urlpatterns = [
     path("api/tenant/", include("apps.licensing.urls")),
     path("api/integrations/", include(vault_api_urlpatterns)),
     path("settings/integrations/", include((vault_web_urlpatterns, "vault"))),
+    *check_web_urlpatterns,
+    path("api/system-check/", include(check_api_urlpatterns)),
     path("admin/", admin.site.urls),
 ]

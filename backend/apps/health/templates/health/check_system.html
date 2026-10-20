@@ -1,0 +1,84 @@
+{% extends "admin/base_site.html" %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .chk { --ink: var(--body-fg); --ink-2: var(--body-quiet-color); --grid: var(--hairline-color);
+         --ok: #0a7d0a; --ok-bg: #e6f4e6; --warn: #8a5a00; --warn-bg: #fdf1d8; --bad: #b42323; --bad-bg: #fbe5e5; --none: #5c6370; --none-bg: #eceef1;
+         max-width: 980px; color: var(--ink); }
+  @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .chk {
+         --ok: #6fd36f; --ok-bg: #173a17; --warn: #f0c060; --warn-bg: #3d3010; --bad: #ff8a8a; --bad-bg: #451c1c; --none: #b5bcc6; --none-bg: #2c3038; } }
+  :root[data-theme="dark"] .chk { --ok: #6fd36f; --ok-bg: #173a17; --warn: #f0c060; --warn-bg: #3d3010; --bad: #ff8a8a; --bad-bg: #451c1c; --none: #b5bcc6; --none-bg: #2c3038; }
+  .chk .top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin-bottom: 16px; }
+  .chk .top form { margin: 0; }
+  .chk .note { color: var(--ink-2); font-size: 13px; margin: 0; }
+  .chk .summary { border: 1px solid var(--grid); border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; }
+  .chk .summary .big { font-size: 22px; font-weight: 600; }
+  .chk .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .chk .pill::before { font-weight: 700; }
+  .chk .ok { color: var(--ok); background: var(--ok-bg); } .chk .ok::before { content: "✓"; }
+  .chk .warning { color: var(--warn); background: var(--warn-bg); } .chk .warning::before { content: "!"; }
+  .chk .failed { color: var(--bad); background: var(--bad-bg); } .chk .failed::before { content: "✕"; }
+  .chk .not_set_up { color: var(--none); background: var(--none-bg); } .chk .not_set_up::before { content: "–"; }
+  .chk h2.area { font-size: 15px; margin: 18px 0 6px; background: none; color: var(--ink); padding: 0; text-transform: none; letter-spacing: 0; }
+  .chk table { width: 100%; border-collapse: collapse; }
+  .chk td { vertical-align: top; padding: 8px 8px; border-bottom: 1px solid var(--grid); }
+  .chk td.what { width: 30%; font-weight: 600; }
+  .chk td.state { width: 150px; }
+  @media (max-width: 640px) {
+    .chk table, .chk tbody, .chk tr, .chk td { display: block; width: auto; }
+    .chk thead { display: none; }
+    .chk tr { border-bottom: 1px solid var(--grid); padding: 6px 0; }
+    .chk td { border: 0; padding: 2px 0; }
+    .chk td.what, .chk td.state { width: auto; }
+  }
+  .chk .history td, .chk .history th { padding: 6px 8px; }
+  .chk .history { margin-top: 8px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="chk">
+  <div class="top">
+    <form method="post" action="{% url 'system_check' %}">{% csrf_token %}
+      <input type="submit" value="Check system" class="default" style="font-size: 15px; padding: 10px 18px;">
+    </form>
+    <p class="note">Tests {{ where }} now: {{ covers }}.
+      Checks only read and test; they never change business data. They also run every hour by themselves.</p>
+  </div>
+
+  {% if not latest %}<p><a href="{% url 'system_check' %}">← Latest results</a></p>{% endif %}
+
+  {% if record %}
+    <div class="summary" aria-live="polite">
+      <span class="pill {{ record.status }} big">{{ record.get_status_display }}</span>
+      <span>{{ record.started_at|date:"j M Y, H:i" }} · {{ record.seconds }} s · {{ record.get_trigger_display }}{% if record.run_by_email %} by {{ record.run_by_email }}{% endif %}</span>
+      <span class="note">
+        {% for key, label, n in counts %}<span class="pill {{ key }}">{{ n }} {{ label }}</span> {% endfor %}
+      </span>
+    </div>
+
+    {% for area, rows in groups %}
+      <h2 class="area">{{ area }}</h2>
+      <table><tbody>
+        {% for r in rows %}
+          <tr><td class="what">{{ r.label }}</td><td class="state"><span class="pill {{ r.status }}">{{ r.status_label }}</span></td><td>{{ r.message }}</td></tr>
+        {% endfor %}
+      </tbody></table>
+    {% endfor %}
+  {% else %}
+    <p>The checks have not run yet. Click <strong>Check system</strong>.</p>
+  {% endif %}
+
+  {% if history %}
+    <h2 class="area" style="margin-top: 28px;">Earlier runs</h2>
+    <table class="history"><thead><tr><th>When</th><th>Result</th><th>Started by</th><th>Time</th></tr></thead><tbody>
+      {% for run in history %}
+        <tr>
+          <td><a href="{% url 'system_check_run' run.pk %}">{{ run.started_at|date:"j M Y, H:i" }}</a></td>
+          <td><span class="pill {{ run.status }}">{{ run.get_status_display }}</span></td>
+          <td>{% if run.run_by_email %}{{ run.run_by_email }}{% else %}{{ run.get_trigger_display }}{% endif %}</td>
+          <td>{{ run.seconds }} s</td>
+        </tr>
+      {% endfor %}
+    </tbody></table>
+  {% endif %}
+</div>
+{% endblock %}

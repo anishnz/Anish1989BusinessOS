@@ -94,6 +94,11 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-086 | Unknown address page | A friendly 404 page with no cookies, sessions or database reads | Does not reveal which businesses exist | Decided (21 Oct 2026) |
 | D-087 | Moving the platform domain | `change_platform_domain` moves the platform and every business subdomain in one step (dry run first); `bootstrap_platform` never adds a second platform address | Moving from a laptop pilot to the real domain must not leave businesses on `*.localhost` | Decided (21 Oct 2026) |
 | D-088 | DNS and HTTPS on the server | Wildcard DNS record and a wildcard certificate (Let's Encrypt DNS-01, or a proxy such as Cloudflare) | New businesses need no DNS change; depends on the hosting choice (open question) | Proposed (21 Oct 2026) |
+| D-089 | Check results | Four states: OK, Needs attention, Failed, Not set up (grey, does not change the overall result); shown with a symbol and words, not colour only | Clear for owners; "not built yet" is not an error | Decided (21 Oct 2026) |
+| D-090 | Who runs the checks | Business: Settings - View (System Admin, IT Admin, Business Owner); platform: Platform settings - View. The button runs at most once a minute per site | Checks show technical state; each run tests every saved key with its provider | Decided (21 Oct 2026) |
+| D-091 | Live key tests in checks | Every run tests each saved connection with the provider (read-only calls, in parallel, 10 s each); status saved; audit entry only when the status changes | Shows real problems (expired keys) without filling the audit log every hour | Decided (21 Oct 2026) |
+| D-092 | Scheduled checks and alerts | Every hour for every open business and the platform; email to System/IT Admins (or Super Admins) only when a scheduled check turns red | Problems are found without anyone clicking; no email flood while a problem lasts | Decided (21 Oct 2026) |
+| D-093 | Scheduler heartbeat | A job every 5 minutes writes a timestamp; older than 15 minutes shows amber | Proves the scheduler and a worker really run, not only that they exist | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 
