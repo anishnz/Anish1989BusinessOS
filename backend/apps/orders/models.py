@@ -15,6 +15,7 @@ from django.db import models
 from django.db.models import Q
 
 from apps.catalog.models import Product
+from apps.core.business import SET_NULL_IN_BUSINESS
 from apps.customers.models import Customer
 
 
@@ -61,7 +62,7 @@ class Order(models.Model):
     confirmed_at = models.DateTimeField(null=True, blank=True, editable=False)
     completed_at = models.DateTimeField(null=True, blank=True, editable=False)
     cancelled_at = models.DateTimeField(null=True, blank=True, editable=False)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+", editable=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+", editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -131,7 +132,7 @@ class OrderEvent(models.Model):
     from_status = models.CharField(max_length=30, blank=True)
     to_status = models.CharField(max_length=30)
     note = models.CharField(max_length=300, blank=True)
-    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
     at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

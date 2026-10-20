@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% comment %}Same as Django's admin base_site, plus links to "Two-step verification" and (platform site) "Businesses and users".{% endcomment %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
+{% if user.is_anonymous %}
+  {% include "admin/color_theme_toggle.html" %}
+{% endif %}
+{% endblock %}
+
+{% block userlinks %}
+  {% if user.is_active and user.is_staff %}
+    {% if request.tenant.schema_name == "public" %}<a href="{% url 'platform_people' %}">Businesses and users</a> /{% endif %}
+    <a href="{% url 'accounts:mfa_manage' %}">Two-step verification</a> /
+  {% endif %}
+  {{ block.super }}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

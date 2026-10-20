@@ -174,6 +174,7 @@ class TenantAdmin(BaseTenantAdmin):
         extra_context["tenant_links"] = [
             (reverse("admin:tenants_tenant_invite", args=[object_id]), "Invite System Admin"),
             (reverse("admin:tenants_tenant_suspend", args=[object_id]), "Suspend business"),
+            (reverse("platform_people_list", args=[Tenant.objects.get(pk=object_id).schema_name]), "Users and roles"),
         ]
         return super().change_view(request, object_id, form_url, extra_context)
 

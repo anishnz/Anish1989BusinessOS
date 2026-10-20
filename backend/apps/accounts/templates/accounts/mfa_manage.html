@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 640px;">
+  {% if status == "on" %}
+    <p><strong>Two-step verification is on.</strong> You have {{ remaining }} unused backup code{{ remaining|pluralize }}.</p>
+    {% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+
+    <h2>New backup codes</h2>
+    <p>Creates 10 new one-time codes. Your old backup codes stop working.</p>
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="codes">
+      <p><label>Your password: <input type="password" name="password" autocomplete="current-password" required></label></p>
+      <div class="submit-row"><input type="submit" value="Create new backup codes"></div>
+    </form>
+
+    <h2>Move to a new phone (new QR code)</h2>
+    <p>Shows a new QR code for your authenticator app. Your old app keeps working until you confirm the new one.</p>
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="new_qr">
+      <p><label>Your password: <input type="password" name="password" autocomplete="current-password" required></label></p>
+      <div class="submit-row"><input type="submit" value="Show a new QR code"></div>
+    </form>
+
+    <h2>Lost your phone and your backup codes?</h2>
+    {% if request.tenant.schema_name == "public" %}
+      <p>Ask another Super Admin to reset it on <strong>Businesses and users</strong>. If you are the only one, the person who runs the server can run
+         <code>docker compose exec web python manage.py reset_mfa --email {{ request.user.email }}</code>. You then set it up again at your next login.</p>
+    {% else %}
+      <p>Ask the platform Super Admin to reset your two-step verification. You then set it up again at your next login.</p>
+    {% endif %}
+  {% elif status == "off" %}
+    <p class="errornote"><strong>Two-step verification is switched off for your account.</strong>
+      It was switched off by {{ exempt.mfa_exempt_by|default:"an administrator" }} on {{ exempt.mfa_exempt_at|date:"j M Y" }}{% if exempt.mfa_exempt_reason %} ({{ exempt.mfa_exempt_reason }}){% endif %}.
+      Anyone who learns your password can sign in as you.</p>
+    <p><a class="button" href="{% url 'accounts:mfa_setup' %}?next={% url 'accounts:mfa_manage' %}">Set up two-step verification now</a></p>
+  {% else %}
+    <p>Two-step verification is not set up.</p>
+    <p><a class="button" href="{% url 'accounts:mfa_setup' %}?next={% url 'accounts:mfa_manage' %}">Set up two-step verification</a></p>
+  {% endif %}
+</div>
+{% endblock %}

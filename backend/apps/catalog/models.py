@@ -13,6 +13,8 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Lower
 
+from apps.core.business import SET_NULL_IN_BUSINESS
+
 ZERO = Decimal("0")
 CENT = Decimal("0.01")
 
@@ -66,7 +68,7 @@ class Product(models.Model):
     )
     is_available = models.BooleanField("Available to order", default=True)
     is_archived = models.BooleanField("Archived", default=False, help_text="Archived products are hidden but kept for old orders and reports.")
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

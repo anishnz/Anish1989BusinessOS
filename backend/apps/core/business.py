@@ -1,5 +1,6 @@
 """Helpers for apps whose data only exists inside a business (tenant) schema."""
 from django.contrib import admin
+from django.db import models
 from django.db import connection
 
 
@@ -41,3 +42,21 @@ class ArchivedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         return queryset.filter(is_archived=self.value() == "yes")
+
+
+def SET_NULL_IN_BUSINESS(collector, field, sub_objs, using):
+    """
+    on_delete for links from business-only tables to users.
+
+    The users table exists in every schema, but business tables (products,
+    orders...) only exist in business schemas. When a platform user is
+    deleted, Django would try to update those tables in the platform schema,
+    where they do not exist. There is nothing to update there, so skip it.
+    """
+    if not on_platform_site():
+        models.SET_NULL(collector, field, sub_objs, using)
+
+
+# Like Django's SET_NULL: do not load the linked rows before calling the rule
+# (loading them is exactly what fails on the platform schema).
+SET_NULL_IN_BUSINESS.lazy_sub_objs = True

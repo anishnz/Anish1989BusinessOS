@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
+from apps.core.business import SET_NULL_IN_BUSINESS
 from apps.customers.models import Customer
 
 
@@ -25,7 +26,7 @@ class Conversation(models.Model):
     external_id = models.CharField(max_length=64, blank=True, help_text="The customer's id on the channel (WhatsApp: phone digits).")
     customer = models.ForeignKey(Customer, null=True, blank=True, on_delete=models.SET_NULL, related_name="conversations")
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.OPEN)
-    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
     unread_count = models.PositiveIntegerField(default=0)
     last_message_at = models.DateTimeField(null=True, blank=True)
     last_inbound_at = models.DateTimeField(null=True, blank=True, help_text="Last message from the customer (starts the 24-hour reply window).")
@@ -69,7 +70,7 @@ class Message(models.Model):
     provider_message_id = models.CharField(max_length=128, null=True, blank=True, unique=True)
     status = models.CharField(max_length=10, choices=Status.choices)
     error = models.CharField(max_length=300, blank=True)
-    sent_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    sent_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
     provider_timestamp = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

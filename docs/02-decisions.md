@@ -77,6 +77,10 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-069 | 24-hour rule and templates | Free replies only within 24 hours of the customer's last message; otherwise approved templates; marketing templates only with consent; STOP opts out | WhatsApp policy and the NZ Unsolicited Electronic Messages Act | Decided (21 Oct 2026) |
 | D-070 | Messages and privacy | Message text never goes into the audit log; removing a customer's data deletes their messages | Messages are personal data; the audit log cannot be edited | Decided (21 Oct 2026) |
 | D-071 | Operations Manager defaults | Default role now also sees products and customers | Needed to pick products and customers in orders; agreed 21 Oct 2026 | Decided (21 Oct 2026) |
+| D-072 | Backup codes | 10 one-time codes of 16 characters (XXXX-XXXX-XXXX-XXXX, no look-alike letters), with print and download | Asked by the owner on 21 Oct 2026; easier to read and type, about 79 bits each | Decided (21 Oct 2026) |
+| D-073 | Switching MFA off | The Super Admin can switch MFA off for one user with a required reason; shown in red; recorded in both audit logs; "switch on again" and "reset" available. Not recommended for admins | Chosen by the owner on 21 Oct 2026 after the risk was explained | Decided (21 Oct 2026) |
+| D-074 | Super Admin and business users | Super Admin can see every business's users and change roles, reset or switch off MFA, lock and unlock; recorded in the business's audit log as the platform administrator | Spec: Super Admin views and changes roles across tenants with an audit trail | Decided (21 Oct 2026) |
+| D-075 | Locked-out Super Admin | Recovery is the `reset_mfa` server command (needs server access); a second Super Admin is recommended | No password-only backdoor in the web app | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

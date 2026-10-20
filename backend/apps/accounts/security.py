@@ -8,6 +8,7 @@ affects the same email address in another business.
 from __future__ import annotations
 
 import base64
+import secrets
 
 import segno
 from django.conf import settings
@@ -21,6 +22,9 @@ from .models import LoginEvent
 
 TOTP_DEVICE_NAME = "Authenticator app"
 BACKUP_DEVICE_NAME = "Backup codes"
+# Backup codes: 16 characters, without letters that look alike (I, L, O, 0, 1).
+BACKUP_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+BACKUP_CODE_LENGTH = 16
 
 
 # ---------------------------------------------------------------------------
@@ -146,9 +150,19 @@ def confirm_totp(device: TOTPDevice, token: str) -> bool:
     return True
 
 
+def normalise_code(token: str) -> str:
+    """Accept codes typed with spaces or dashes, and backup codes in lower case."""
+    token = (token or "").strip().replace(" ", "").replace("-", "")
+    return token.upper() if len(token) == BACKUP_CODE_LENGTH else token
+
+
+def format_backup_code(code: str) -> str:
+    return "-".join(code[i:i + 4] for i in range(0, len(code), 4)) if len(code) == BACKUP_CODE_LENGTH else code
+
+
 def verify_mfa(user, token: str):
     """Check a code from the authenticator app or a backup code. Returns the device or None."""
-    token = (token or "").strip().replace(" ", "")
+    token = normalise_code(token)
     if not token:
         return None
     with transaction.atomic():
@@ -163,10 +177,70 @@ def create_backup_codes(user) -> list[str]:
     """Replace the user's backup codes with a new set. Each code works once."""
     device, _ = StaticDevice.objects.get_or_create(user=user, name=BACKUP_DEVICE_NAME, defaults={"confirmed": True})
     device.token_set.all().delete()
-    codes = [StaticToken.random_token() for _ in range(settings.MFA_BACKUP_CODE_COUNT)]
+    codes = ["".join(secrets.choice(BACKUP_CODE_ALPHABET) for _ in range(BACKUP_CODE_LENGTH)) for _ in range(settings.MFA_BACKUP_CODE_COUNT)]
     StaticToken.objects.bulk_create([StaticToken(device=device, token=code) for code in codes])
-    return codes
+    return [format_backup_code(code) for code in codes]
 
 
 def backup_codes_remaining(user) -> int:
     return StaticToken.objects.filter(device__user=user, device__confirmed=True).count()
+
+
+def replace_authenticator(user, device: TOTPDevice) -> None:
+    """After the new authenticator is confirmed, remove the old ones."""
+    TOTPDevice.objects.filter(user=user, confirmed=True).exclude(pk=device.pk).delete()
+
+
+# ---------------------------------------------------------------------------
+# Administrator actions (Super Admin, or the reset_mfa command)
+# ---------------------------------------------------------------------------
+def _admin_event(event: str, user, *, by_email: str, request=None, reason: str = "") -> None:
+    from apps.audit.services import audit
+
+    audit(
+        f"auth.{event}", request=request, actor_email=by_email, target=user,
+        metadata={"by": by_email or "server command", **({"reason": reason} if reason else {})},
+    )
+    LoginEvent.objects.create(user=user, email=user.email, event=event, ip_address=client_ip(request), user_agent=user_agent(request))
+
+
+@transaction.atomic
+def reset_mfa(user, *, by_email: str = "", request=None) -> None:
+    """Remove the authenticator and backup codes. The person sets MFA up again at the next login."""
+    TOTPDevice.objects.filter(user=user).delete()
+    StaticDevice.objects.filter(user=user).delete()
+    user.mfa_exempt, user.mfa_exempt_reason, user.mfa_exempt_by, user.mfa_exempt_at = False, "", "", None
+    user.save(update_fields=["mfa_exempt", "mfa_exempt_reason", "mfa_exempt_by", "mfa_exempt_at"])
+    _admin_event(LoginEvent.Event.MFA_RESET, user, by_email=by_email, request=request)
+
+
+@transaction.atomic
+def set_mfa_switched_off(user, off: bool, *, reason: str = "", by_email: str = "", request=None) -> None:
+    """
+    Switch two-step verification off (the person logs in with a password only)
+    or on again (they must set it up at the next login). A reason is required
+    to switch it off, and both are recorded.
+    """
+    from django.core.exceptions import ValidationError
+    from django.utils import timezone
+
+    if off:
+        reason = (reason or "").strip()
+        if not reason:
+            raise ValidationError("Give a reason for switching two-step verification off.")
+        TOTPDevice.objects.filter(user=user).delete()
+        StaticDevice.objects.filter(user=user).delete()
+        user.mfa_exempt, user.mfa_exempt_reason, user.mfa_exempt_by, user.mfa_exempt_at = True, reason[:200], by_email, timezone.now()
+        event = LoginEvent.Event.MFA_SWITCHED_OFF
+    else:
+        user.mfa_exempt, user.mfa_exempt_reason, user.mfa_exempt_by, user.mfa_exempt_at = False, "", "", None
+        event = LoginEvent.Event.MFA_SWITCHED_ON
+    user.save(update_fields=["mfa_exempt", "mfa_exempt_reason", "mfa_exempt_by", "mfa_exempt_at"])
+    _admin_event(event, user, by_email=by_email, request=request, reason=reason if off else "")
+
+
+def mfa_status(user) -> str:
+    """'on', 'off' (switched off by an admin) or 'not_set_up'."""
+    if user.mfa_exempt and not has_totp(user):
+        return "off"
+    return "on" if has_totp(user) else "not_set_up"

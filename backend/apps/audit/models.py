@@ -31,6 +31,7 @@ class AuditEvent(models.Model):
         USER = "user", "User"
         SYSTEM = "system", "System"
         AI = "ai", "AI agent"
+        PLATFORM = "platform", "Platform administrator"
         ANONYMOUS = "anonymous", "Anonymous"
 
     class Outcome(models.TextChoices):

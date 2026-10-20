@@ -1,0 +1,17 @@
+<table style="width: 100%;">
+  <thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Roles</th><th>Two-step verification</th><th>Last login</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><a href="{% url 'platform_person' schema r.user.pk %}">{{ r.user.email }}</a>{% if r.user.is_superuser %} <em>(superuser)</em>{% endif %}</td>
+      <td>{{ r.user.get_full_name|default:"–" }}</td>
+      <td>{% if r.user.is_active %}Active{% else %}<strong>Locked</strong>{% endif %}{% if not r.user.is_staff %} · no admin access{% endif %}</td>
+      <td>{{ r.roles|join:", "|default:"–" }}</td>
+      <td>{% if r.mfa == "on" %}On{% elif r.mfa == "off" %}<strong style="color:#ba2121">Switched off</strong>{% else %}Not set up{% endif %}</td>
+      <td>{{ r.user.last_login|date:"j M Y H:i"|default:"never" }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6">No users.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>

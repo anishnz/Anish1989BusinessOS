@@ -302,6 +302,17 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": nu
 | POST | `/api/inbox/conversations/<id>/close/` `{"closed": true}` | `crm.edit` |
 | POST | `/api/inbox/start/` `{"customer": id, "name", "language", "params", "category"}` | `crm.edit` |
 
+## MFA tools and Super Admin user pages
+
+- Backup codes: 10 codes of 16 characters from `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, shown as `XXXX-XXXX-XXXX-XXXX`; typed with or without dashes/spaces, any case (`security.normalise_code`). Old 8-character codes still work.
+- `/account/mfa/` (all sites): status; new backup codes and new authenticator (QR) both need the password (normal 5-try lockout); the old authenticator is removed only after the new one is confirmed.
+- `User.mfa_exempt` (+ reason, by, at): set by `security.set_mfa_switched_off` (reason required, devices removed); `mfa_required` is False for exempt users. `security.reset_mfa` removes devices and clears the exemption. Both write a LoginEvent and an audit event.
+- `python manage.py reset_mfa --email <email> [--schema <slug>]` for locked-out accounts (server access needed).
+- Platform pages (`config/urls_public.py`, `apps/accounts/platform_pages.py`): `/platform/people/`, `/platform/people/<schema>/`, `/platform/people/<schema>/<user id>/`, wrapped in `admin.site.admin_view` (staff + MFA). Permissions: `tenants.view` / `tenants.administer` for business users; `platform_users.view` / `platform_users.edit` / `platform_roles.assign` for platform users. No self-lock, no own-role change, last active Super Admin cannot be locked or lose full access.
+- Changes inside a business run in `schema_context(schema)` and `audit.services.platform_actor(email)`, so the business's audit log records `actor_type=platform` with the Super Admin's email and no user id (platform user ids mean nothing in a business schema). A `platform.user_changed` event is also written to the platform log.
+- Bug fix: links from business-only tables to users use `apps.core.business.SET_NULL_IN_BUSINESS` (lazy), so deleting a platform user no longer touches business tables that do not exist in the public schema.
+- `backend/templates/admin/base_site.html` adds the "Two-step verification" and (platform) "Businesses and users" links.
+
 ## Useful commands
 
 | Task | Command |
@@ -314,6 +325,7 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": nu
 | Invite a business's System Admin | `python manage.py invite_admin --schema <slug> --email <email>` |
 | Check the audit log is untouched | `python manage.py verify_audit_chain` |
 | Re-encrypt saved keys with the newest master key | `python manage.py rotate_vault_key` |
+| Reset someone's two-step verification (locked out) | `python manage.py reset_mfa --email <email> [--schema <slug>]` |
 | Pretend a customer sent a WhatsApp message (testing) | `python manage.py whatsapp_simulate --schema <slug> --from "021 123 4567" --text "hi"` |
 | Expire orders not confirmed in time | `python manage.py expire_orders --minutes 60` |
 | Send a test email through the saved Gmail/SMTP connection | `python manage.py send_test_email --to you@example.com [--schema <slug>]` |

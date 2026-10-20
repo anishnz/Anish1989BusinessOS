@@ -1,10 +1,30 @@
 {% extends "admin/base_site.html" %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  @media print { #header, nav, .breadcrumbs, #footer, .no-print { display: none !important; } }
+  .codes { font-family: monospace; font-size: 1.25em; line-height: 2; padding: 12px 16px; border: 1px solid var(--hairline-color); columns: 2; max-width: 520px; }
+</style>
+{% endblock %}
 {% block content %}
-<div style="max-width: 520px;">
-  <p><strong>Save these backup codes now.</strong> Each code works once. Use one if you lose your phone. They will not be shown again.</p>
-  <pre style="font-size: 1.2em; line-height: 1.8; padding: 12px; border: 1px solid #ccc;">{% for code in codes %}{{ code }}
-{% endfor %}</pre>
-  <p>Keep them somewhere safe, for example in a password manager or printed in a locked drawer.</p>
-  <p><a class="button" href="{{ next }}">I have saved my codes – continue</a></p>
+<div style="max-width: 560px;">
+  <p><strong>Save these backup codes now.</strong> Each code works once, instead of the 6-digit code, if you lose your phone. They will not be shown again.</p>
+  <div class="codes" id="codes">{% for code in codes %}<div>{{ code }}</div>{% endfor %}</div>
+  <p class="no-print" style="margin-top: 12px;">
+    <button type="button" class="button" onclick="window.print()">Print</button>
+    <button type="button" class="button" id="download">Download as a text file</button>
+  </p>
+  <p>Keep them somewhere safe, for example in a password manager or printed in a locked drawer. You can type them with or without the dashes.</p>
+  <p class="no-print"><a class="button default" href="{{ next }}">I have saved my codes – continue</a></p>
 </div>
+<script>
+  document.getElementById("download").addEventListener("click", function () {
+    var codes = Array.from(document.querySelectorAll("#codes div")).map(function (d) { return d.textContent; });
+    var text = "Anish1989 Business OS - backup codes for {{ request.user.email|escapejs }}\n" +
+               "Created {% now 'j M Y H:i' %}. Each code works once.\n\n" + codes.join("\n") + "\n";
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
+    link.download = "backup-codes.txt";
+    link.click();
+  });
+</script>
 {% endblock %}

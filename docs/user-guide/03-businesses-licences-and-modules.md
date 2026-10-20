@@ -68,3 +68,23 @@ Core modules (users, roles, settings, integrations, audit log) are always on. Mo
 ## 3.6 See your licence and usage
 
 **Settings → Licence** (API: `/api/tenant/licence/`) shows the plan, status, trial end date, and usage against each limit, for example *Users: 6 of 10*.
+
+
+## 3.7 Businesses and users (Super Admin)
+
+Click **Businesses and users** at the top right of the platform admin (or open a business and click **Users and roles**).
+
+- The first page lists every business: its users, how many are active, and how many staff have two-step verification (MFA) **on**, **not set up**, or **switched off**. The platform's own administrators are listed below.
+- Click a business to see its users, their roles, MFA status and last login.
+- Click a user to:
+  - **Change roles:** tick the roles and click **Save roles**.
+  - **Reset MFA:** they set it up again at their next login (for a lost phone).
+  - **Switch MFA off:** type a reason and click **Switch MFA off**. That person then signs in with a **password only**. Use this only for a short time and switch it on again (**Switch MFA on again**), because a stolen password is then enough to sign in. Accounts with MFA off are shown in red.
+  - **Lock / Unlock** the account. Unlocking counts against the business's user limit.
+  - See their recent sign-in history.
+
+Every change is recorded in the platform audit log **and** in the business's own audit log, as "Platform administrator (your email)", so the business can see what you changed.
+
+Safety rules: you cannot lock your own account or change your own roles, and the last active Super Admin cannot be locked.
+
+Who can use these pages: platform roles with *Tenants – View* can look; *Tenants – Administer* can change business users. Platform administrators need *Platform admin users – View/Edit* (and *Platform roles – Assign* for roles). The Super Admin role has all of these.

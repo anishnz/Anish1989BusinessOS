@@ -23,7 +23,7 @@ The first time an admin logs in, the **Set up two-step verification** page opens
 2. In the app, tap **Add account** and scan the QR code on the screen.
    - Can't scan? Type the key shown under the QR code into the app instead.
 3. Type the **6-digit code** from the app and click **Turn on**.
-4. **Save your 10 backup codes.** They are shown only once. Each code works once, if you lose your phone.
+4. **Save your 10 backup codes.** They look like `EGR2-PPKR-Y4VD-MXTK` (16 characters). They are shown only once. Use **Print** or **Download as a text file**. Each code works once, if you lose your phone.
 5. Click **I have saved my codes – continue**.
 
 *Screenshot: set up two-step verification*
@@ -36,19 +36,33 @@ The first time an admin logs in, the **Set up two-step verification** page opens
 
 If a code does not work, wait a few seconds and type the **newest** code. Check that the time on your phone is set automatically.
 
-## 1.4 Lost your phone?
+## 1.4 My two-step verification (new phone, new backup codes)
 
-- Log in and enter one of your **backup codes** instead of the 6-digit code.
-- Or ask another admin of your business to open **Users**, tick your name, choose **Reset two-step verification**, and click **Go**. You will set it up again at your next login.
+Click **Two-step verification** at the top right of the admin (or go to `/account/mfa/`).
 
-Admins cannot reset their own two-step verification. Ask another admin, or platform support.
+- **New backup codes:** type your password and click **Create new backup codes**. Your old backup codes stop working. Print or download the new ones.
+- **Move to a new phone (new QR code):** type your password and click **Show a new QR code**. Scan it with the authenticator app on the new phone and type the 6-digit code from the **new** app. Your old app keeps working until you confirm, then it stops working.
 
-## 1.5 Forgot your password?
+## 1.5 Lost your phone?
+
+- Log in and type one of your **backup codes** instead of the 6-digit code (with or without the dashes). Then use 1.4 to set up your new phone.
+- No backup codes? Ask another admin of your business to open **Users**, tick your name, choose **Reset two-step verification**, and click **Go**. Or ask the platform Super Admin (chapter 3.7). You set it up again at your next login.
+- Admins cannot reset their own two-step verification in the Users list.
+
+**Super Admin locked out** (no phone, no backup codes, no other Super Admin): the person who runs the server opens PowerShell in the project folder and runs:
+
+```
+docker compose exec web python manage.py reset_mfa --email you@example.com
+```
+
+Then log in again and set up two-step verification. For a business user, add `--schema gorkhabutchery`. The reset is recorded in the audit log.
+
+## 1.6 Forgot your password?
 
 1. On the login page, click **Forgotten your password?**
 2. Enter your email. If an account exists, you get an email with a reset link.
 3. The link works for **1 hour**. Choose a new password (at least 12 characters).
 
-## 1.6 Login history
+## 1.7 Login history
 
 Admins can see every login, failed attempt, lockout and two-step verification event under **Accounts → Login events**. The history cannot be edited or deleted.

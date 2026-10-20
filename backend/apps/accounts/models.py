@@ -44,6 +44,11 @@ class User(AbstractUser):
     username = None
     email = models.EmailField("email address", unique=True)
     phone = models.CharField(max_length=30, blank=True)
+    # Two-step verification switched off for this person by the platform Super Admin (with a reason).
+    mfa_exempt = models.BooleanField("Two-step verification switched off", default=False)
+    mfa_exempt_reason = models.CharField(max_length=200, blank=True)
+    mfa_exempt_by = models.CharField(max_length=254, blank=True)
+    mfa_exempt_at = models.DateTimeField(null=True, blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS: list[str] = []
@@ -63,8 +68,8 @@ class User(AbstractUser):
 
     @property
     def mfa_required(self) -> bool:
-        """Staff and admins must use MFA."""
-        return bool(self.is_staff and getattr(settings, "MFA_REQUIRED_FOR_STAFF", True))
+        """Staff and admins must use MFA, unless the Super Admin switched it off for them."""
+        return bool(self.is_staff and getattr(settings, "MFA_REQUIRED_FOR_STAFF", True) and not self.mfa_exempt)
 
 
 class LoginEvent(models.Model):
@@ -82,6 +87,10 @@ class LoginEvent(models.Model):
         MFA_FAILED = "mfa_failed", "MFA failed"
         MFA_ENABLED = "mfa_enabled", "MFA enabled"
         BACKUP_CODES_CREATED = "backup_codes_created", "Backup codes created"
+        AUTHENTICATOR_REPLACED = "authenticator_replaced", "Authenticator app replaced"
+        MFA_RESET = "mfa_reset", "MFA reset by an administrator"
+        MFA_SWITCHED_OFF = "mfa_switched_off", "MFA switched off by an administrator"
+        MFA_SWITCHED_ON = "mfa_switched_on", "MFA switched on again"
         PASSWORD_RESET_REQUESTED = "password_reset_requested", "Password reset requested"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="login_events")

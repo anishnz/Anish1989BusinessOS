@@ -1,0 +1,7 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 980px;">
+  <p><a href="{% url 'platform_people' %}">← All businesses</a></p>
+  {% include "accounts/platform/user_table.html" with rows=rows schema=tenant.schema_name %}
+</div>
+{% endblock %}

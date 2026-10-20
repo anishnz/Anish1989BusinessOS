@@ -51,6 +51,9 @@ def mfa_setup(request):
         if security.confirm_totp(device, request.POST.get("token", "")):
             device.refresh_from_db()
             otp_login(request, device)
+            if user.mfa_exempt:  # they chose to use MFA again
+                user.mfa_exempt, user.mfa_exempt_reason, user.mfa_exempt_by, user.mfa_exempt_at = False, "", "", None
+                user.save(update_fields=["mfa_exempt", "mfa_exempt_reason", "mfa_exempt_by", "mfa_exempt_at"])
             security.record_event(LoginEvent.Event.MFA_ENABLED, request, user=user)
             codes = security.create_backup_codes(user)
             security.record_event(LoginEvent.Event.BACKUP_CODES_CREATED, request, user=user)
@@ -90,3 +93,70 @@ def mfa_verify(request):
         error = "That code is not valid. Wait a few seconds and enter the newest 6-digit code from your authenticator app, or a backup code."
 
     return render(request, "accounts/mfa_verify.html", _context(request, title="Two-step verification", next=next_url, error=error))
+
+
+def _password_ok(request) -> bool:
+    """Re-check the password before changing MFA (with the normal lockout)."""
+    user = request.user
+    if security.is_locked_out(user.email):
+        return False
+    if user.check_password(request.POST.get("password", "")):
+        security.clear_failures(user.email)
+        return True
+    security.register_failure(user.email)
+    security.record_event(LoginEvent.Event.LOGIN_FAILED, request, user=user)
+    return False
+
+
+@never_cache
+@login_required
+@require_http_methods(["GET", "POST"])
+def mfa_manage(request):
+    """
+    "My two-step verification": see the status, get new backup codes, or move
+    to a new phone (new QR code). Both changes need the password again.
+    """
+    from django.contrib import messages
+
+    user = request.user
+    here = reverse("accounts:mfa_manage")
+    if security.has_mfa(user) and not user.is_verified():
+        return redirect(f"{reverse('accounts:mfa_verify')}?next={quote(here)}")
+    if not security.has_totp(user):
+        if user.mfa_exempt or not user.mfa_required:
+            context = _context(request, title="My two-step verification", status=security.mfa_status(user), exempt=user)
+            context["is_nav_sidebar_enabled"] = True
+            return render(request, "accounts/mfa_manage.html", context)
+        return redirect(f"{reverse('accounts:mfa_setup')}?next={quote(here)}")
+
+    error = ""
+    action = request.POST.get("action") if request.method == "POST" else None
+    if action in ("codes", "new_qr"):
+        if not _password_ok(request):
+            error = "The password is not correct." if not security.is_locked_out(user.email) else "Too many wrong passwords. Try again in 15 minutes."
+        elif action == "codes":
+            codes = security.create_backup_codes(user)
+            security.record_event(LoginEvent.Event.BACKUP_CODES_CREATED, request, user=user)
+            return render(request, "accounts/mfa_backup_codes.html", _context(request, title="Your new backup codes", codes=codes, next=here))
+        else:
+            device = security.start_totp_setup(user)
+            return render(request, "accounts/mfa_replace.html", _context(request, title="Move to a new phone", setup=security.totp_setup_details(device)))
+    elif action == "confirm_qr":
+        device = security.pending_totp_device(user)
+        if device is not None and security.confirm_totp(device, request.POST.get("token", "")):
+            device.refresh_from_db()
+            security.replace_authenticator(user, device)
+            otp_login(request, device)
+            security.record_event(LoginEvent.Event.AUTHENTICATOR_REPLACED, request, user=user)
+            messages.success(request, "Your new authenticator app is now active. The old one no longer works.")
+            return redirect(here)
+        if device is None:
+            return redirect(here)
+        return render(request, "accounts/mfa_replace.html", _context(
+            request, title="Move to a new phone", setup=security.totp_setup_details(device),
+            error="That code did not match. Use the newest code from the new app.",
+        ))
+
+    context = _context(request, title="My two-step verification", status="on", remaining=security.backup_codes_remaining(user), error=error)
+    context["is_nav_sidebar_enabled"] = True
+    return render(request, "accounts/mfa_manage.html", context)

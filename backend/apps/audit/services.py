@@ -12,6 +12,7 @@ from __future__ import annotations
 import contextvars
 import json
 import re
+from contextlib import contextmanager
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connection, transaction
@@ -57,7 +58,27 @@ def redact(value):
     return value
 
 
+_platform_actor: contextvars.ContextVar[str | None] = contextvars.ContextVar("platform_actor", default=None)
+
+
+@contextmanager
+def platform_actor(email: str):
+    """
+    Use while the platform Super Admin changes something inside a business.
+    Their user id belongs to the platform, not to the business, so the
+    business's audit log records "platform administrator <email>" instead.
+    """
+    token = _platform_actor.set(email)
+    try:
+        yield
+    finally:
+        _platform_actor.reset(token)
+
+
 def _actor(request, actor):
+    platform_email = _platform_actor.get()
+    if platform_email:
+        return AuditEvent.ActorType.PLATFORM, None, platform_email
     user = actor if actor is not None else (getattr(request, "user", None) if request is not None else None)
     if user is not None and getattr(user, "is_authenticated", False):
         return AuditEvent.ActorType.USER, user.pk, user.email

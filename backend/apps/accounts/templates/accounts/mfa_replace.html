@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 560px;">
+  <ol>
+    <li>On your new phone, open your authenticator app (for example Google Authenticator or Microsoft Authenticator) and add an account.</li>
+    <li>Scan this QR code.</li>
+    <li>Type the 6-digit code from the <strong>new</strong> app below.</li>
+  </ol>
+  <div>{{ setup.qr_svg|safe }}</div>
+  <p>Can't scan? Enter this key in the app instead:<br><code style="font-size: 1.1em; letter-spacing: 1px;">{{ setup.secret }}</code></p>
+  {% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="confirm_qr">
+    <p><label>6-digit code: <input type="text" name="token" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required autofocus></label></p>
+    <div class="submit-row"><input type="submit" value="Confirm the new app" class="default"> <a href="{% url 'accounts:mfa_manage' %}">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

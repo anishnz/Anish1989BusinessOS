@@ -11,6 +11,8 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Lower
 
+from apps.core.business import SET_NULL_IN_BUSINESS
+
 
 class Customer(models.Model):
     class Source(models.TextChoices):
@@ -32,7 +34,7 @@ class Customer(models.Model):
     marketing_consent_at = models.DateTimeField(null=True, blank=True, editable=False)
     is_archived = models.BooleanField("Archived", default=False)
     is_anonymised = models.BooleanField("Personal data removed", default=False, editable=False)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -72,7 +74,7 @@ class ConsentRecord(models.Model):
     given = models.BooleanField()
     source = models.CharField(max_length=20, choices=Source.choices)
     note = models.CharField(max_length=200, blank=True)
-    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
     recorded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 980px;">
+  <p>Every business on the platform and its users. Click a business to see its users, change their roles, reset or switch off two-step verification (MFA), or lock an account.</p>
+  <table style="width: 100%;">
+    <thead><tr><th>Business</th><th>Id</th><th>Status</th><th>Users</th><th>Active</th><th>Staff with MFA on</th><th>MFA not set up</th><th>MFA switched off</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td><a href="{% url 'platform_people_list' r.tenant.schema_name %}">{{ r.tenant.name }}</a></td>
+        <td>{{ r.tenant.schema_name }}</td><td>{{ r.tenant.get_status_display }}</td>
+        <td>{{ r.users }}</td><td>{{ r.active }}</td><td>{{ r.mfa_on }}</td><td>{{ r.mfa_not_set_up }}</td>
+        <td>{% if r.mfa_off %}<strong style="color:#ba2121">{{ r.mfa_off }}</strong>{% else %}0{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8">No businesses yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  {% if platform is not None %}
+    <h2 style="margin-top: 24px;">Platform administrators</h2>
+    {% include "accounts/platform/user_table.html" with rows=platform schema="public" %}
+  {% endif %}
+</div>
+{% endblock %}

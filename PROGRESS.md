@@ -107,6 +107,13 @@ Open a new chat in the ERP CRM project and type:
   - User guide chapter: docs/user-guide/07-whatsapp-and-inbox.md
   - 385 tests pass
   - Still to do for the Step 1 "done" check: a real WhatsApp message from Meta (needs a public https address: a server, or the Cloudflare tunnel in guide 7.7)
+- [x] Extra (21 Oct 2026): MFA tools and Super Admin user control
+  - 16-character backup codes with print/download; "My two-step verification" page: new backup codes and new phone (QR), both need the password
+  - `reset_mfa` command for locked-out accounts
+  - Super Admin "Businesses and users": every business and its users, roles, MFA status; change roles, reset MFA, switch MFA off (reason) / on, lock / unlock; audited in both logs
+  - Fixed: deleting a platform user failed
+  - User guide: chapter 1 (1.4, 1.5) and chapter 3 (3.7)
+  - 410 tests pass
 - [ ] 1.9 Simple dashboard
 - [ ] 1.10 Tenant isolation and permission tests
 - [ ] 1.11 React/Next.js frontend shell

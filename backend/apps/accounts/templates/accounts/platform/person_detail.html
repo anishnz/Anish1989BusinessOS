@@ -1,0 +1,63 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 820px;">
+  <p><a href="{{ back }}">← {% if tenant.schema_name == "public" %}Platform administrators{% else %}Users of {{ tenant.name }}{% endif %}</a></p>
+  <p><strong>{{ person.get_full_name|default:person.email }}</strong> · {% if person.is_active %}Active{% else %}<strong>Locked</strong>{% endif %}
+     · Last login {{ person.last_login|date:"j M Y H:i"|default:"never" }}</p>
+
+  <h2>Two-step verification (MFA)</h2>
+  {% if status == "on" %}
+    <p>On · {{ backup }} unused backup code{{ backup|pluralize }}.</p>
+  {% elif status == "off" %}
+    <p class="errornote"><strong>Switched off</strong> by {{ person.mfa_exempt_by }} on {{ person.mfa_exempt_at|date:"j M Y H:i" }}. Reason: {{ person.mfa_exempt_reason }}.
+       This person signs in with a password only.</p>
+  {% else %}
+    <p>Not set up yet. {% if person.is_staff %}They must set it up at the next login.{% endif %}</p>
+  {% endif %}
+  {% if can_change %}
+    <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="reset_mfa">
+      <input type="submit" value="Reset (set up again at next login)" onclick="return confirm('Reset two-step verification for {{ person.email|escapejs }}?');"></form>
+    {% if status == "off" %}
+      <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="mfa_on">
+        <input type="submit" value="Switch MFA on again" class="default"></form>
+    {% else %}
+      <form method="post" style="margin-top: 10px;">{% csrf_token %}<input type="hidden" name="action" value="mfa_off">
+        <label>Reason for switching MFA off: <input type="text" name="reason" size="40" maxlength="200" required></label>
+        <input type="submit" value="Switch MFA off" style="background:#ba2121" onclick="return confirm('Without MFA, a stolen password is enough to sign in as {{ person.email|escapejs }}. Continue?');">
+      </form>
+    {% endif %}
+  {% endif %}
+
+  <h2>Roles</h2>
+  {% if can_roles and not is_self %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="roles">
+      <div style="columns: 2;">
+      {% for r in roles %}
+        <label style="display:block; margin: 2px 0;"><input type="checkbox" name="roles" value="{{ r.role.pk }}" {% if r.checked %}checked{% endif %}> {{ r.role.name }}{% if r.role.full_access %} <em>(full access)</em>{% endif %}</label>
+      {% endfor %}
+      </div>
+      <div class="submit-row"><input type="submit" value="Save roles" class="default"></div>
+    </form>
+  {% else %}
+    <p>{% for r in roles %}{% if r.checked %}{{ r.role.name }}{% if not forloop.last %}, {% endif %}{% endif %}{% endfor %}</p>
+    {% if is_self %}<p class="help">You cannot change your own roles.</p>{% endif %}
+  {% endif %}
+
+  {% if can_change and not is_self %}
+    <h2>Account</h2>
+    <form method="post">{% csrf_token %}
+      {% if person.is_active %}
+        <input type="hidden" name="action" value="lock"><input type="submit" value="Lock account (cannot sign in)" onclick="return confirm('Lock {{ person.email|escapejs }}?');">
+      {% else %}
+        <input type="hidden" name="action" value="unlock"><input type="submit" value="Unlock account" class="default">
+      {% endif %}
+    </form>
+  {% endif %}
+
+  <h2>Recent sign-in history</h2>
+  <table><thead><tr><th>When</th><th>Event</th><th>IP address</th></tr></thead><tbody>
+  {% for e in events %}<tr><td>{{ e.created_at|date:"j M Y H:i" }}</td><td>{{ e.get_event_display }}</td><td>{{ e.ip_address|default:"–" }}</td></tr>
+  {% empty %}<tr><td colspan="3">None yet.</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+{% endblock %}

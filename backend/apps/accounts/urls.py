@@ -9,6 +9,7 @@ app_name = "accounts"
 web_urlpatterns = [
     path("mfa/setup/", views.mfa_setup, name="mfa_setup"),
     path("mfa/verify/", views.mfa_verify, name="mfa_verify"),
+    path("mfa/", views.mfa_manage, name="mfa_manage"),
 ]
 
 # JSON API: /api/auth/...
