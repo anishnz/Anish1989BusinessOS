@@ -40,7 +40,7 @@ To change a package version: edit `requirements/base.txt` or `dev.txt`, then run
 You need **Docker Desktop** (on Windows, with the WSL 2 backend). No Docker Hub login is needed.
 
 1. Start everything with one command from the project folder:
-   - Windows:
+   - Windows: double-click **`start.cmd`**, or run:
      ```powershell
      powershell -ExecutionPolicy Bypass -File .\start.ps1
      ```

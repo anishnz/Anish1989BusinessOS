@@ -17,7 +17,7 @@ Anish1989 Business OS is a multi-tenant SaaS platform for small and medium busin
 
 ## Quick start
 
-Install Docker Desktop, then from the project folder:
+Install Docker Desktop, then **double-click `start.cmd`** (Windows), or from the project folder:
 
 ```powershell
 # Windows
