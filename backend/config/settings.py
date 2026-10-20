@@ -291,6 +291,9 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = env.int("DJANGO_HSTS_SECONDS", default=60 * 60 * 24 * 30)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # HSTS "preload" is left off on purpose (decision D-081): a domain on the browsers'
+    # preload list is very hard to remove, and businesses will add their own domains.
+    SILENCED_SYSTEM_CHECKS = ["security.W021"]
 
 # ---------------------------------------------------------------------------
 # Logging (never log secrets)

@@ -9,6 +9,7 @@ Uses Django sessions with CSRF protection:
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import PasswordResetForm
 from django.utils.decorators import method_decorator
+from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django_otp import login as otp_login
 from rest_framework import serializers, status
@@ -62,10 +63,18 @@ class EmailSerializer(serializers.Serializer):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class CsrfView(APIView):
+    """
+    The CSRF cookie is HttpOnly (scripts cannot read it), so the token is also
+    returned here. The React app sends it back in the X-CSRFToken header on
+    every POST/PATCH/DELETE. Call this again after logging in or out, because
+    Django changes the token then. Other websites cannot read this answer
+    (same-origin only; no CORS).
+    """
+
     permission_classes = [AllowAny]
 
     def get(self, request):
-        return Response({"detail": "CSRF cookie set."})
+        return Response({"detail": "CSRF cookie set.", "csrfToken": get_token(request._request)})
 
 
 @method_decorator(csrf_protect, name="dispatch")

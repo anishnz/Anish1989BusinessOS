@@ -125,11 +125,11 @@ GitHub Actions runs the same tests and a Docker build on every push to `main`.
 
 ### Auth API (for the React frontend)
 
-Session cookie + CSRF. Call `GET /api/auth/csrf/` first, then send the `X-CSRFToken` header on POST requests.
+Session cookie + CSRF. Call `GET /api/auth/csrf/` first and send the returned `csrfToken` in the `X-CSRFToken` header on every POST/PATCH/PUT/DELETE. The `csrftoken` cookie is HttpOnly, so scripts cannot read it; the token comes from this endpoint instead. Call it again after logging in or out (Django changes the token then).
 
 | Method | Path | Body | Notes |
 |---|---|---|---|
-| GET | `/api/auth/csrf/` | – | Sets the `csrftoken` cookie |
+| GET | `/api/auth/csrf/` | – | Sets the `csrftoken` cookie and returns `csrfToken` |
 | POST | `/api/auth/login/` | `email`, `password` | 400 wrong details, 429 locked out. Response says if MFA is required or needs setup |
 | POST | `/api/auth/mfa/verify/` | `token` | 6-digit code or a backup code |
 | POST | `/api/auth/mfa/totp/setup/` | – | Returns `otpauth_url`, `secret`, `qr_svg` |
@@ -319,6 +319,27 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": nu
 - Days are midnight to midnight in `TIME_ZONE` (Pacific/Auckland), including `TruncDate(..., tzinfo=...)`.
 - API `GET /api/reports/dashboard/?date=YYYY-MM-DD` (`reports.view`); money values are exact strings.
 - Page `/dashboard/` (business sites, `admin.site.admin_view`, `reports.view`): stat tiles, an inline SVG column chart (single series `#2a78d6` light / `#3987e5` dark, validated with the dataviz palette checker; per-bar tooltip on hover/focus; table view), top-product bars, attention list linking to filtered orders. Header link "Dashboard" on business sites.
+
+## Security sweep tests (task 1.10)
+
+`tests/test_security_sweep.py` walks **every URL** of the business sites (`config.urls`) and the platform site (`config.urls_public`), so new pages are checked without writing new tests:
+
+| Sweep | What it proves |
+|---|---|
+| Not logged in | Every page except the public list (`PUBLIC_ROUTES`) answers 401/403/404/405 or redirects to login, for GET and POST |
+| Logged in, no role | Every API answers 403/405 and every page refuses (deny by default); only "about me" routes (`SELF_ROUTES`) answer |
+| Staff without roles | Every admin list page is refused, and the admin menu is empty |
+| MFA not finished | Every API answers 403 `mfa_required`, every page redirects to `/account/mfa/` |
+| Business B vs A | A full System Admin of B opens every API (with every id of A's records) and every admin list and change page: A's marker text never appears; searches find nothing |
+| Platform | Platform APIs show no business data; every platform admin page opens without crashing, and business-only admin pages are refused |
+| Module off | Every API and admin page of a switched-off module is refused, using real records |
+| Suspended | Every page except `/health/` is blocked, for staff and anonymous visitors |
+| CSRF / cookies | POST without the CSRF token is refused; a session cookie from one business does not work on another; cookie domains are host-only |
+| Production checks | `check --deploy` passes (CI) |
+
+When adding a page that anyone may open, add it to `PUBLIC_ROUTES` with a comment saying how it protects itself. The sweeps were checked by switching protections off one at a time (each one makes a sweep fail).
+
+Bugs the sweeps found and fixed: `GET /api/rbac/users/<id>/roles/<role_id>/` crashed (now a delete-only view); a view-only role page in the admin crashed; the platform's tenant admin page crashed on business sites before refusing; the CSRF token could not be read by the React app.
 
 ## Useful commands
 

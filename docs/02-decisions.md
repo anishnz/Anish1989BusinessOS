@@ -84,6 +84,9 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-076 | What counts as a sale | Sales = totals of orders completed (picked up) that day, incl. GST; orders = confirmed that day and not cancelled; compared with the same weekday last week | Simple and matches cash in hand for pickup businesses; the same weekday is a fairer comparison than yesterday | Decided (21 Oct 2026) |
 | D-077 | Dashboard days | Midnight to midnight in the business's time zone (Pacific/Auckland) | Owners think in local days; UTC days would mix evenings into the next day | Decided (21 Oct 2026) |
 | D-078 | Dashboard access | Needs Reports – View; unread chats only for people who can see customers | Sales figures are sensitive; least privilege | Decided (21 Oct 2026) |
+| D-079 | Security tests sweep every URL | Tests discover all pages and APIs automatically and check login, deny-by-default, MFA, cross-business data, module-off and suspension rules | New pages are covered without remembering to write tests; checked by breaking protections on purpose | Decided (21 Oct 2026) |
+| D-080 | CSRF token for the React app | `GET /api/auth/csrf/` returns the token; the cookie stays HttpOnly; the app sends `X-CSRFToken` | Scripts cannot read the cookie, so the token must come from a same-origin API call | Decided (21 Oct 2026) |
+| D-081 | HSTS preload | Not enabled (HSTS with subdomains is on); the Django warning is silenced on purpose | Preload is very hard to undo and businesses will add their own domains; revisit when the platform domain is final | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 

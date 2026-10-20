@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.9 are done. Next: **1.10 Automated tests for login, permissions and tenant isolation (review and fill gaps)**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.10 are done. Next: **1.11 React/Next.js frontend shell**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -121,7 +121,11 @@ Open a new chat in the ERP CRM project and type:
   - Page `/dashboard/` (header link) and API `/api/reports/dashboard/`; needs Reports – View
   - User guide chapter: docs/user-guide/08-dashboard.md
   - 422 tests pass
-- [ ] 1.10 Tenant isolation and permission tests
+- [x] 1.10 Tenant isolation and permission tests (done 21 Oct 2026)
+  - Security sweep tests that find every page and API by themselves: not logged in, no role, MFA not finished, business B vs business A (every API and admin page), platform pages, module off, suspended business
+  - CSRF and cookie tests; Django production checks in CI
+  - Fixed 4 bugs found by the sweeps (a crashing roles API, a crashing view-only role page, a crashing tenant page on business sites, CSRF token not readable by the future React app)
+  - 440 tests pass
 - [ ] 1.11 React/Next.js frontend shell
 - [ ] 1.12 Tenant subdomains
 - [ ] 1.13 "Check system" health check button

@@ -26,13 +26,18 @@ class RoleForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["permission_codes"].choices = grouped_choices(connection.schema_name)
+        # Fields can be missing when the page is view-only (staff who may only look).
+        codes = self.fields.get("permission_codes")
+        if codes is not None:
+            codes.choices = grouped_choices(connection.schema_name)
         if self.instance.pk:
-            self.fields["permission_codes"].initial = sorted(self.instance.permission_codes())
-            self.fields["slug"].disabled = self.instance.is_system
-            if self.instance.full_access:
-                self.fields["permission_codes"].disabled = True
-                self.fields["permission_codes"].help_text = "This role always has every permission."
+            if codes is not None:
+                codes.initial = sorted(self.instance.permission_codes())
+            if "slug" in self.fields:
+                self.fields["slug"].disabled = self.instance.is_system
+            if self.instance.full_access and codes is not None:
+                codes.disabled = True
+                codes.help_text = "This role always has every permission."
 
 
 # Django's own groups are not used: permissions come only from roles.

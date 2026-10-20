@@ -141,7 +141,7 @@ class RolePermissionsView(APIView):
 class UserRolesView(APIView):
     permission_classes = [ModulePermission]
     permission_module = "roles"
-    permission_actions = {"GET": "view", "POST": "assign", "DELETE": "assign"}
+    permission_actions = {"GET": "view", "POST": "assign"}
 
     def get(self, request, user_id):
         user = get_object_or_404(get_user_model(), pk=user_id)
@@ -158,6 +158,14 @@ class UserRolesView(APIView):
         except (PermissionDenied, ValidationError) as exc:
             return _error(exc)
         return Response(status=status.HTTP_201_CREATED)
+
+
+class UserRoleDetailView(APIView):
+    """DELETE /api/rbac/users/<user_id>/roles/<role_id>/ removes one role."""
+
+    permission_classes = [ModulePermission]
+    permission_module = "roles"
+    permission_actions = {"DELETE": "assign"}
 
     def delete(self, request, user_id, role_id):
         user = get_object_or_404(get_user_model(), pk=user_id)

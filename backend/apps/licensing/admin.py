@@ -171,11 +171,14 @@ class TenantAdmin(BaseTenantAdmin):
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
-        extra_context["tenant_links"] = [
-            (reverse("admin:tenants_tenant_invite", args=[object_id]), "Invite System Admin"),
-            (reverse("admin:tenants_tenant_suspend", args=[object_id]), "Suspend business"),
-            (reverse("platform_people_list", args=[Tenant.objects.get(pk=object_id).schema_name]), "Users and roles"),
-        ]
+        tenant = Tenant.objects.filter(pk=object_id).first() if str(object_id).isdigit() else None
+        # Only on the platform site (the links do not exist on business sites, where this page is refused anyway).
+        if tenant is not None and self._on_public_site(request):
+            extra_context["tenant_links"] = [
+                (reverse("admin:tenants_tenant_invite", args=[object_id]), "Invite System Admin"),
+                (reverse("admin:tenants_tenant_suspend", args=[object_id]), "Suspend business"),
+                (reverse("platform_people_list", args=[tenant.schema_name]), "Users and roles"),
+            ]
         return super().change_view(request, object_id, form_url, extra_context)
 
     # ---- list actions ----
