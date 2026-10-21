@@ -43,6 +43,8 @@ PUBLIC_ROUTES = {
     "app/",  # the React page itself holds no data; its API calls are checked
     "app/<path:rest>",
     "oauth/google/callback/",  # Google's return address: protected by the signed state and the session check (test_backups.py)
+    "login-as/",  # "Log in as": needs the Super Admin's signed one-time link, 60 seconds (test_login_as.py)
+    "login-as/stop/",  # only signs out and goes back to the platform
 }
 # Pages about the logged-in person themselves.
 SELF_ROUTES = {r for r in [
