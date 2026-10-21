@@ -114,16 +114,23 @@ class TestNumbers:
         completed(goods, when=local(today), lines=[L(goods["samosa"].pk, Decimal("20"))])
         assert summary()["top_products"][0]["quantity"] == "20"
 
-    def test_pickups_due_and_unread_chats(self, goods):
+    def test_pickups_and_deliveries_due_and_unread_chats(self, goods):
+        from apps.fulfilment.models import DeliveryArea
         from apps.inbox.models import Conversation
 
+        today = timezone.localdate()
         with schema_context("tenant_a"):
-            order = services.create_order(lines=[L(goods["samosa"].pk, Decimal("1"))], pickup_at=local(timezone.localdate(), 17))
+            order = services.create_order(lines=[L(goods["samosa"].pk, Decimal("1"))], due_at=local(today, 17))
             services.change_status(order, S.CONFIRMED)
+            services.create_order(lines=[L(goods["samosa"].pk, Decimal("1"))], due_at=local(today, 17))  # a draft is not counted
+            DeliveryArea.objects.create(name="Central", postcodes="1010", fee=Decimal("8"))
+            delivery = services.create_order(lines=[L(goods["samosa"].pk, Decimal("1"))], fulfilment="delivery", due_at=local(today, 18),
+                                             delivery_address="1 Queen Street", delivery_postcode="1010")
+            services.change_status(delivery, S.CONFIRMED)
             Conversation.objects.create(external_id="64211234567", unread_count=3)
             Conversation.objects.create(external_id="64211234568", unread_count=0)
         data = summary()
-        assert data["pickups_due_today"] == 1 and data["unread_conversations"] == 1
+        assert data["pickups_due_today"] == 1 and data["deliveries_due_today"] == 1 and data["unread_conversations"] == 1
 
     def test_another_day(self, goods):
         day = timezone.localdate() - timedelta(days=2)

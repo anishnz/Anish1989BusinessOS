@@ -20,7 +20,7 @@ from apps.orders.models import Order, OrderLine
 S = Order.Status
 ZERO = Decimal("0.00")
 CANCELLED = {S.CANCELLED_CUSTOMER, S.CANCELLED_SHOP, S.EXPIRED}
-ATTENTION = [S.AWAITING, S.CONFIRMED, S.PREPARING, S.FINAL_SENT, S.FINAL_ACCEPTED, S.READY]
+ATTENTION = [S.AWAITING, S.CONFIRMED, S.PREPARING, S.FINAL_SENT, S.FINAL_ACCEPTED, S.READY, S.OUT_FOR_DELIVERY]
 MONEY = DecimalField(max_digits=14, decimal_places=2)
 
 
@@ -96,7 +96,10 @@ def summary(day: date | None = None, *, include_inbox: bool = False) -> dict:
 
     attention_counts = dict(Order.objects.filter(status__in=ATTENTION).values("status").annotate(n=Count("id")).values_list("status", "n"))
     attention = [{"status": s, "label": S(s).label, "count": attention_counts.get(s, 0)} for s in ATTENTION]
-    pickups_due = Order.objects.filter(pickup_at__gte=start, pickup_at__lt=end).exclude(status__in=CANCELLED | {S.COMPLETED}).count()
+    due_today = dict(
+        Order.objects.filter(due_at__gte=start, due_at__lt=end).exclude(status__in=CANCELLED | {S.COMPLETED, S.DRAFT})
+        .values("fulfilment").annotate(n=Count("id")).values_list("fulfilment", "n")
+    )
 
     result = {
         "date": day.isoformat(),
@@ -106,9 +109,10 @@ def summary(day: date | None = None, *, include_inbox: bool = False) -> dict:
         "week_total": sum((w["total"] for w in week), ZERO),
         "top_products": top,
         "attention": attention,
-        "pickups_due_today": pickups_due,
+        "pickups_due_today": due_today.get("pickup", 0),
+        "deliveries_due_today": due_today.get("delivery", 0),
         "definitions": {
-            "sales": "Totals of orders completed (picked up) that day, NZ$ incl. GST.",
+            "sales": "Totals of orders completed (picked up or delivered) that day, NZ$ incl. GST and delivery fees.",
             "orders": "Orders confirmed that day that were not cancelled or expired.",
             "compared_with": (day - timedelta(days=7)).isoformat(),
         },

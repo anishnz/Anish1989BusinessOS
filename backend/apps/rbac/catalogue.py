@@ -48,7 +48,7 @@ TENANT_MODULES = (
     Module("marketing", "Marketing campaigns", CRUD + ("approve", "publish", "export")),
     Module("products", "Products and catalogue", CRUD + ("import", "export", "publish")),
     Module("inventory", "Inventory, suppliers, purchasing", CRUD + ("approve", "import", "export")),
-    Module("orders", "Orders and WhatsApp ordering", CRUD + ("approve", "assign", "export")),
+    Module("orders", "Orders and WhatsApp ordering", CRUD + ("approve", "assign", "export", "configure")),
     Module("finance", "Invoices, payments, reconciliation", CRUD + ("approve", "export", "import", "manage_billing")),
     Module("hr", "Employees, shifts, attendance", CRUD + ("approve", "export")),
     Module("websites", "Websites and content", CRUD + ("publish",)),

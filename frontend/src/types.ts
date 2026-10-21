@@ -55,7 +55,16 @@ export interface Order {
   customer: number | null;
   customer_name: string;
   customer_phone: string;
-  pickup_at: string | null;
+  fulfilment: "pickup" | "delivery";
+  due_at: string | null;
+  due_until: string | null;
+  due_text: string;
+  delivery_address: string;
+  delivery_suburb: string;
+  delivery_postcode: string;
+  delivery_area: number | null;
+  delivery_area_name: string;
+  delivery_fee: string;
   notes: string;
   lines: OrderLine[];
   estimated_total: string;
@@ -66,6 +75,48 @@ export interface Order {
   paid_at: string | null;
   created_at: string;
   events?: OrderEvent[];
+  warnings?: string[];
+}
+
+export interface DeliveryArea {
+  id: number;
+  name: string;
+  fee: string;
+  minimum_order: string;
+  free_over: string | null;
+  postcodes: string[];
+  suburbs: string[];
+}
+
+export interface FulfilmentInfo {
+  pickup_enabled: boolean;
+  delivery_enabled: boolean;
+  pickup_slot_minutes: number;
+  delivery_slot_minutes: number;
+  lead_minutes: number;
+  days_ahead: number;
+  areas: DeliveryArea[];
+}
+
+export interface Slot {
+  kind: "pickup" | "delivery";
+  start: string;
+  end: string;
+  label: string;
+  taken: number;
+  capacity: number;
+  full: boolean;
+  past: boolean;
+  too_soon: boolean;
+}
+
+export interface SlotDay {
+  kind: "pickup" | "delivery";
+  date: string;
+  enabled: boolean;
+  closed: boolean;
+  closed_reason: string;
+  slots: Slot[];
 }
 
 export interface Product {
@@ -86,6 +137,7 @@ export interface Customer {
   name: string;
   phone: string;
   email: string;
+  address?: string;
   tags: string;
   marketing_consent: boolean;
 }
@@ -123,6 +175,7 @@ export interface Dashboard {
   top_products: { product_id: number; name: string; unit: string; sales: string; quantity: string; orders: number }[];
   attention: { status: string; label: string; count: number }[];
   pickups_due_today: number;
+  deliveries_due_today: number;
   unread_conversations?: number;
   definitions: { sales: string; orders: string; compared_with: string };
 }
@@ -134,9 +187,16 @@ export const STATUS_LABELS: Record<string, string> = {
   preparing: "Being prepared",
   final_price_sent: "Final price sent",
   final_price_accepted: "Final price accepted",
-  ready: "Ready for pickup",
+  ready: "Ready",
+  out_for_delivery: "Out for delivery",
   completed: "Completed",
   cancelled_by_customer: "Cancelled by customer",
   cancelled_by_shop: "Cancelled by shop",
   expired: "Expired",
 };
+
+/** A status in words for one order ("Ready for pickup" or "Ready for delivery"). */
+export function statusLabel(status: string, fulfilment: string): string {
+  if (status === "ready") return fulfilment === "delivery" ? "Ready for delivery" : "Ready for pickup";
+  return STATUS_LABELS[status] ?? status;
+}

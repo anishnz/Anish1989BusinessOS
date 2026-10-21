@@ -5,6 +5,9 @@ Orders in the business admin (until the React staff screens arrive).
 - Products can be changed while the order is a draft or awaiting confirmation.
 - While "Being prepared", enter the real weights of products sold by weight.
 - The "Status and payment" page moves the order on, cancels it, or marks it paid.
+- Pickup or delivery, the address and the time are saved through the order
+  rules too (delivery fee from the area, warnings for broken slot rules).
+  When a rule says no, nothing is saved and the reason is shown.
 """
 from django import forms
 from django.contrib import admin, messages
@@ -17,6 +20,7 @@ from django.utils import timezone
 from apps.audit.services import audit
 from apps.catalog.models import Product
 from apps.core.business import BusinessOnlyAdminMixin
+from apps.fulfilment.models import Kind
 from apps.rbac import policy
 
 from . import services
@@ -90,7 +94,13 @@ class LineInline(admin.TabularInline):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ["customer", "channel", "pickup_at", "notes"]
+        fields = ["customer", "channel", "fulfilment", "due_at", "delivery_address", "delivery_suburb", "delivery_postcode", "delivery_area", "notes"]
+
+    def clean_delivery_postcode(self):
+        value = (self.cleaned_data.get("delivery_postcode") or "").strip()
+        if value and not (len(value) == 4 and value.isdigit()):
+            raise forms.ValidationError("The postcode must have 4 digits.")
+        return value
 
     def clean_customer(self):
         customer = self.cleaned_data.get("customer")
@@ -105,7 +115,7 @@ class StatusForm(forms.Form):
 
     def __init__(self, *args, order=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["to"].choices = [(s, S(s).label) for s in services.allowed_moves(order)]
+        self.fields["to"].choices = [(s, services.status_label(order, s)) for s in services.allowed_moves(order)]
 
 
 class PaymentForm(forms.Form):
@@ -119,14 +129,15 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
     form = OrderForm
     inlines = [LineInline]
     autocomplete_fields = ["customer"]
-    list_display = ["number_label", "created", "customer", "status", "total_label", "paid", "pickup"]
-    list_filter = ["status", "channel", "is_paid"]
+    list_display = ["number_label", "created", "customer", "status_label", "how", "due", "total_label", "paid"]
+    list_filter = ["status", "fulfilment", "channel", "is_paid"]
     date_hierarchy = "created_at"
     search_fields = ["=number", "customer__name", "customer__phone"]
-    list_select_related = ["customer"]
-    actions = ["confirm", "start_preparing", "mark_ready", "complete"]
-    fields = ["customer", "channel", "pickup_at", "notes"]
-    summary_fields = ["number_label", "status", "estimated_total", "total", "gst_total", "paid", "payment_method", "created_by", "created_at"]
+    list_select_related = ["customer", "delivery_area"]
+    actions = ["confirm", "start_preparing", "mark_ready", "send_out", "complete"]
+    fields = ["customer", "channel", "fulfilment", "due_at", "delivery_address", "delivery_suburb", "delivery_postcode", "delivery_area", "notes"]
+    summary_fields = ["number_label", "status_label", "due", "delivery_fee", "estimated_total", "total", "gst_total", "paid", "payment_method",
+                      "created_by", "created_at"]
 
     @admin.display(description="Order", ordering="number")
     def number_label(self, obj):
@@ -136,9 +147,19 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
     def created(self, obj):
         return timezone.localtime(obj.created_at).strftime("%d %b %H:%M")
 
-    @admin.display(description="Pickup", ordering="pickup_at")
-    def pickup(self, obj):
-        return timezone.localtime(obj.pickup_at).strftime("%d %b %H:%M") if obj.pickup_at else "–"
+    @admin.display(description="Status", ordering="status")
+    def status_label(self, obj):
+        return obj.status_text
+
+    @admin.display(description="Pickup or delivery", ordering="fulfilment")
+    def how(self, obj):
+        if obj.fulfilment == Kind.DELIVERY:
+            return f"Delivery to {obj.delivery_area.name}" if obj.delivery_area_id else "Delivery (no area)"
+        return "Pickup"
+
+    @admin.display(description="Due", ordering="due_at")
+    def due(self, obj):
+        return services.due_text(obj) if obj.due_at else "–"
 
     @admin.display(description="Total $", ordering="total")
     def total_label(self, obj):
@@ -157,14 +178,29 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
         readonly = list(self.summary_fields)
         if not obj.is_open:
             readonly += self.fields
+        elif obj.status == S.OUT_FOR_DELIVERY:
+            readonly += sorted(services.FULFILMENT_FIELDS, key=self.fields.index)
         return readonly
 
     # ---- saving goes through the order rules ----
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        # A rule that says no while saving: nothing is saved (the admin saves in one transaction).
+        try:
+            return super().changeform_view(request, object_id, form_url, extra_context)
+        except ValidationError as exc:
+            messages.error(request, "Not saved: " + " ".join(exc.messages))
+            return redirect(request.get_full_path())
+
     def save_model(self, request, obj, form, change):
         if not change:
             obj.number = services._next_number()
             obj.created_by = request.user
-        super().save_model(request, obj, form, change)
+            services._clean_fulfilment(obj)
+            return super().save_model(request, obj, form, change)
+        changed = {name: form.cleaned_data[name] for name in form.changed_data if name in self.fields}
+        if changed:
+            services.update_order(obj, actor=request.user, **changed)
+        return None
 
     def save_formset(self, request, form, formset, change):
         order = form.instance
@@ -190,9 +226,10 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
         ]
         if not change:
             services._replace_lines(order, lines) if lines else None
-            services.recalculate(order)
-            services._event(order, "", S.DRAFT, request.user, "Order created")
-            audit("orders.create", target=order, actor=request.user, metadata={"lines": len(lines), "total": str(order.total), "channel": order.channel})
+            services.recalculate(order, refresh_fee=True)
+            services._event(order, "", S.DRAFT, request.user, f"Order created ({services.fulfilment_text(order)})")
+            audit("orders.create", target=order, actor=request.user,
+                  metadata={"lines": len(lines), "total": str(order.total), "channel": order.channel, "fulfilment": order.fulfilment})
         elif formset.has_changed():
             services.update_order(order, lines=lines, actor=request.user)
         return None
@@ -231,7 +268,7 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
     def get_actions(self, request):
         actions = super().get_actions(request)
         if not policy.has_perm(request.user, "orders.edit"):
-            for name in ("confirm", "start_preparing", "mark_ready", "complete"):
+            for name in ("confirm", "start_preparing", "mark_ready", "send_out", "complete"):
                 actions.pop(name, None)
         return actions
 
@@ -243,11 +280,15 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
     def start_preparing(self, request, queryset):
         self._bulk(request, queryset, S.PREPARING)
 
-    @admin.action(description="Mark selected orders ready for pickup")
+    @admin.action(description="Mark selected orders ready (for pickup or delivery)")
     def mark_ready(self, request, queryset):
         self._bulk(request, queryset, S.READY)
 
-    @admin.action(description="Complete selected orders (picked up)")
+    @admin.action(description="Send selected delivery orders out for delivery")
+    def send_out(self, request, queryset):
+        self._bulk(request, queryset, S.OUT_FOR_DELIVERY)
+
+    @admin.action(description="Complete selected orders (picked up or delivered)")
     def complete(self, request, queryset):
         self._bulk(request, queryset, S.COMPLETED)
 
@@ -266,6 +307,8 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
         extra_context["can_change_status"] = policy.has_perm(request.user, "orders.edit")
+        order = Order.objects.filter(pk=object_id).select_related("delivery_area").first() if str(object_id).isdigit() else None
+        extra_context["warnings"] = services.warnings(order) if order else []
         return super().change_view(request, object_id, form_url, extra_context)
 
     def status_view(self, request, pk):
@@ -278,7 +321,8 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
             try:
                 if "move" in request.POST and status_form.is_valid():
                     services.change_status(order, status_form.cleaned_data["to"], actor=request.user, note=status_form.cleaned_data["note"])
-                    self.message_user(request, f"Order #{order.number} is now '{S(status_form.cleaned_data['to']).label}'.", messages.SUCCESS)
+                    order.refresh_from_db()
+                    self.message_user(request, f"Order #{order.number} is now '{order.status_text}'.", messages.SUCCESS)
                     return redirect(reverse("admin:orders_order_change", args=[order.pk]))
                 if "pay" in request.POST and payment_form.is_valid():
                     services.set_paid(order, True, method=payment_form.cleaned_data["method"], actor=request.user)
@@ -296,7 +340,7 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
             **self.admin_site.each_context(request), "title": f"Status and payment: order #{order.number}", "order": order,
             "status_form": status_form, "payment_form": payment_form, "opts": self.model._meta,
             "events": [
-                {"at": e.at, "from": S(e.from_status).label if e.from_status else "–", "to": S(e.to_status).label,
+                {"at": e.at, "from": services.status_label(order, e.from_status) if e.from_status else "–", "to": services.status_label(order, e.to_status),
                  "by": e.actor.email if e.actor else "system", "note": e.note}
                 for e in order.events.select_related("actor")
             ],

@@ -1,6 +1,6 @@
 # 6. Orders
 
-*User guide, chapter 6 · Last updated 21 October 2026*
+*User guide, chapter 6 · Last updated 22 October 2026*
 
 **Who this is for:** counter and kitchen staff (role **Shop Staff**), managers and business owners.
 
@@ -18,14 +18,14 @@ Orders are in your business admin under **Orders → Orders**. Later, orders fro
 | Sales Manager | See and export |
 | Finance Manager, Support Agent | See |
 
-To pick products and customers in an order, a person also needs to **see** products and customers.
+To pick products and customers in an order, a person also needs to **see** products and customers. Changing opening hours, time slots and delivery fees needs **Orders – Configure** (chapter 15).
 
 ## 6.2 Add an order
 
 1. Go to **Orders → Add order**.
 2. **Customer**: start typing a name or phone number. Leave it empty for a walk-in customer.
 3. **Channel**: how the order came in (counter, phone, WhatsApp, website).
-4. **Pickup time** and **Notes** (optional), for example *cut into small pieces*.
+4. **Pickup or delivery**, the **time** and, for delivery, the **address** (chapter 15 explains slots, areas and fees). **Notes** (optional), for example *cut into small pieces*.
 5. In **Order lines**, choose each product and the **Ordered amount**:
    - Products sold by weight use kg, and the amount must follow the product's steps, for example 0.5, 1, 1.5 kg.
    - Packs and single items use whole numbers.
@@ -38,6 +38,7 @@ Prices always come from the product and include GST. The order keeps the price o
 ```
 Draft → (Awaiting customer confirmation) → Confirmed → Being prepared
       → (Final price sent → Final price accepted) → Ready for pickup → Completed
+                                                   Ready for delivery → Out for delivery → Completed
 ```
 
 | Status | Meaning |
@@ -48,8 +49,9 @@ Draft → (Awaiting customer confirmation) → Confirmed → Being prepared
 | Being prepared | Staff are packing it. Enter the real weights now. |
 | Final price sent | The real weight changed the price, and the new price was sent to the customer. |
 | Final price accepted | The customer agreed to the new price. |
-| Ready for pickup | Packed and waiting. |
-| Completed | Picked up. |
+| Ready for pickup / Ready for delivery | Packed and waiting for the customer or the driver. |
+| Out for delivery | On the way (delivery orders only). Can go back to *Ready for delivery* with a reason. |
+| Completed | Picked up or delivered. |
 | Cancelled by customer / by shop | Stopped. A reason is required. |
 
 To move an order on, open it and click **Status and payment**, choose the next step and click **Change status**. To move several orders at once, select them in the list and choose an action, for example **Confirm selected orders**. If an order cannot move, a message tells you why.
@@ -62,7 +64,7 @@ A customer orders 1.5 kg of goat, but the pack weighs 1.58 kg.
 2. Open the order. In **Real weight**, type *1.58* next to the goat line, and click **Save**. The total changes.
 3. Open **Status and payment**:
    - If the price **changed**, choose **Final price sent** and tell the customer the new price. When they agree, choose **Final price accepted**. If the customer is at the counter, you can do both steps at once.
-   - If the price is **the same**, go straight to **Ready for pickup**.
+   - If the price is **the same**, go straight to **Ready for pickup** (or **Ready for delivery**).
 
 The order cannot be marked ready until every weight is entered, and it cannot skip the customer's agreement when the price changed.
 
@@ -75,7 +77,7 @@ If you give the money back, click **Mark as not paid**. A paid order cannot be c
 ## 6.6 Changing, cancelling and deleting
 
 - **Products** can only change while the order is a **Draft** or **Awaiting customer confirmation**. If you change products while waiting for the customer, the order goes back to **Draft** and the customer must confirm again.
-- **Customer, pickup time and notes** can change until the order is completed or cancelled.
+- **Customer, the time, the address and notes** can change until the order is completed or cancelled (the address and time not while it is out for delivery). Changing pickup to delivery or the area changes the delivery fee, so it is not possible while the order is marked as paid.
 - **Cancel** from **Status and payment**: choose *Cancelled by customer* or *Cancelled by shop* and write the reason.
 - **Delete** is only possible for drafts. Other orders are cancelled instead, so the history stays complete.
 

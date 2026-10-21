@@ -111,6 +111,10 @@ svg.chart { width: 100%; height: auto; display: block; }
 svg.chart line { stroke: var(--line); }
 svg.chart text { fill: var(--ink-2); font-size: 11px; }
 svg.chart path { fill: var(--accent); }
+.slots { display: flex; flex-wrap: wrap; gap: 6px; }
+.slot { flex-direction: column; align-items: flex-start; gap: 0; min-width: 96px; padding: 6px 10px; }
+.slot small { font-size: .75rem; opacity: .8; }
+.slot.dim:not(.primary) { color: var(--ink-2); background: var(--surface); border-style: dashed; }
 ol.history { list-style: none; margin: 0; padding: 0; }
 ol.history li { padding: 8px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
 ol.history li:last-child { border-bottom: 0; }

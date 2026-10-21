@@ -333,6 +333,38 @@ def check_whatsapp() -> Result:
     return Result("whatsapp", "Connections", label, OK, f"Last call from Meta arrived {_ago(last.received_at)}.")
 
 
+def check_fulfilment() -> list[Result]:
+    """Can customers choose a pickup or delivery time? (task 2.1). Only when the Orders module is on."""
+    from apps.fulfilment import services as fulfilment
+    from apps.fulfilment.models import DeliveryArea, Kind, OpeningHours
+    from apps.rbac.policy import module_enabled
+
+    if not module_enabled("orders"):
+        return []
+    label = "Pickup and delivery"
+    s = fulfilment.current_settings()
+    if not s.pickup_enabled and not s.delivery_enabled:
+        return [Result("fulfilment", "Business", label, WARNING, "Pickup and delivery are both switched off, so customers cannot choose how to get their order.")]
+    problems, counts = [], []
+    for kind in (Kind.PICKUP, Kind.DELIVERY):
+        if not s.enabled(kind):
+            continue
+        word = Kind(kind).label.lower()
+        if not OpeningHours.objects.filter(settings=s, kind=kind).exists():
+            problems.append(f"no {word} hours")
+            continue
+        free = len(fulfilment.bookable_slots(kind))
+        counts.append(f"{free} {word} time{'s' if free != 1 else ''}")
+        if not free:
+            problems.append(f"no free {word} times in the next {s.days_ahead} day{'s' if s.days_ahead > 1 else ''}")
+    if s.delivery_enabled and not DeliveryArea.objects.filter(is_active=True).exists():
+        problems.append("no delivery areas")
+    if problems:
+        return [Result("fulfilment", "Business", label, WARNING,
+                       f"Customers cannot order properly: {', '.join(problems)}. Open Pickup and delivery in the admin pages.")]
+    return [Result("fulfilment", "Business", label, OK, f"Customers can choose from {' and '.join(counts)} in the next {s.days_ahead} day(s).")]
+
+
 def business_checks(tenant, *, live: bool = True) -> list[Result]:
     """Checks for one business. Must run inside that business's schema."""
     found: list[Result] = []
@@ -342,6 +374,7 @@ def business_checks(tenant, *, live: bool = True) -> list[Result]:
     found += _safe("scheduler", "System", "Scheduled jobs", check_scheduler)
     found += _safe("licence", "Business", "Licence", lambda: check_licence(tenant))
     found += _safe("web_address", "Business", "Web address", lambda: check_web_address(tenant))
+    found += _safe("fulfilment", "Business", "Pickup and delivery", check_fulfilment)
     found += _safe("connections", "Connections", "Saved connections", lambda: test_connections(live))
     found += _safe("email", "Connections", "Email sending", check_email)
     found += _safe("whatsapp", "Connections", "WhatsApp messages", check_whatsapp)

@@ -12,4 +12,5 @@ class OrdersConfig(AppConfig):
         from .models import Order
 
         # Lines and status changes are audited by the services with clear actions.
-        track(Order, exclude={"updated_at", "estimated_total", "total", "gst_total"}, personal={"notes"})
+        track(Order, exclude={"updated_at", "estimated_total", "total", "gst_total", "due_until"},
+              personal={"notes", "delivery_address", "delivery_suburb", "delivery_postcode"})

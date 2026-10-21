@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { api, money } from "../api";
 import { useAuth } from "../auth";
+import FulfilmentEditor, { EMPTY_FULFILMENT, type FulfilmentValue } from "../components/FulfilmentEditor";
 import type { Customer, Order, Page, Product } from "../types";
 
 interface Line { product: Product; quantity: string; note: string }
@@ -32,7 +33,7 @@ export default function NewOrder() {
   const [lines, setLines] = useState<Line[]>([]);
   const [notes, setNotes] = useState("");
   const [channel, setChannel] = useState("counter");
-  const [pickup, setPickup] = useState("");
+  const [how, setHow] = useState<FulfilmentValue>(EMPTY_FULFILMENT);
   const [problem, setProblem] = useState("");
   const [busy, setBusy] = useState(false);
   const customers = useSearch<Customer>("/api/customers/?q=", customerTerm, canSeeCustomers && !customer);
@@ -52,8 +53,7 @@ export default function NewOrder() {
       const order = await api<Order>("/api/orders/", {
         method: "POST",
         body: {
-          customer: customer?.id ?? null, channel, notes,
-          pickup_at: pickup ? new Date(pickup).toISOString() : null,
+          customer: customer?.id ?? null, channel, notes, ...how,
           lines: lines.map((l) => ({ product: l.product.id, quantity: l.quantity, note: l.note })),
         },
       });
@@ -85,8 +85,18 @@ export default function NewOrder() {
           <label style={{ margin: 0 }}>Channel <select value={channel} onChange={(e) => setChannel(e.target.value)}>
             <option value="counter">Counter</option><option value="phone">Phone</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option>
           </select></label>
-          <label style={{ margin: 0 }}>Pickup <input type="datetime-local" value={pickup} onChange={(e) => setPickup(e.target.value)} /></label>
         </div>
+      </div>
+
+      <div className="card">
+        <h2>Pickup or delivery</h2>
+        <FulfilmentEditor value={how} productsTotal={estimate} onChange={(next) => {
+          // The customer's saved address is a good start for a delivery.
+          if (next.fulfilment === "delivery" && how.fulfilment !== "delivery" && !next.delivery_address && customer?.address) {
+            next = { ...next, delivery_address: customer.address.replace(/\s+/g, " ").trim().slice(0, 200) };
+          }
+          setHow(next);
+        }} />
       </div>
 
       <div className="card">

@@ -301,7 +301,9 @@ class TestOrdersApi:
         owner = user_client(client_for, tenant_a, "owner@a.test", "business_owner")
         rows = list(csv.reader(io.StringIO(owner.get("/api/orders/export/").content.decode("utf-8-sig"))))
         assert rows[0][0] == "order" and len(rows) == 3
-        assert rows[1][0] == str(order.number) and rows[1][6] == "Goat curry cut" and rows[1][12] == "64.50"
+        row = dict(zip(rows[0], rows[1]))
+        assert row["order"] == str(order.number) and row["product"] == "Goat curry cut" and row["order_total"] == "64.50"
+        assert row["fulfilment"] == "pickup" and row["delivery_fee"] == "0.00" and row["delivery_area"] == ""
         assert owner.get("/api/orders/export/?date_from=bad").status_code == 400
 
 
@@ -320,7 +322,7 @@ def inline(prefix, rows, initial=0):
 class TestOrdersAdmin:
     def test_add_order_with_lines(self, client_for, tenant_a, goods):
         client = verified_staff_client(client_for, tenant_a, "counter@a.test", "shop_staff")
-        data = {"customer": goods["customer"].pk, "channel": "counter", "notes": "",
+        data = {"customer": goods["customer"].pk, "channel": "counter", "fulfilment": "pickup", "notes": "",
                 **inline("lines", [{"product": goods["goat"].pk, "quantity": "2", "note": ""}, {"product": goods["samosa"].pk, "quantity": "1", "note": ""}])}
         response = client.post("/admin/orders/order/add/", data)
         assert response.status_code == 302, response.content.decode()[:3000]
@@ -331,7 +333,7 @@ class TestOrdersAdmin:
 
     def test_bad_amount_shows_an_error(self, client_for, tenant_a, goods):
         client = verified_staff_client(client_for, tenant_a, "counter@a.test", "shop_staff")
-        data = {"channel": "counter", **inline("lines", [{"product": goods["goat"].pk, "quantity": "0.3", "note": ""}])}
+        data = {"channel": "counter", "fulfilment": "pickup", **inline("lines", [{"product": goods["goat"].pk, "quantity": "0.3", "note": ""}])}
         response = client.post("/admin/orders/order/add/", data)
         assert response.status_code == 200 and "smallest amount" in response.content.decode()
         with schema_context("tenant_a"):
@@ -344,7 +346,7 @@ class TestOrdersAdmin:
         assert "real weight" in page and "Status and payment" in page
         with schema_context("tenant_a"):
             lines = list(order.lines.order_by("position"))
-        data = {"customer": goods["customer"].pk, "channel": "counter", "notes": "", **inline("lines", [
+        data = {"customer": goods["customer"].pk, "channel": "counter", "fulfilment": "pickup", "notes": "", **inline("lines", [
             {"id": lines[0].pk, "order": order.pk, "final_quantity": "1.62"},
             {"id": lines[1].pk, "order": order.pk, "final_quantity": ""},
         ], initial=2)}

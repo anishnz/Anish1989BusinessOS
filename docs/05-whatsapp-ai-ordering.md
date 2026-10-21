@@ -1,6 +1,6 @@
 # 05. WhatsApp AI ordering
 
-Last updated: 21 October 2026
+Last updated: 22 October 2026
 
 ## Goal
 
@@ -17,7 +17,7 @@ Customers order by chatting on WhatsApp. They do not need to open the website or
 7. **Record the order.** After confirmation, the order is saved in the backend with the customer details, order history and sales records.
 8. **Manage the order.** Staff process the order in the dashboard.
 9. **Final weight and price.** For items sold by weight, staff enter the real weight, and the customer gets the final price on WhatsApp to accept.
-10. **Status updates.** Received, being prepared, ready for pickup.
+10. **Status updates.** Received, being prepared, ready for pickup, or out for delivery.
 11. **Feedback.** After pickup, the customer is asked for a 1 to 5 star rating.
 12. **Analyse.** All orders and chats feed sales reports, customer analysis, inventory and demand forecasts.
 
@@ -28,13 +28,16 @@ Customers order by chatting on WhatsApp. They do not need to open the website or
 | Weight-based pricing | An order of "1 kg" may weigh 1.08 kg. Staff enter the real weight, and the customer accepts the final price. |
 | Stock-aware AI | The AI checks stock before confirming and offers alternatives. |
 | Quick reorder | "Same as last week" rebuilds the customer's last order. |
-| Pickup time slots | The customer chooses a slot, and the shop sets capacity per slot. |
+| Pickup and delivery slots | The customer chooses pickup or delivery and a time slot. The shop sets opening hours, capacity per slot, delivery areas and fees (D-120 to D-122). |
 | Human handover | If the AI is unsure, or the customer is upset, a staff member takes over the chat in the unified inbox. |
-| Languages | To be decided (see open questions). |
+| Languages | English and Nepali, including Nepali written in English letters. The AI answers in the customer's language (D-119). |
+| Payment | No payment in the chat. The customer pays at pickup or on delivery, and staff mark the order as paid (D-117). |
 
 ## Order states
 
 `Draft` → `Awaiting customer confirmation` → `Confirmed` → `Being prepared` → `Final price sent` → `Final price accepted` → `Ready for pickup` → `Completed`
+
+Delivery orders: `Ready for delivery` → `Out for delivery` → `Completed` (D-123).
 
 Other states: `Cancelled by customer`, `Cancelled by shop`, `Expired` (no confirmation in time).
 

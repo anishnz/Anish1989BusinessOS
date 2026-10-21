@@ -75,6 +75,21 @@ def sign_in(page, s: dict) -> None:
         sys.exit("Sign-in failed. Check the email and password.")
 
 
+def run_step(page, step: dict) -> None:
+    """{"click": selector}, {"fill": selector, "value": text} or {"wait_for": selector}.
+    "{tomorrow}" in a value becomes tomorrow's date (YYYY-MM-DD), so time slots are not in the past."""
+    import datetime
+
+    if "click" in step:
+        page.locator(step["click"]).first.click()
+    elif "fill" in step:
+        value = str(step.get("value", "")).replace("{tomorrow}", (datetime.date.today() + datetime.timedelta(days=1)).isoformat())
+        page.locator(step["fill"]).first.fill(value)
+    if step.get("wait_for"):
+        page.wait_for_selector(step["wait_for"], timeout=15000)
+    page.wait_for_load_state("networkidle")
+
+
 def main(only: list[str]) -> int:
     from playwright.sync_api import sync_playwright
 
@@ -99,6 +114,8 @@ def main(only: list[str]) -> int:
             page.wait_for_load_state("networkidle")
             if shot.get("wait_for"):  # pages that build themselves in the browser (the staff app)
                 page.wait_for_selector(shot["wait_for"], timeout=15000)
+            for step in shot.get("steps", []):  # clicks and typing before the picture, for example choosing "Delivery"
+                run_step(page, step)
             for selector in shot.get("hide", []):  # personal or changing details
                 page.locator(selector).evaluate_all("els => els.forEach(e => e.style.visibility = 'hidden')")
             target = OUT / f"{shot['name']}.png"

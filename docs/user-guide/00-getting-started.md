@@ -1,6 +1,6 @@
 # Getting started
 
-*User guide · Last updated 21 October 2026*
+*User guide · Last updated 22 October 2026*
 
 Anish1989 Business OS runs your business in one place: products, customers, orders, WhatsApp messages, a dashboard, and more modules later. Each business has its own address, for example `gorkhabutchery.<platform address>`, and its own data. No other business can see it.
 
@@ -18,14 +18,15 @@ Anish1989 Business OS runs your business in one place: products, customers, orde
 2. The **setup** opens by itself (chapter 14). Fill in your business details, set up **backups to your Google Drive**, and look at the connections.
 3. **Add your staff**: admin pages → **Users** → **Add**. Give each person a role, for example **Shop Staff** (chapter 2).
 4. **Add your products**, one by one or from a CSV file (chapter 5).
-5. Connect **email sending** and **WhatsApp** on the **Integrations** page (chapters 4 and 7).
-6. Open the **Dashboard** to see today's sales and orders (chapter 8).
+5. Set your **pickup and delivery** hours, time slots and delivery areas with their fees (chapter 15).
+6. Connect **email sending** and **WhatsApp** on the **Integrations** page (chapters 4 and 7).
+7. Open the **Dashboard** to see today's sales and orders (chapter 8).
 
 ## Your first day as staff
 
 1. Open the link your manager gives you and **log in**. Staff who use the admin pages also set up two-step verification (chapter 1).
 2. Open the **staff app** at `/app/`. You can add it to your phone's home screen.
-3. Take **orders**, look up **customers**, and answer **WhatsApp** messages if your role allows it (chapters 6, 7 and 9).
+3. Take **orders**, look up **customers**, and answer **WhatsApp** messages if your role allows it (chapters 6, 7, 9 and 15).
 
 ## When something goes wrong
 

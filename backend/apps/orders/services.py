@@ -6,10 +6,15 @@ admin and (later) the WhatsApp AI all follow the same rules:
 - amounts must follow the product's minimum and steps (for example 0.5 kg);
 - lines can only change while the order is a draft or awaiting confirmation;
 - the status can only move along the allowed paths below;
+- pickup or delivery (task 2.1): a delivery order needs an address, an area
+  and a time before it is sent to the customer or confirmed; the delivery fee
+  comes from the area and is part of the total. Slot, area and minimum-order
+  rules are strict for customers and warnings for staff (D-121);
 - everything is recorded in the order history and the audit log.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
@@ -21,6 +26,8 @@ from django.utils import timezone
 from apps.audit.services import audit
 from apps.catalog.models import Product, gst_in
 from apps.customers.models import Customer
+from apps.fulfilment import services as fulfilment
+from apps.fulfilment.models import Kind
 
 from .models import CLOSED_STATUSES, EDITABLE_STATUSES, Order, OrderCounter, OrderEvent, OrderLine
 
@@ -37,9 +44,14 @@ TRANSITIONS: dict[str, set[str]] = {
     S.PREPARING: {S.FINAL_SENT, S.READY},
     S.FINAL_SENT: {S.FINAL_ACCEPTED, S.PREPARING},
     S.FINAL_ACCEPTED: {S.READY},
-    S.READY: {S.COMPLETED},
+    S.READY: {S.COMPLETED, S.OUT_FOR_DELIVERY},  # pickup orders are completed, delivery orders go out first (D-123)
+    S.OUT_FOR_DELIVERY: {S.COMPLETED, S.READY},
 }
 CANCEL_STATUSES = {S.CANCELLED_CUSTOMER, S.CANCELLED_SHOP}
+# Until the order is ready, a wrong time or address can still be fixed: show warnings.
+BEFORE_READY = {S.DRAFT, S.AWAITING, S.CONFIRMED, S.PREPARING, S.FINAL_SENT, S.FINAL_ACCEPTED}
+FULFILMENT_FIELDS = {"fulfilment", "due_at", "delivery_address", "delivery_suburb", "delivery_postcode", "delivery_area"}
+ADDRESS_FIELDS = {"delivery_address", "delivery_suburb", "delivery_postcode"}
 
 
 @dataclass
@@ -104,8 +116,13 @@ def _event(order: Order, from_status: str, to_status: str, actor=None, note: str
     OrderEvent.objects.create(order=order, from_status=from_status, to_status=to_status, actor=actor, note=(note or "")[:300])
 
 
-def recalculate(order: Order) -> Order:
-    """Work out line totals, the estimated total, the final total and the GST included."""
+def recalculate(order: Order, *, refresh_fee: bool = False) -> Order:
+    """Work out line totals, the estimated total, the final total and the GST included.
+
+    `refresh_fee`: work out the delivery fee again from the area (when the
+    products, pickup or delivery, or the area changed). Otherwise the fee on
+    the order stays, so later fee changes never change a confirmed order.
+    """
     estimated = total = gst = Decimal("0")
     for line in order.lines.all():
         line.line_total = money(line.unit_price * line.effective_quantity)
@@ -114,9 +131,69 @@ def recalculate(order: Order) -> Order:
         total += line.line_total
         if line.gst_applies:
             gst += gst_in(line.line_total)
-    order.estimated_total, order.total, order.gst_total = estimated, total, gst
-    order.save(update_fields=["estimated_total", "total", "gst_total", "updated_at"])
+    if refresh_fee:
+        area = order.delivery_area if order.fulfilment == Kind.DELIVERY else None
+        order.delivery_fee = fulfilment.delivery_fee(area, estimated) if area is not None else Decimal("0.00")
+        order.delivery_fee_gst = fulfilment.current_settings().delivery_fee_gst
+    if order.delivery_fee and order.delivery_fee_gst:
+        gst += gst_in(order.delivery_fee)
+    order.estimated_total, order.total, order.gst_total = estimated + order.delivery_fee, total + order.delivery_fee, gst
+    order.save(update_fields=["estimated_total", "total", "gst_total", "delivery_fee", "delivery_fee_gst", "updated_at"])
     return order
+
+
+# ---------------------------------------------------------------------------
+# Pickup or delivery
+# ---------------------------------------------------------------------------
+def due_text(order: Order) -> str:
+    """For example "Thu 23 Oct 10:00–10:30" (a slot) or "Thu 23 Oct 07:30" (a time staff typed)."""
+    if order.due_at is None:
+        return "no time yet"
+    text = fulfilment.when_text(order.due_at)
+    return f"{text}–{fulfilment.time_text(order.due_until)}" if order.due_until else text
+
+
+def fulfilment_text(order: Order) -> str:
+    """For example "Delivery to Central Auckland (fee $8.00), Thu 23 Oct 16:00–17:00"."""
+    if order.fulfilment == Kind.DELIVERY:
+        where = f" to {order.delivery_area.name}" if order.delivery_area_id else ""
+        return f"Delivery{where} (fee ${order.delivery_fee}), {due_text(order)}"
+    return f"Pickup, {due_text(order)}"
+
+
+def _clean_fulfilment(order: Order) -> None:
+    if order.fulfilment not in Kind.values:
+        raise ValidationError("Choose pickup or delivery.")
+    order.delivery_address = " ".join((order.delivery_address or "").split())[:200]
+    order.delivery_suburb = " ".join((order.delivery_suburb or "").split())[:100]
+    order.delivery_postcode = (order.delivery_postcode or "").strip()
+    if order.delivery_postcode and not re.fullmatch(r"\d{4}", order.delivery_postcode):
+        raise ValidationError("The postcode must have 4 digits.")
+    if order.fulfilment == Kind.PICKUP:
+        # A pickup order keeps no delivery address (less personal data to look after).
+        order.delivery_address = order.delivery_suburb = order.delivery_postcode = ""
+        order.delivery_area = None
+    elif order.delivery_area_id is None:
+        order.delivery_area = fulfilment.find_area(
+            postcode=order.delivery_postcode, suburb=order.delivery_suburb, address=order.delivery_address)
+    order.due_until = fulfilment.slot_end_for(order.fulfilment, order.due_at)
+
+
+def booking_problems(order: Order, *, strict: bool = False) -> list[str]:
+    """What stops the order being sent to the customer or confirmed. Staff: only the must-haves (D-121, D-122)."""
+    problems = fulfilment.required_problems(order)
+    if strict:
+        fulfilment.lock_bookings()
+        problems += fulfilment.rule_problems(order, order.products_estimate, exact=True)
+    return problems
+
+
+def warnings(order: Order) -> list[str]:
+    """Rules this order breaks, shown to staff until the order is ready (empty list = all fine)."""
+    if order.status not in BEFORE_READY:
+        return []
+    found = fulfilment.required_problems(order) + fulfilment.rule_problems(order, order.products_estimate)
+    return list(dict.fromkeys(found))
 
 
 def _lock(order: Order) -> Order:
@@ -146,28 +223,39 @@ def _replace_lines(order: Order, lines: list[LineInput]) -> None:
 # ---------------------------------------------------------------------------
 @transaction.atomic
 def create_order(*, lines: list[LineInput], customer: Customer | None = None, channel: str = Order.Channel.COUNTER,
-                 notes: str = "", pickup_at=None, actor=None) -> Order:
+                 notes: str = "", actor=None, **details) -> Order:
+    """A new draft. `details`: fulfilment, due_at, delivery_address, delivery_suburb, delivery_postcode, delivery_area."""
     if channel not in Order.Channel.values:
         raise ValidationError("Unknown channel.")
     if customer is not None and customer.is_anonymised:
         raise ValidationError("This customer's personal data was removed. Choose another customer.")
-    order = Order.objects.create(
-        number=_next_number(), customer=customer, channel=channel, notes=(notes or "").strip(), pickup_at=pickup_at, created_by=actor,
-    )
+    unknown = set(details) - FULFILMENT_FIELDS
+    if unknown:
+        raise ValidationError(f"Unknown order details: {', '.join(sorted(unknown))}.")
+    order = Order(number=_next_number(), customer=customer, channel=channel, notes=(notes or "").strip(), created_by=actor, **details)
+    _clean_fulfilment(order)
+    order.save()
     _replace_lines(order, lines)
-    recalculate(order)
-    _event(order, "", S.DRAFT, actor, "Order created")
-    audit("orders.create", target=order, actor=actor, metadata={"lines": len(lines), "total": str(order.total), "channel": channel})
+    recalculate(order, refresh_fee=True)
+    _event(order, "", S.DRAFT, actor, f"Order created ({fulfilment_text(order)})")
+    audit("orders.create", target=order, actor=actor,
+          metadata={"lines": len(lines), "total": str(order.total), "channel": channel, "fulfilment": order.fulfilment})
     return order
 
 
 @transaction.atomic
-def update_order(order: Order, *, lines: list[LineInput] | None = None, actor=None, **fields) -> Order:
-    """Change lines (draft / awaiting confirmation only) and details (customer, notes, pickup time) while open."""
+def update_order(order: Order, *, lines: list[LineInput] | None = None, actor=None, strict: bool = False, **fields) -> Order:
+    """Change lines (draft / awaiting confirmation only), pickup or delivery, the time and other details while open.
+
+    - A change to what the customer agreed (products, pickup or delivery, address, time)
+      while the order awaits their confirmation sends it back to Draft.
+    - The delivery fee can only change while the order is not paid.
+    - After confirmation, a delivery order must keep its address, area and time.
+    """
     order = _lock(order)
     if not order.is_open:
         raise ValidationError(f"Order #{order.number} is {order.get_status_display().lower()} and cannot be changed.")
-    allowed = {"customer", "notes", "pickup_at", "channel"}
+    allowed = {"customer", "notes", "channel"} | FULFILMENT_FIELDS
     unknown = set(fields) - allowed
     if unknown:
         raise ValidationError(f"These fields cannot be changed: {', '.join(sorted(unknown))}.")
@@ -175,18 +263,40 @@ def update_order(order: Order, *, lines: list[LineInput] | None = None, actor=No
         raise ValidationError("This customer's personal data was removed. Choose another customer.")
     if "channel" in fields and fields["channel"] not in Order.Channel.values:
         raise ValidationError("Unknown channel.")
+    touches_fulfilment = bool(set(fields) & FULFILMENT_FIELDS)
+    if touches_fulfilment and order.status == S.OUT_FOR_DELIVERY:
+        raise ValidationError("The order is out for delivery. Move it back to “Ready for delivery” first.")
+    if lines is not None and order.status not in EDITABLE_STATUSES:
+        raise ValidationError("Products can only be changed while the order is a draft or awaiting confirmation.")
+    before = {"fulfilment": order.fulfilment, "area": order.delivery_area_id, "due_at": order.due_at, "fee": order.delivery_fee,
+              "address": (order.delivery_address, order.delivery_suburb, order.delivery_postcode)}
     for key, value in fields.items():
         setattr(order, key, value.strip() if isinstance(value, str) else value)
+    if set(fields) & ADDRESS_FIELDS and "delivery_area" not in fields:
+        order.delivery_area = None  # found again from the new address
+    if touches_fulfilment:
+        _clean_fulfilment(order)
     order.save()
     if lines is not None:
-        if order.status not in EDITABLE_STATUSES:
-            raise ValidationError("Products can only be changed while the order is a draft or awaiting confirmation.")
         _replace_lines(order, lines)
-        recalculate(order)
+    price_changed = lines is not None or order.fulfilment != before["fulfilment"] or order.delivery_area_id != before["area"]
+    if price_changed:
+        recalculate(order, refresh_fee=True)
+    if order.is_paid and order.delivery_fee != before["fee"]:
+        raise ValidationError("This order is paid, and this change would change the delivery fee. Record the refund first (mark it as not paid).")
+    if lines is not None:
         audit("orders.lines_changed", target=order, actor=actor, metadata={"lines": len(lines), "total": str(order.total)})
-        if order.status == S.AWAITING:
-            # The customer agreed to a different order, so they must confirm again.
-            _move(order, S.DRAFT, actor, "Products changed; the customer must confirm again")
+    changed_fulfilment = (order.fulfilment != before["fulfilment"] or order.delivery_area_id != before["area"] or order.due_at != before["due_at"]
+                          or (order.delivery_address, order.delivery_suburb, order.delivery_postcode) != before["address"])
+    if changed_fulfilment:
+        if order.status not in EDITABLE_STATUSES:
+            problems = booking_problems(order, strict=strict)
+            if problems:
+                raise ValidationError(problems)
+        _event(order, order.status, order.status, actor, f"Changed to: {fulfilment_text(order)}")
+    if order.status == S.AWAITING and (lines is not None or changed_fulfilment):
+        # The customer agreed to a different order, so they must confirm again.
+        _move(order, S.DRAFT, actor, "Order changed; the customer must confirm again")
     return order
 
 
@@ -202,10 +312,25 @@ def delete_draft(order: Order, *, actor=None) -> None:
 # ---------------------------------------------------------------------------
 # Status
 # ---------------------------------------------------------------------------
+def status_label(order: Order, status: str) -> str:
+    """A status in words for this order ("Ready for pickup" or "Ready for delivery")."""
+    if status == S.READY:
+        return "Ready for delivery" if order.fulfilment == Kind.DELIVERY else "Ready for pickup"
+    return S(status).label
+
+
+def next_moves(order: Order) -> set[str]:
+    """The forward moves for this order: a pickup order is never "Out for delivery"; a delivery order goes out before it is completed."""
+    moves = set(TRANSITIONS.get(order.status, set()))
+    if order.status == S.READY:
+        moves.discard(S.COMPLETED if order.fulfilment == Kind.DELIVERY else S.OUT_FOR_DELIVERY)
+    return moves
+
+
 def allowed_moves(order: Order) -> list[str]:
     if not order.is_open:
         return []
-    return sorted(TRANSITIONS.get(order.status, set())) + sorted(CANCEL_STATUSES)
+    return sorted(next_moves(order)) + sorted(CANCEL_STATUSES)
 
 
 def _move(order: Order, to_status: str, actor=None, note: str = "") -> Order:
@@ -225,22 +350,29 @@ def _move(order: Order, to_status: str, actor=None, note: str = "") -> Order:
 
 
 @transaction.atomic
-def change_status(order: Order, to_status: str, *, actor=None, note: str = "") -> Order:
+def change_status(order: Order, to_status: str, *, actor=None, note: str = "", strict: bool = False) -> Order:
+    """Move the order on. `strict`: the customer (or the AI for them) does it, so every slot and area rule applies (D-121)."""
     order = _lock(order)
     if to_status not in S.values:
         raise ValidationError("Unknown status.")
     if to_status in CANCEL_STATUSES:
         return _cancel(order, to_status, actor=actor, note=note)
-    if to_status not in TRANSITIONS.get(order.status, set()):
-        raise ValidationError(f"Order #{order.number} cannot go from '{order.get_status_display()}' to '{S(to_status).label}'.")
+    if to_status not in next_moves(order):
+        raise ValidationError(f"Order #{order.number} cannot go from '{order.status_text}' to '{status_label(order, to_status)}'.")
     if to_status in (S.AWAITING, S.CONFIRMED) and not order.lines.exists():
         raise ValidationError("Add at least one product first.")
     if to_status == S.AWAITING and order.customer is None:
         raise ValidationError("Choose the customer who must confirm the order.")
+    if to_status in (S.AWAITING, S.CONFIRMED):
+        problems = booking_problems(order, strict=strict)
+        if problems:
+            raise ValidationError(problems)
+    if order.status == S.OUT_FOR_DELIVERY and to_status == S.READY and not (note or "").strip():
+        raise ValidationError("Give the reason the delivery did not happen.")
     if to_status in (S.FINAL_SENT, S.READY) and order.needs_weighing:
         raise ValidationError("Enter the real weight of every product sold by weight first.")
     if to_status == S.FINAL_SENT and order.total == order.estimated_total:
-        raise ValidationError("The final price is the same as the estimate, so the order can go straight to 'Ready for pickup'.")
+        raise ValidationError(f"The final price is the same as the estimate, so the order can go straight to '{status_label(order, S.READY)}'.")
     if to_status == S.READY and order.status == S.PREPARING and order.total != order.estimated_total:
         raise ValidationError(
             f"The final price (${order.total}) differs from the estimate (${order.estimated_total}). "

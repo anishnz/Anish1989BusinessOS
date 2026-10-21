@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Next: **Step 2, ordering flow** (see the delivery plan). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Task 2.1 (pickup and delivery) is done; next is 2.2 (stock). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -190,7 +190,24 @@ Open a new chat in the ERP CRM project and type:
 
 ## Step 2: Ordering flow
 
-Not started.
+- [x] 2.1 Pickup and delivery: opening hours, time slots with capacity, closed days, delivery areas and fees, "Out for delivery" status (done 22 Oct 2026)
+  - Decisions D-117 to D-125: pay at pickup or on delivery, pickup and delivery, English and Nepali, slot rules, strict for customers and warnings for staff, delivery areas and fees, "Out for delivery", Orders – Configure, the due time
+  - New app `apps.fulfilment`: settings (slot lengths, orders per slot, preparation time, days ahead, GST in fees), opening hours per weekday (pickup and delivery), closed days, delivery areas (postcodes, suburbs, fee, minimum order, free delivery from)
+  - Slots in New Zealand time (clocks going forward handled); a slot counts orders from "Awaiting customer confirmation" on
+  - Orders: pickup or delivery, due time and slot end, delivery address, area (found from postcode or suburb) and fee (part of the total, kept when fees change later); "Ready for pickup" / "Ready for delivery", "Out for delivery"
+  - Staff app: pickup or delivery, address with the area and fee, day and slot buttons (taken, full, too soon), another time; warnings on the order; change on the order page
+  - Admin: settings page with "Times customers can choose now", closed days, delivery areas; order list and form with pickup or delivery
+  - Check system: "Pickup and delivery" warns when customers cannot choose a time
+  - User guide chapter: docs/user-guide/15-pickup-and-delivery.md (chapters 0, 6, 8 and 9 updated)
+  - 734 tests pass (50 new for pickup and delivery)
+- [ ] 2.2 Stock: track stock per product, check it and take it off when an order is confirmed, put it back when cancelled, low-stock alerts
+- [ ] 2.3 WhatsApp status messages and final-price acceptance (approved templates; the customer answers Yes or No)
+- [ ] 2.4 AI order taking on WhatsApp in English and Nepali: AI keys per business, product search, time slots, order summary, the customer confirms, AI log
+- [ ] 2.5 Quick reorder ("same as last time") and human handover in the inbox
+- [ ] 2.6 Live order board for the counter and kitchen
+- [ ] 2.7 Daily owner summary on WhatsApp and star feedback after the order
+- [ ] 2.8 Custom domains with DNS check and automatic SSL
+- [ ] 2.9 Website content editor (title, headings, text, SEO) with "Generate with AI"
 
 ## Step 3: Enquiry, quote and booking flow
 

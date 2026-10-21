@@ -52,7 +52,7 @@ export default function Orders() {
       {error && <p className="error">{error}</p>}
       <div className="card table-wrap">
         <table>
-          <thead><tr><th>Order</th><th>Created</th><th>Customer</th><th>Status</th><th>Pickup</th><th className="num">Total</th><th>Paid</th></tr></thead>
+          <thead><tr><th>Order</th><th>Created</th><th>Customer</th><th>Status</th><th>Pickup or delivery</th><th className="num">Total</th><th>Paid</th></tr></thead>
           <tbody>
             {data?.results.map((o) => (
               <tr key={o.id} className="link" onClick={() => navigate(`/orders/${o.id}`)}>
@@ -60,7 +60,7 @@ export default function Orders() {
                 <td>{when(o.created_at)}</td>
                 <td>{o.customer_name || <span className="muted">Walk-in</span>}</td>
                 <td><span className="pill">{o.status_label}</span></td>
-                <td>{when(o.pickup_at)}</td>
+                <td>{o.fulfilment === "delivery" ? "Delivery" : "Pickup"}{o.due_at ? <span className="muted"> · {o.due_text}</span> : null}</td>
                 <td className="num">{money(o.total)}</td>
                 <td>{o.is_paid ? "Yes" : "No"}</td>
               </tr>

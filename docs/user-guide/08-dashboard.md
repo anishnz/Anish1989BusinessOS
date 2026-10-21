@@ -1,6 +1,6 @@
 # 8. Dashboard
 
-*User guide, chapter 8 · Last updated 21 October 2026*
+*User guide, chapter 8 · Last updated 22 October 2026*
 
 **Who this is for:** business owners and managers.
 
@@ -32,7 +32,7 @@ The five products with the most sales in completed orders, with the amount sold 
 
 ## 8.4 Orders needing attention
 
-How many orders are waiting at each step: awaiting the customer's confirmation, confirmed (to prepare), being prepared, final price sent or accepted, and ready for pickup. Click a step to open those orders. **Pickups due today** counts orders with a pickup time today that are not completed yet.
+How many orders are waiting at each step: awaiting the customer's confirmation, confirmed (to prepare), being prepared, final price sent or accepted, ready, and out for delivery. Click a step to open those orders. **Pickups due** and **Deliveries due** count today's booked orders (not drafts) with a time today that are not completed yet.
 
 ## 8.5 Another day
 

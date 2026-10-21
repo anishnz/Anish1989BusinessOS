@@ -1,6 +1,6 @@
 # 10. Delivery plan
 
-Last updated: 21 October 2026
+Last updated: 22 October 2026
 
 Agreed on 21 October 2026. Work is full-time. All pilot businesses have said they will pay after the pilot.
 
@@ -47,6 +47,18 @@ Agreed on 21 October 2026. Work is full-time. All pilot businesses have said the
 - Website content editor (title, headings, text, SEO) with "Generate with AI"
 
 **Done when:** Gorkha Butchery and the restaurant take real orders through WhatsApp for one week without staff re-typing orders.
+
+Tasks (agreed 22 October 2026; payment at pickup or on delivery, pickup and delivery, English and Nepali — D-117 to D-119):
+
+- 2.1 Pickup and delivery: opening hours, time slots with capacity, closed days, delivery areas and fees, "Out for delivery" status
+- 2.2 Stock: track stock per product, check it and take it off when an order is confirmed, put it back when cancelled, low-stock alerts
+- 2.3 WhatsApp status messages and final-price acceptance (approved templates; the customer answers Yes or No)
+- 2.4 AI order taking on WhatsApp in English and Nepali: AI keys per business, product search, time slots, order summary, the customer confirms, AI log
+- 2.5 Quick reorder ("same as last time") and human handover in the inbox
+- 2.6 Live order board for the counter and kitchen
+- 2.7 Daily owner summary on WhatsApp and star feedback after the order
+- 2.8 Custom domains with DNS check and automatic SSL
+- 2.9 Website content editor (title, headings, text, SEO) with "Generate with AI"
 
 ## Step 3: Enquiry, quote and booking flow
 

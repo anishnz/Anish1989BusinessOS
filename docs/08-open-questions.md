@@ -1,16 +1,8 @@
 # 08. Open questions
 
-Last updated: 21 October 2026
+Last updated: 22 October 2026
 
 Answer these before writing code. When a question is answered, move the answer to [02. Decisions](02-decisions.md).
-
-## WhatsApp AI ordering
-
-| # | Question | Options |
-|---|---|---|
-| Q-01 | Can customers pay inside the chat? | Bank transfer reference in chat / Pay at pickup or delivery only |
-| Q-02 | Fulfilment type? | Pickup only / Delivery only / Both |
-| Q-03 | Which languages should the AI understand? | English only / English and Nepali / More |
 
 ## Competitor intelligence
 
@@ -44,7 +36,7 @@ Answer these before writing code. When a question is answered, move the answer t
 | # | Question | Notes |
 |---|---|---|
 | Q-16 | Whose Google Drive receives backups? | **Answered:** both. Platform owner's Drive for the whole database, and each tenant's own Drive for its own data (D-031) |
-| Q-17 | Backup retention? | Proposed: 6-hourly for 7 days, daily for 30 days, monthly for 12 months |
+| Q-17 | Backup retention? | **Answered:** every backup for 7 days, daily to 30 days, monthly for 12 months (D-099) |
 | Q-18 | Platform domain name for tenant subdomains? | For example `<tenant>.<platform-domain>` |
 | Q-19 | Which registrar for domain search and purchase (later)? | Needs an account and API access |
 
@@ -56,3 +48,6 @@ Answer these before writing code. When a question is answered, move the answer t
 | — | Job tools: separate or same platform? | Module in the same platform | D-021 |
 | — | What did businesses agree to? | Pay after the pilot | D-022 |
 | — | Working time | Full-time | D-023 |
+| Q-01 | Can customers pay inside the chat? | No: pay at pickup or on delivery (22 Oct 2026) | D-117 |
+| Q-02 | Fulfilment type? | Pickup and delivery (22 Oct 2026) | D-118 |
+| Q-03 | Which languages should the AI understand? | English and Nepali, including Nepali in English letters (22 Oct 2026) | D-119 |

@@ -6,5 +6,7 @@
   {"name": "tickets-list", "site": "business", "path": "/tickets/?show=all", "selector": "#content"},
   {"name": "check-system", "site": "business", "path": "/system-check/", "selector": "#content"},
   {"name": "staff-app-phone", "site": "business", "path": "/app/", "width": 390, "height": 760, "wait_for": "main h1"},
-  {"name": "guide-search", "site": "business", "path": "/guide/search/?q=backup"}
+  {"name": "guide-search", "site": "business", "path": "/guide/search/?q=backup"},
+  {"name": "pickup-delivery-settings", "site": "business", "path": "/admin/fulfilment/fulfilmentsettings/", "selector": "#content"},
+  {"name": "new-order-delivery", "site": "business", "path": "/app/orders/new", "width": 1000, "height": 1300, "wait_for": "main h1", "steps": [{"click": "button[role=radio]:has-text('Delivery')"}, {"fill": "#delivery-address", "value": "12 Example Street"}, {"fill": "input[aria-label=Postcode]", "value": "1010", "wait_for": "p[role=status] strong"}, {"fill": "#due-day", "value": "{tomorrow}", "wait_for": ".slots .slot"}, {"click": ".slots .slot:not(.dim)"}], "selector": ".card:has(h2:text-is('Pickup or delivery'))"}
 ]

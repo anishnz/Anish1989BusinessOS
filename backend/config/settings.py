@@ -88,6 +88,7 @@ TENANT_APPS = [
     "apps.setup",
     "apps.catalog",
     "apps.customers",
+    "apps.fulfilment",  # pickup and delivery settings (task 2.1)
     "apps.orders",
     "apps.inbox",
     "apps.reports",

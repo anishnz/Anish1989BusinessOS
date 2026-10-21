@@ -269,13 +269,25 @@ Body for POST: `{"provider": "openai", "label": "Main AI", "config": {"model": "
 | Method | Path | Permission |
 |---|---|---|
 | GET, POST | `/api/orders/` (filters `status`, `open`, `customer`, `date=YYYY-MM-DD` local, `q=#number` or customer name) | `orders.view`, `orders.create` |
-| GET, PATCH, DELETE | `/api/orders/<id>/` (PATCH: `customer`, `notes`, `pickup_at`, `channel`, `lines`; DELETE drafts only) | `orders.view`, `orders.edit`, `orders.delete` |
+| GET, PATCH, DELETE | `/api/orders/<id>/` (PATCH: `customer`, `notes`, `channel`, `lines`, `fulfilment`, `due_at`, `delivery_address`, `delivery_suburb`, `delivery_postcode`, `delivery_area`; DELETE drafts only) | `orders.view`, `orders.edit`, `orders.delete` |
 | POST | `/api/orders/<id>/status/` `{"to": "confirmed", "note": ""}` | `orders.edit` |
 | POST | `/api/orders/<id>/weights/` `{"weights": {"<line id>": "1.08"}}` | `orders.edit` |
 | POST | `/api/orders/<id>/payment/` `{"paid": true, "method": "cash"}` | `orders.edit` |
 | GET | `/api/orders/export/` (`date_from`, `date_to`) | `orders.export` |
+| GET | `/api/orders/fulfilment/` (settings and active delivery areas) | `orders.view` |
+| GET | `/api/orders/slots/?kind=pickup\|delivery&date=YYYY-MM-DD&order=<id>` (that day's slots with `taken`, `capacity`, `full`, `past`, `too_soon`; `order` is not counted) | `orders.view` |
+| GET | `/api/orders/delivery-areas/find/?postcode=&suburb=&address=` | `orders.view` |
 
-Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": null, "lines": [{"product": 5, "quantity": "1.5", "note": ""}]}`. Responses include `next_statuses` for the UI.
+Create body: `{"customer": 3, "channel": "counter", "notes": "", "fulfilment": "delivery", "due_at": "2026-10-23T16:00:00+13:00", "delivery_address": "1 Queen Street", "delivery_postcode": "1010", "lines": [{"product": 5, "quantity": "1.5", "note": ""}]}`. The delivery fee always comes from the area. Responses include `next_statuses`, `status_label` ("Ready for pickup" / "Ready for delivery"), `due_text` and, on one order, `warnings` (slot, area and minimum-order rules the order breaks).
+
+## Pickup and delivery (task 2.1)
+
+- Business-only app `apps.fulfilment` (permissions: module `orders`; changing needs `orders.configure`, D-124): `FulfilmentSettings` (one row: pickup/delivery on, slot lengths, orders per slot, preparation time, days ahead, GST in fees), `OpeningHours` (kind, weekday, from, until; periods must not overlap), `ClosedDay`, `DeliveryArea` (postcodes, suburbs, fee, minimum order, free from, active; a postcode or suburb in one active area only).
+- `apps/fulfilment/services.py`: `slots(kind, day, days)` builds slots from the opening hours in the business time zone (times that do not exist when the clocks go forward are skipped) and counts orders with `due_at` in each slot whose status is "awaiting confirmation" or later (not cancelled or expired, D-120); `bookable_slots()` (after the preparation time, within the days ahead, not full); `time_problems()`; `find_area()` (postcode first, then suburb; "Mt" = "Mount"); `delivery_fee()`; `required_problems()` (a delivery needs address, area and time) and `rule_problems()` (switched off, inactive area, minimum order, slot rules).
+- Orders: `fulfilment`, `due_at` (renamed from `pickup_at`, D-125), `due_until` (end of the slot, set by the server), `delivery_address/suburb/postcode`, `delivery_area`, `delivery_fee` and `delivery_fee_gst` (copied when the products, pickup or delivery, or the area change; weights never change them). Totals include the fee.
+- Status `out_for_delivery`: delivery orders go ready → out_for_delivery → completed; out_for_delivery → ready needs a note (D-123). `change_status(..., strict=True)` and `update_order(..., strict=True)` apply every slot and area rule (for the WhatsApp AI and website); staff calls only need the delivery must-haves, and `warnings(order)` lists the rest (D-121).
+- Migration `orders.0003` renames the field, adds the columns, and gives `orders.configure` to roles that had every other Orders permission.
+- Check system: "Pickup and delivery" warns when customers cannot choose a time (no hours, no free slots, no delivery areas, both switched off).
 
 ## WhatsApp and the inbox (task 1.8)
 
@@ -315,7 +327,7 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "pickup_at": nu
 
 ## Dashboard (task 1.9)
 
-- App `apps.reports` (module `reports`, no tables). `apps/reports/dashboard.py` `summary(day)` returns: sales (completed orders by `completed_at`: total, GST, count, average, unpaid) with the change against the same weekday last week; orders confirmed (by `confirmed_at`, not cancelled/expired); sales per day for 7 days; top 5 products by line totals of completed orders in those 7 days; counts of open orders per status; pickups due that day; unread open conversations (if the user has `crm.view`).
+- App `apps.reports` (module `reports`, no tables). `apps/reports/dashboard.py` `summary(day)` returns: sales (completed orders by `completed_at`: total, GST, count, average, unpaid) with the change against the same weekday last week; orders confirmed (by `confirmed_at`, not cancelled/expired); sales per day for 7 days; top 5 products by line totals of completed orders in those 7 days; counts of open orders per status; pickups and deliveries due that day; unread open conversations (if the user has `crm.view`). Pickups and deliveries due that day count booked orders (not drafts) by `due_at`.
 - Days are midnight to midnight in `TIME_ZONE` (Pacific/Auckland), including `TruncDate(..., tzinfo=...)`.
 - API `GET /api/reports/dashboard/?date=YYYY-MM-DD` (`reports.view`); money values are exact strings.
 - Page `/dashboard/` (business sites, `admin.site.admin_view`, `reports.view`): stat tiles, an inline SVG column chart (single series `#2a78d6` light / `#3987e5` dark, validated with the dataviz palette checker; per-bar tooltip on hover/focus; table view), top-product bars, attention list linking to filtered orders. Header link "Dashboard" on business sites.

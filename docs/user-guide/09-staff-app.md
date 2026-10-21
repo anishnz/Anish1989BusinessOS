@@ -1,6 +1,6 @@
 # 9. The staff app
 
-*User guide, chapter 9 · Last updated 21 October 2026*
+*User guide, chapter 9 · Last updated 22 October 2026*
 
 **Who this is for:** counter staff, kitchen staff, managers and owners.
 
@@ -53,7 +53,7 @@ The **Orders** page lists open orders first. You can:
 
 1. Click **+ New order**.
 2. **Customer:** type a name or phone number and pick the customer. If they are new, add them first in the classic admin (chapter 5).
-3. Choose the **channel** (Counter, Phone, WhatsApp or Website) and, if you know it, the **pickup** time.
+3. Choose the **channel** (Counter, Phone, WhatsApp or Website), then **Pickup** or **Delivery**, the address for a delivery, and the **time** (chapter 15).
 4. **Products:** type a product name or code and pick it. Enter the amount. The app shows the smallest amount and the steps allowed (for example "min 0.5, steps of 0.5" for kg).
 5. Add a note for a line if needed (for example "curry cut, small pieces"), and a note for the whole order at the bottom.
 6. Check the **Estimate** and click **Save as draft**.
@@ -65,7 +65,7 @@ The estimate on the screen is only a guide. The server always checks prices agai
 The order page shows the lines, the total with GST included, and these boxes:
 
 - **Real weight:** when the order is being prepared, type the real weight of each kg item and click **Save weights**. The total changes and "Estimate was …" shows the old amount.
-- **Next step:** the buttons show only the steps allowed now (for example **Confirmed**, **Being prepared**, **Ready for pickup**, **Completed**). Chapter 6 explains each status.
+- **Next step:** the buttons show only the steps allowed now (for example **Confirmed**, **Being prepared**, **Ready for pickup** or **Ready for delivery**, **Out for delivery**, **Completed**). Chapter 6 explains each status.
 - **Cancel:** type a reason, then click **Customer cancelled** or **Shop cancelled**. A reason is required.
 - **Payment:** choose how the customer paid and click **Mark as paid**.
 - **History:** every change, with the time and who made it.

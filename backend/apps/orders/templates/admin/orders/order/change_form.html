@@ -4,6 +4,10 @@
   {{ block.super }}
 {% endblock %}
 {% block form_top %}
+  {% if warnings %}
+    <ul class="messagelist"><li class="warning">Check before you go on:<ul>{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+      <span class="help">Staff may still book this order. Customers ordering by WhatsApp or the website must follow these rules.</span></li></ul>
+  {% endif %}
   {% if original %}
     <p class="help">
       {% if original.status == "draft" or original.status == "awaiting_confirmation" %}You can change the products while the order is a draft or awaiting confirmation.
@@ -12,6 +16,7 @@
       Prices come from the products and include GST.
     </p>
   {% else %}
-    <p class="help">Choose the customer (or leave it empty for a walk-in), then add products. Prices come from the products and include GST.</p>
+    <p class="help">Choose the customer (or leave it empty for a walk-in), pickup or delivery, then add products. Prices come from the products and include GST.
+      For delivery, the area (and its fee) is found from the postcode or suburb when you leave it empty.</p>
   {% endif %}
 {% endblock %}

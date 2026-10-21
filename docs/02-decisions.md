@@ -1,6 +1,6 @@
 # 02. Decisions
 
-Last updated: 21 October 2026
+Last updated: 22 October 2026
 
 This document records each decision, the reason for it, and its status. A decision can change later, but the change must be written here.
 
@@ -122,6 +122,15 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-114 | Who can read the guide | Every signed-in person of the site, staff app users included; login still needed | Help must be there for everyone who uses the system; the guide has no business data but describes internal procedures | Decided (22 Oct 2026) |
 | D-115 | Guide screenshots | `tools/guide_screenshots.py` (Playwright, run on a computer, not the server) signs in to a test business and saves the pages listed in `docs/user-guide/screenshots.json`; pictures are committed with the chapters | Pictures stay up to date with one command; never made from real customer data | Decided (22 Oct 2026) |
 | D-116 | Help for each page | The header's **Help** link opens the chapter about the current page (a fixed list in `apps/guide/services.py`); the staff app has a Help item | People find the right chapter without searching | Decided (22 Oct 2026) |
+| D-117 | Payment for WhatsApp orders (Q-01) | No payment inside the chat for now. Customers pay at pickup or on delivery (cash, EFTPOS card or bank transfer) and staff mark the order as paid | Simple and safe: no payment provider and no card details; online payment can be added later if pilots ask | Decided (22 Oct 2026) |
+| D-118 | Fulfilment (Q-02) | Pickup and delivery. Each business turns pickup and delivery on or off in its settings | Gorkha Butchery and the restaurant both need delivery as well as pickup | Decided (22 Oct 2026) |
+| D-119 | AI languages (Q-03) | The AI understands and answers in English and Nepali, including Nepali written in English letters (for example "1 kilo khasi ko masu chahiyo"). It answers in the customer's language | Most pilot customers write in one of these; more languages later | Decided (22 Oct 2026) |
+| D-120 | Time slots | Opening hours per weekday (separate for pickup and delivery), slot length, orders per slot, preparation time, days ahead and closed days. A slot counts every order in it from "Awaiting customer confirmation" on (not drafts, cancelled or expired orders) | The shop controls its workload; unfinished drafts never block a slot | Decided (22 Oct 2026) |
+| D-121 | Rules for customers and staff | Orders made by customers (WhatsApp AI, website) must follow every slot, area and minimum-order rule. Staff may book outside them (for example a regular customer before opening time); the order then shows a warning | Shops need flexibility; customers must not overload the shop | Decided (22 Oct 2026) |
+| D-122 | Delivery areas and fees | Areas are found by 4-digit postcode first, then by suburb name. Each area has a fee, a minimum order and an optional "free delivery from" amount. The fee is copied onto the order and included in the total (with 15% GST unless switched off). A delivery order always needs an address, an area and a time | Clear, predictable fees; old orders never change when fees change | Decided (22 Oct 2026) |
+| D-123 | Delivery status | "Ready" shows as "Ready for pickup" or "Ready for delivery". Delivery orders go Ready → Out for delivery → Completed; "Out for delivery" can go back to Ready if the delivery failed (a reason is needed) | The customer's status message (task 2.2) must be able to say "on the way" | Decided (22 Oct 2026) |
+| D-124 | Who changes pickup and delivery settings | New permission Orders – Configure. Existing roles that already had every Orders permission get it automatically (migration); other roles stay as they are | Shop staff take orders but do not change fees or hours; owners keep full control without extra clicks | Decided (22 Oct 2026) |
+| D-125 | Order time field | The order's "pickup time" became the due time (`due_at`, plus `due_until` for the end of the slot): the pickup time, or the start of the delivery window | One clear field for both pickup and delivery | Decided (22 Oct 2026) |
 
 ## Why schema per tenant?
 

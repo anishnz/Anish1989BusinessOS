@@ -104,6 +104,7 @@ export default function DashboardPage() {
                 <tr key={a.status}><td>{can("orders.view") ? <Link to={`/orders?status=${a.status}`}>{a.label}</Link> : a.label}</td><td className="num"><strong>{a.count}</strong></td></tr>
               ))}
               <tr><td>Pickups due (not completed)</td><td className="num"><strong>{data.pickups_due_today}</strong></td></tr>
+              <tr><td>Deliveries due (not completed)</td><td className="num"><strong>{data.deliveries_due_today}</strong></td></tr>
             </tbody></table>
           </div>
         </div>

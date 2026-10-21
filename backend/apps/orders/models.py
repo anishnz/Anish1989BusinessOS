@@ -7,6 +7,9 @@ Orders: what a customer asked for, at the prices of the moment.
   staff enter the real weight when packing (for example 1.08 kg) and the
   final price is worked out from it. The customer accepts the final price.
 - All money is NZ$ including GST, rounded to the cent.
+- Pickup or delivery (task 2.1): the due time is the pickup time or the start
+  of the delivery window. A delivery order also has an address, an area and
+  the delivery fee of that area, which is part of the total.
 """
 from decimal import Decimal
 
@@ -17,6 +20,7 @@ from django.db.models import Q
 from apps.catalog.models import Product
 from apps.core.business import SET_NULL_IN_BUSINESS
 from apps.customers.models import Customer
+from apps.fulfilment.models import DeliveryArea, Kind
 
 
 class Order(models.Model):
@@ -27,7 +31,8 @@ class Order(models.Model):
         PREPARING = "preparing", "Being prepared"
         FINAL_SENT = "final_price_sent", "Final price sent"
         FINAL_ACCEPTED = "final_price_accepted", "Final price accepted"
-        READY = "ready", "Ready for pickup"
+        READY = "ready", "Ready"
+        OUT_FOR_DELIVERY = "out_for_delivery", "Out for delivery"
         COMPLETED = "completed", "Completed"
         CANCELLED_CUSTOMER = "cancelled_by_customer", "Cancelled by customer"
         CANCELLED_SHOP = "cancelled_by_shop", "Cancelled by shop"
@@ -51,7 +56,18 @@ class Order(models.Model):
                                  help_text="Leave empty for a walk-in customer.")
     channel = models.CharField(max_length=20, choices=Channel.choices, default=Channel.COUNTER)
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.DRAFT, editable=False)
-    pickup_at = models.DateTimeField("Pickup time", null=True, blank=True)
+    fulfilment = models.CharField("Pickup or delivery", max_length=10, choices=Kind.choices, default=Kind.PICKUP)
+    due_at = models.DateTimeField("Pickup or delivery time", null=True, blank=True,
+                                  help_text="The pickup time, or the start of the delivery window.")
+    due_until = models.DateTimeField("Until", null=True, blank=True, editable=False,
+                                     help_text="The end of the chosen slot. Empty when staff typed an exact time.")
+    delivery_address = models.CharField(max_length=200, blank=True, help_text="Street and number, flat or unit, and delivery notes.")
+    delivery_suburb = models.CharField("Suburb", max_length=100, blank=True)
+    delivery_postcode = models.CharField("Postcode", max_length=4, blank=True)
+    delivery_area = models.ForeignKey(DeliveryArea, null=True, blank=True, on_delete=models.PROTECT, related_name="orders",
+                                      help_text="Found from the postcode or suburb when left empty.")
+    delivery_fee = models.DecimalField("Delivery fee (NZ$)", max_digits=8, decimal_places=2, default=Decimal("0"), editable=False)
+    delivery_fee_gst = models.BooleanField("GST in the delivery fee", default=True, editable=False)
     notes = models.TextField(blank=True, help_text="Customer requests, for example 'cut into small pieces'.")
     estimated_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"), editable=False)
     total = models.DecimalField("Total (NZ$, incl. GST)", max_digits=12, decimal_places=2, default=Decimal("0"), editable=False)
@@ -68,9 +84,10 @@ class Order(models.Model):
 
     class Meta:
         ordering = ["-number"]
-        indexes = [models.Index(fields=["status"]), models.Index(fields=["created_at"]), models.Index(fields=["pickup_at"])]
+        indexes = [models.Index(fields=["status"]), models.Index(fields=["created_at"]), models.Index(fields=["due_at"], name="orders_order_due_at_idx")]
         constraints = [
             models.CheckConstraint(condition=Q(total__gte=0) & Q(estimated_total__gte=0) & Q(gst_total__gte=0), name="orders_totals_not_negative"),
+            models.CheckConstraint(condition=Q(delivery_fee__gte=0), name="orders_delivery_fee_not_negative"),
         ]
 
     def __str__(self):
@@ -83,6 +100,22 @@ class Order(models.Model):
     @property
     def is_open(self) -> bool:
         return self.status not in CLOSED_STATUSES
+
+    @property
+    def is_delivery(self) -> bool:
+        return self.fulfilment == Kind.DELIVERY
+
+    @property
+    def status_text(self) -> str:
+        """The status in words; "Ready" says what the order is ready for."""
+        if self.status == self.Status.READY:
+            return "Ready for delivery" if self.is_delivery else "Ready for pickup"
+        return self.get_status_display()
+
+    @property
+    def products_estimate(self) -> Decimal:
+        """The estimated price of the products, without the delivery fee."""
+        return self.estimated_total - self.delivery_fee
 
     @property
     def needs_weighing(self) -> bool:

@@ -3,8 +3,9 @@ import { Link, useParams } from "react-router-dom";
 
 import { api, money, quantity, when } from "../api";
 import { useAuth } from "../auth";
+import FulfilmentEditor, { fromOrder, type FulfilmentValue } from "../components/FulfilmentEditor";
 import { useData } from "../components/useData";
-import { STATUS_LABELS, type Order } from "../types";
+import { statusLabel, type Order } from "../types";
 
 const CANCEL = ["cancelled_by_customer", "cancelled_by_shop"];
 const METHODS: [string, string][] = [["cash", "Cash"], ["card", "Card (EFTPOS)"], ["bank_transfer", "Bank transfer"], ["other", "Other"]];
@@ -19,20 +20,22 @@ export default function OrderDetail() {
   const [reason, setReason] = useState("");
   const [method, setMethod] = useState("cash");
   const [weights, setWeights] = useState<Record<number, string>>({});
+  const [editing, setEditing] = useState<FulfilmentValue | null>(null);
 
   if (error) return <p className="error">{error}</p>;
   if (!order) return <p className="muted">Loading…</p>;
   const canEdit = can("orders.edit");
 
-  async function act(path: string, body: unknown, done: string) {
+  async function act(path: string, body: unknown, done: string, method = "POST") {
     setBusy(true);
     setProblem("");
     setMessage("");
     try {
-      setData(await api<Order>(`/api/orders/${id}/${path}/`, { method: "POST", body }));
+      setData(await api<Order>(path ? `/api/orders/${id}/${path}/` : `/api/orders/${id}/`, { method, body }));
       setMessage(done);
       setReason("");
       setWeights({});
+      setEditing(null);
     } catch (e) {
       setProblem(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -40,8 +43,11 @@ export default function OrderDetail() {
     }
   }
 
-  const forward = order.next_statuses.filter((s) => !CANCEL.includes(s));
+  const backFromDelivery = order.status === "out_for_delivery";
+  const forward = order.next_statuses.filter((s) => !CANCEL.includes(s) && !(backFromDelivery && s === "ready"));
   const canCancel = order.next_statuses.some((s) => CANCEL.includes(s));
+  const canChangeHow = canEdit && !["out_for_delivery", "completed", "cancelled_by_customer", "cancelled_by_shop", "expired"].includes(order.status);
+  const productsTotal = Number(order.estimated_total) - Number(order.delivery_fee);
   const kgLines = order.lines.filter((l) => l.unit === "kg");
   const weighing = canEdit && order.status === "preparing" && kgLines.length > 0;
   const changed = order.total !== order.estimated_total;
@@ -55,8 +61,38 @@ export default function OrderDetail() {
       </div>
       <p className="muted" style={{ margin: 0 }}>
         {order.customer_name ? `${order.customer_name}${order.customer_phone ? " · " + order.customer_phone : ""}` : "Walk-in customer"}
-        {" · "}{order.channel}{order.pickup_at ? ` · pickup ${when(order.pickup_at)}` : ""}
+        {" · "}{order.channel}
       </p>
+      <div className="card">
+        <div className="row">
+          <h2 style={{ margin: 0, marginRight: "auto" }}>{order.fulfilment === "delivery" ? `Delivery${order.delivery_area_name ? ` to ${order.delivery_area_name}` : ""}` : "Pickup"}</h2>
+          {canChangeHow && !editing && <button onClick={() => setEditing(fromOrder(order))}>Change</button>}
+        </div>
+        {!editing && (
+          <>
+            <p style={{ margin: "6px 0 0" }}>{order.due_at ? order.due_text : <span className="muted">No time chosen</span>}</p>
+            {order.fulfilment === "delivery" && (
+              <p style={{ margin: "4px 0 0" }}>{[order.delivery_address, order.delivery_suburb, order.delivery_postcode].filter(Boolean).join(", ") || <span className="muted">No address yet</span>}</p>
+            )}
+          </>
+        )}
+        {editing && (
+          <div style={{ marginTop: 8 }}>
+            <FulfilmentEditor value={editing} onChange={setEditing} orderId={order.id} productsTotal={productsTotal} />
+            <p className="row" style={{ marginBottom: 0 }}>
+              <button className="primary" disabled={busy} onClick={() => act("", editing, "Saved.", "PATCH")}>Save</button>
+              <button disabled={busy} onClick={() => setEditing(null)}>Cancel</button>
+            </p>
+          </div>
+        )}
+      </div>
+      {order.warnings && order.warnings.length > 0 && (
+        <div className="notice" role="note">
+          <strong>Check before you go on:</strong>
+          <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>{order.warnings.map((w) => <li key={w}>{w}</li>)}</ul>
+          <span className="small muted">Staff may still book this order. Customers ordering by WhatsApp or the website must follow these rules.</span>
+        </div>
+      )}
       {order.notes && <div className="notice">Note: {order.notes}</div>}
       {message && <p role="status" style={{ color: "var(--good)" }}>{message}</p>}
       {problem && <p className="error" role="alert">{problem}</p>}
@@ -81,6 +117,9 @@ export default function OrderDetail() {
             ))}
           </tbody>
           <tfoot>
+            {order.fulfilment === "delivery" && (
+              <tr><td colSpan={4} className="num">Delivery fee{order.delivery_area_name ? ` (${order.delivery_area_name})` : ""}</td><td className="num">{money(order.delivery_fee)}</td></tr>
+            )}
             <tr><td colSpan={4} className="num"><strong>Total</strong>{changed && <div className="muted small">Estimate was {money(order.estimated_total)}</div>}</td><td className="num"><strong>{money(order.total)}</strong></td></tr>
             <tr><td colSpan={4} className="num muted small">GST included</td><td className="num muted small">{money(order.gst_total)}</td></tr>
           </tfoot>
@@ -98,9 +137,15 @@ export default function OrderDetail() {
           <h2>Next step</h2>
           <div className="row">
             {forward.map((s) => (
-              <button key={s} className="primary" disabled={busy} onClick={() => act("status", { to: s }, `Now: ${STATUS_LABELS[s]}.`)}>{STATUS_LABELS[s]}</button>
+              <button key={s} className="primary" disabled={busy} onClick={() => act("status", { to: s }, `Now: ${statusLabel(s, order.fulfilment)}.`)}>{statusLabel(s, order.fulfilment)}</button>
             ))}
           </div>
+          {backFromDelivery && (
+            <div className="row" style={{ marginTop: 12 }}>
+              <input aria-label="Why the delivery did not happen" placeholder="Why the delivery did not happen" value={reason} onChange={(e) => setReason(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+              <button disabled={busy || !reason.trim()} onClick={() => act("status", { to: "ready", note: reason }, "Back to: Ready for delivery.")}>Not delivered: back to Ready</button>
+            </div>
+          )}
           {canCancel && (
             <div className="row" style={{ marginTop: 12 }}>
               <input aria-label="Reason for cancelling" placeholder="Reason for cancelling" value={reason} onChange={(e) => setReason(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
@@ -133,7 +178,7 @@ export default function OrderDetail() {
         <ol className="history">
           {order.events?.map((e, i) => (
             <li key={i}>
-              <strong>{STATUS_LABELS[e.to_status] ?? e.to_status}</strong>
+              <strong>{e.from_status === e.to_status ? "Update" : statusLabel(e.to_status, order.fulfilment)}</strong>
               <span className="muted small"> · {when(e.at)} · {e.actor_email || "system"}</span>
               {e.note && <div>{e.note}</div>}
             </li>
