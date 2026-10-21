@@ -17,6 +17,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django_tenants.utils import get_public_schema_name
 
+from apps.core import deleteguard
 from apps.rbac import policy
 
 from . import domains
@@ -62,6 +63,13 @@ def addresses(request, schema: str):
                     domains.make_main(domain, actor=request.user, request=request)
                     messages.success(request, f"{domain.domain} is now the main address. Visitors on the other addresses are sent there.")
                 elif action == "remove":
+                    domains.check_removable(domain)
+                    page = deleteguard.require(
+                        request, title=f"Remove {domain.domain}?", back=here, fields={"action": "remove", "domain": domain.pk},
+                        message=f"{domain.domain} will stop opening {tenant.name}. Links, QR codes and webhooks that use it will stop working. "
+                                "Update the WhatsApp webhook first if it uses this address.")
+                    if page is not None:  # the safety check is not done yet (task 1.18)
+                        return page
                     domains.remove(domain, actor=request.user, request=request)
                     messages.success(request, f"Removed {domain.domain}. It no longer opens this business.")
                 else:

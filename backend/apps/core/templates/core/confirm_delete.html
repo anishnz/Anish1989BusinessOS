@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+{% load deleteguard %}
+{% block content %}
+<div style="max-width: 760px;">
+  {% if problem %}<ul class="messagelist"><li class="error">Not deleted: {{ problem }}</li></ul>{% endif %}
+  <p>{{ message }}</p>
+  <form method="post">{% csrf_token %}
+    {% for name, value in fields.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+    {% include "core/delete_guard.html" %}
+    <input type="submit" value="Yes, delete" style="background: #ba2121;">
+    <a href="{{ back }}" class="button">No, take me back</a>
+  </form>
+</div>
+{% endblock %}

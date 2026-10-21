@@ -1,5 +1,5 @@
 <table style="width: 100%;">
-  <thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Roles</th><th>Two-step verification</th><th>Last login</th></tr></thead>
+  <thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Roles</th><th>Two-step verification</th><th>Last login</th>{% if can_login_as %}<th>Log in as</th>{% endif %}</tr></thead>
   <tbody>
   {% for r in rows %}
     <tr>
@@ -9,9 +9,16 @@
       <td>{{ r.roles|join:", "|default:"–" }}</td>
       <td>{% if r.mfa == "on" %}On{% elif r.mfa == "off" %}<strong style="color:#ba2121">Switched off</strong>{% else %}Not set up{% endif %}</td>
       <td>{{ r.user.last_login|date:"j M Y H:i"|default:"never" }}</td>
+      {% if can_login_as %}<td>
+        {% if r.user.is_active %}
+          <form method="post" action="{% url 'platform_login_as' schema r.user.pk %}" style="margin: 0; display: flex; gap: 6px;">{% csrf_token %}
+            {% if not tenant.is_test %}<input name="reason" required maxlength="200" placeholder="Why? (real business)" size="18">{% endif %}
+            <input type="submit" value="Log in as"></form>
+        {% else %}–{% endif %}
+      </td>{% endif %}
     </tr>
   {% empty %}
-    <tr><td colspan="6">No users.</td></tr>
+    <tr><td colspan="7">No users.</td></tr>
   {% endfor %}
   </tbody>
 </table>

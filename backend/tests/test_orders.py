@@ -16,6 +16,7 @@ from apps.customers.services import anonymise
 from apps.licensing.services import set_module_enabled
 from apps.orders import services
 from apps.orders.models import Order, OrderEvent
+from tests.conftest import pass_delete_check
 from tests.test_catalog import make_product, user_client
 from tests.test_rbac import verified_staff_client
 
@@ -368,7 +369,11 @@ class TestOrdersAdmin:
         client = verified_staff_client(client_for, tenant_a, "owner@a.test", "business_owner")
         assert client.get(f"/admin/orders/order/{confirmed.pk}/delete/").status_code == 403
         draft = new_order(goods)
-        assert client.post(f"/admin/orders/order/{draft.pk}/delete/", {"post": "yes"}).status_code == 302
+        url = f"/admin/orders/order/{draft.pk}/delete/"
+        assert client.post(url, {"post": "yes"}).status_code == 302  # no safety check: nothing deleted
+        with schema_context("tenant_a"):
+            assert Order.objects.filter(pk=draft.pk).exists()
+        assert client.post(url, {"post": "yes", **pass_delete_check(client, client.get(url))}).status_code == 302
         with schema_context("tenant_a"):
             assert not Order.objects.filter(pk=draft.pk).exists()
             assert AuditEvent.objects.filter(action="orders.delete_draft").exists()

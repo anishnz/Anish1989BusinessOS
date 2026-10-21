@@ -1,0 +1,80 @@
+{% extends "admin/base_site.html" %}
+{% block extrahead %}{{ block.super }}{% if running %}<meta http-equiv="refresh" content="4">{% endif %}{% endblock %}
+{% block content %}
+<div style="max-width: 1100px;">
+  <p>Test data makes <strong>six test businesses</strong> with made-up Nepali names, one for each pilot type, all at
+     <em>{{ address }}</em>. Each has a user for every role, products, customers, orders in every step, pickup and delivery settings,
+     WhatsApp conversations and tickets. Test businesses are marked <strong>Test business</strong>; real businesses are never changed.</p>
+  <ul>
+    <li>Every test login looks like <code>{{ email_example }}</code> (role name after “roleas”). All use the same password:
+        <strong>DEMO_PASSWORD</strong> in the server's <code>.env</code> file. It is never shown here.</li>
+    <li>Test accounts in test businesses do not ask for two-step verification. The platform test accounts (billing, security,
+        support) still do, because they can see every business.</li>
+    <li>Use <strong>Log in as</strong> to open a business as one of its users. The red bar there has <strong>Back to Super Admin</strong>.</li>
+  </ul>
+
+  {% if not password_set %}
+    <ul class="messagelist"><li class="warning">DEMO_PASSWORD is not set (or shorter than 8 characters). Add the line
+      <code>DEMO_PASSWORD=...</code> to the <code>.env</code> file and restart the app, then come back.</li></ul>
+  {% endif %}
+
+  {% if state %}
+    <div style="padding: 10px 14px; border-radius: 6px; margin: 10px 0; background: {% if state.state == 'failed' %}#fbe3e3{% elif state.state == 'done' %}#e6f4ea{% else %}#fdf1d8{% endif %};">
+      <strong>{% if state.state == "failed" %}Stopped{% elif state.state == "done" %}Finished{% else %}Working…{% endif %}</strong>
+      {{ state.message }}{% if running and state.total %} ({{ state.done }} of {{ state.total }} done){% endif %}
+      {% if running %}<span class="help">This page updates every few seconds.</span>{% endif %}
+    </div>
+  {% endif %}
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0;">
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="install">
+      <input type="submit" value="Install test data" {% if not password_set or running %}disabled{% endif %}></form>
+    {% if businesses %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove">
+        <input type="submit" value="Remove test data" style="background: #ba2121;" {% if running %}disabled{% endif %}></form>
+    {% endif %}
+  </div>
+
+  {% if businesses %}
+    <h2>Test businesses</h2>
+    <table style="width: 100%;">
+      <thead><tr><th>Business</th><th>Type</th><th>Web address</th><th>Made</th></tr></thead>
+      <tbody>
+      {% for b in businesses %}
+        <tr><td>{{ b.name }}</td><td>{{ b.get_industry_display }}</td>
+            <td>{% for d in b.domains.all %}{% if d.is_primary %}{{ d.domain }}{% endif %}{% endfor %}</td><td>{{ b.created_at|date:"j M Y H:i" }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <h2 style="margin-top: 22px;">Test logins of {{ chosen.name }}</h2>
+    <p>Business:
+      {% for b in businesses %}{% if b == chosen %}<strong>{{ b.name }}</strong>{% else %}<a href="?business={{ b.schema_name }}">{{ b.name }}</a>{% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}
+    </p>
+    <table style="width: 100%;">
+      <thead><tr><th>Role</th><th>Email (login)</th><th>Name</th><th>Pages</th><th></th></tr></thead>
+      <tbody>
+      {% for a in accounts %}
+        <tr>
+          <td>{{ a.roles|default:"–" }}</td>
+          <td><code>{{ a.email }}</code></td>
+          <td>{{ a.name }}</td>
+          <td>{% if a.staff %}Admin pages and staff app{% else %}Customer or partner portal (later){% endif %}</td>
+          <td><form method="post" action="{% url 'platform_login_as' a.tenant.schema_name a.user_id %}" style="margin: 0;">{% csrf_token %}
+                <input type="hidden" name="back" value="{% url 'platform_test_data' %}?business={{ a.tenant.schema_name }}">
+                <input type="submit" value="Log in as"></form></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if platform_accounts %}
+      <h2 style="margin-top: 22px;">Platform test accounts</h2>
+      <p>These log in on this platform site (not a business), with the same password, and must set up two-step verification.</p>
+      <ul>{% for a in platform_accounts %}<li><code>{{ a.email }}</code> – {{ a.name }} ({{ a.roles|default:"no role" }})</li>{% endfor %}</ul>
+    {% endif %}
+  {% else %}
+    <h2>What “Install test data” makes</h2>
+    <ul>{% for b in planned %}<li>{{ b.name }} ({{ b.type }})</li>{% endfor %}</ul>
+  {% endif %}
+</div>
+{% endblock %}

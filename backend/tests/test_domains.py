@@ -16,7 +16,7 @@ from django_tenants.utils import schema_context
 from apps.audit.models import AuditEvent
 from apps.tenants import domains
 from apps.tenants.models import Domain, Tenant
-from tests.conftest import https_client, make_user
+from tests.conftest import https_client, make_user, pass_delete_check
 from tests.test_mfa_admin import platform_staff
 from tests.test_rbac import verified_staff_client
 
@@ -235,7 +235,9 @@ class TestPlatformPage:
         super_admin.post(URL, {"action": "main", "domain": new.pk})
         assert main_of(tenant_a) == "gorkha-fresh.localhost"
         old = Domain.objects.get(domain="tenant-a.localhost")
-        super_admin.post(URL, {"action": "remove", "domain": old.pk})
+        confirm = super_admin.post(URL, {"action": "remove", "domain": old.pk})  # first the safety check
+        assert confirm.status_code == 200 and "What is" in confirm.content.decode() and Domain.objects.filter(pk=old.pk).exists()
+        super_admin.post(URL, {"action": "remove", "domain": old.pk, **pass_delete_check(super_admin, confirm)})
         assert not Domain.objects.filter(pk=old.pk).exists()
 
     def test_bad_name_shows_an_error(self, super_admin, tenant_a):

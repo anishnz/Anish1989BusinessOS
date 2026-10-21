@@ -23,7 +23,7 @@ GROUPS = [
     ("Getting started", ["00-getting-started", "01-logging-in-and-two-step-verification", "14-first-login-setup", "09-staff-app", "13-tickets"]),
     ("Daily work", ["05-products-and-customers", "06-orders", "15-pickup-and-delivery", "07-whatsapp-and-inbox", "08-dashboard"]),
     ("Admin and settings", ["02-roles-permissions-and-audit-log", "04-integrations-and-api-keys", "11-check-system", "12-backups"]),
-    ("Platform (Super Admin)", ["03-businesses-licences-and-modules", "10-web-addresses"]),
+    ("Platform (Super Admin)", ["03-businesses-licences-and-modules", "10-web-addresses", "16-test-data-and-log-in-as"]),
 ]
 
 # Which chapter explains which page (the "Help" link in the header). Longest match wins.
@@ -34,7 +34,7 @@ PAGE_HELP = {
     "/admin/rbac/": "02-roles-permissions-and-audit-log", "/admin/audit/": "02-roles-permissions-and-audit-log",
     "/admin/accounts/": "02-roles-permissions-and-audit-log", "/account/mfa/": "01-logging-in-and-two-step-verification",
     "/admin/tenants/": "03-businesses-licences-and-modules", "/admin/licensing/": "03-businesses-licences-and-modules",
-    "/platform/businesses/": "10-web-addresses", "/platform/people/": "02-roles-permissions-and-audit-log",
+    "/platform/businesses/": "10-web-addresses", "/platform/test-data/": "16-test-data-and-log-in-as", "/platform/people/": "02-roles-permissions-and-audit-log",
 }
 SLUG = re.compile(r"^[0-9]{2}-[a-z0-9-]+$")
 IMAGE = re.compile(r"^[a-z0-9-]+\.(png|jpg|webp)$")

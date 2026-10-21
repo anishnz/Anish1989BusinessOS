@@ -117,8 +117,11 @@ def people_list(request, schema: str):
     tenant = _business(schema)
     with schema_context(schema):
         rows = _user_rows(list(User.objects.all()))
+    from .login_as import is_super_admin
+
     return render(request, "accounts/platform/people_list.html", _ctx(
         request, title=f"Users of {tenant.name}" if schema != PLATFORM else "Platform administrators", tenant=tenant, rows=rows,
+        can_login_as=schema != PLATFORM and is_super_admin(request.user),
     ))
 
 

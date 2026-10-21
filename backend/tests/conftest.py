@@ -172,3 +172,16 @@ def no_worker_ping(monkeypatch):
     import apps.health.checks as health_checks
 
     monkeypatch.setattr(health_checks, "ping_workers", lambda: 0)
+
+
+def pass_delete_check(client, page) -> dict:
+    """The fields that pass the delete safety check shown on `page` (task 1.18). Tests skip the 5-second wait."""
+    import re
+
+    html = page.content.decode()
+    token = re.search(r'name="guard_token" value="([^"]+)"', html).group(1)
+    a, b = (int(n) for n in re.search(r"What is (\d+) \+ (\d+)\?", html).groups())
+    session = client.session
+    session["delete_guard"][token]["at"] -= 10
+    session.save()
+    return {"guard_token": token, "guard_answer": str(a + b)}

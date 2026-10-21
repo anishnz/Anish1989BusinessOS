@@ -9,8 +9,11 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_POST
+
+from apps.core import deleteguard
 
 from . import access, providers, services
 from .models import Connection
@@ -148,6 +151,10 @@ def connection_delete(request, pk):
     _need(request, "manage")
     conn = get_object_or_404(Connection, pk=pk)
     label = conn.label
+    page = deleteguard.require(request, title=f"Remove {label}?", message=f"“{label}” and its saved keys will be deleted.",
+                               fields={}, back=reverse("vault:list"))
+    if page is not None:  # the safety check is not done yet (task 1.18)
+        return page
     services.delete_connection(conn, actor=request.user)
     messages.success(request, f"{label} removed.")
     return redirect("vault:list")

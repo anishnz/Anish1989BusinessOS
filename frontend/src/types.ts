@@ -9,6 +9,8 @@ export interface Mfa {
 export interface AuthState {
   user: { id: number; email: string; first_name: string; last_name: string; is_staff: boolean };
   mfa: Mfa;
+  /** Set while the platform's Super Admin uses "Log in as" (task 1.18). */
+  login_as?: { by: string; stop_url: string } | null;
 }
 
 export interface MyPermissions {

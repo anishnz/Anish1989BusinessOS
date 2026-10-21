@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
+import { api } from "../api";
 import { useAuth } from "../auth";
 import { visibleNav } from "../nav";
 import { useUnread } from "./useUnread";
@@ -39,6 +40,11 @@ export default function Layout() {
   }, [theme]);
 
   const items = visibleNav(perms?.usable ?? []);
+
+  async function backToSuperAdmin() {
+    const done = await api<{ back: string }>(state?.login_as?.stop_url ?? "/login-as/stop/", { method: "POST" });
+    window.location.href = done.back;
+  }
   const name = state?.user.first_name || state?.user.email;
   const themePicker = (
     <select aria-label="Colour theme" value={theme} onChange={(e) => setTheme(e.target.value)}>
@@ -86,6 +92,12 @@ export default function Layout() {
           <a className="small" href="/guide/">Help</a>
           <button onClick={() => logout()}>Log out</button>
         </header>
+        {state?.login_as && (
+          <div className="login-as" role="alert">
+            <span><strong>You are logged in as {state.user.email}</strong> (Super Admin {state.login_as.by}, “Log in as”).</span>
+            <button onClick={backToSuperAdmin}>Back to Super Admin</button>
+          </div>
+        )}
         <main>
           <Outlet />
         </main>

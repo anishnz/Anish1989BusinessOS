@@ -111,6 +111,8 @@ svg.chart { width: 100%; height: auto; display: block; }
 svg.chart line { stroke: var(--line); }
 svg.chart text { fill: var(--ink-2); font-size: 11px; }
 svg.chart path { fill: var(--accent); }
+.login-as { background: #ba2121; color: #fff; padding: 10px 20px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.login-as button { background: #fff; color: #ba2121; border-color: #fff; }
 .slots { display: flex; flex-wrap: wrap; gap: 6px; }
 .slot { flex-direction: column; align-items: flex-start; gap: 0; min-width: 96px; padding: 6px 10px; }
 .slot small { font-size: .75rem; opacity: .8; }

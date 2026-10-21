@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Task 2.1 (pickup and delivery) is done; next is 2.2 (stock). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Task 2.1 (pickup and delivery) and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.2 (stock). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -187,6 +187,14 @@ Open a new chat in the ERP CRM project and type:
   - New "Getting started" chapter; "Getting started" group: getting started, logging in, first-login setup, staff app, tickets
   - The Docker image carries the guide (`/opt/guide`)
   - 682 tests pass; 44 of 45 deliberate breaks in tasks 1.14 to 1.17 are caught by tests (the 45th, a platform check on /setup/, cannot be reached)
+- [x] 1.18 Test data, Log in as and safer deleting (added on request, done 22 Oct 2026)
+  - Decisions D-126 to D-129
+  - Platform page **Test data** (Super Admin only): **Install test data** makes six test businesses with Nepali names at 2 White Street, Auckland City, Auckland 1010 (butchery, restaurant, catering, events, education consultancy, jobs), each with a user for every role (`roleas<role>@anish1989.com.np`), business details, pickup and delivery, products, customers, orders in every step, conversations and tickets; **Remove test data** deletes only test businesses
+  - The shared test password is `DEMO_PASSWORD` in `.env` (never in the code); test accounts in test businesses skip two-step verification; platform test accounts keep it; no test Super Admin
+  - **Log in as** (Super Admin only) from Test data and Businesses and users: one-time 60-second link, 60-minute session, red bar with **Back to Super Admin** (admin pages and staff app), reason for real businesses, both audit logs
+  - Safer deleting: every delete in the admin pages and the Remove buttons need a small sum, a 5-second wait and a last "Are you sure?" (checked by the server)
+  - Commands: `install_test_data`, `remove_test_data`
+  - User guide chapter: docs/user-guide/16-test-data-and-log-in-as.md
 
 ## Step 2: Ordering flow
 

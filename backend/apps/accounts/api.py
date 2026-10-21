@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from . import security
+from . import login_as, security
 from .models import LoginEvent
 
 
@@ -29,8 +29,10 @@ def _is_verified(user) -> bool:
 
 def auth_state(request) -> dict:
     user = request.user
-    must_verify = user.mfa_required or security.has_mfa(user)
+    acting = login_as.info(request)  # a Super Admin using "Log in as" (task 1.18) passed two-step verification on the platform
+    must_verify = (user.mfa_required or security.has_mfa(user)) and not acting
     return {
+        "login_as": {"by": acting["by"], "stop_url": "/login-as/stop/"} if acting else None,
         "user": {
             "id": user.pk,
             "email": user.email,
@@ -41,7 +43,7 @@ def auth_state(request) -> dict:
         "mfa": {
             "required": must_verify,
             "enabled": security.has_mfa(user),
-            "verified": _is_verified(user),
+            "verified": _is_verified(user) or bool(acting),
             "setup_required": must_verify and not security.has_mfa(user),
             "backup_codes_remaining": security.backup_codes_remaining(user),
         },

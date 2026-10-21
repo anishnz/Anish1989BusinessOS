@@ -32,6 +32,10 @@ class Tenant(TenantMixin):
     name = models.CharField(max_length=200)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.TRIAL)
     industry = models.CharField(max_length=40, choices=Industry.choices, default=Industry.OTHER)
+    is_test = models.BooleanField(
+        "Test business", default=False, editable=False,
+        help_text="Made by “Install test data” (made-up data). Only test businesses can be removed with “Remove test data”.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

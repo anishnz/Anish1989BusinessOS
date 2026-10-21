@@ -33,6 +33,7 @@ Anish1989 Business OS runs your business in one place: products, customers, orde
 - Click **Report a problem** at the top of any admin page. Your admins see it and can answer you (chapter 13).
 - Admins can click **Check system** to test everything in a few seconds (chapter 11).
 - Every admin page has a **Help** link at the top. It opens the chapter about that page.
+- Deleting asks a small sum and waits 5 seconds, so nothing is deleted by accident (chapter 16.5).
 
 ## Find your way in this guide
 

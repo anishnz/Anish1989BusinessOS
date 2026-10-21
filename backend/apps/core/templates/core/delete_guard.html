@@ -1,0 +1,31 @@
+<div class="delete-guard" style="margin: 14px 0; padding: 12px 14px; border: 1px solid #ba2121; border-radius: 6px; max-width: 560px;">
+  <p style="margin: 0 0 8px;"><strong>Safety check:</strong> deleting cannot be undone.</p>
+  <input type="hidden" name="guard_token" value="{{ guard.token }}">
+  <label for="guard-answer-{{ guard.token }}" style="display: inline; font-weight: 600;">What is {{ guard.question }}?</label>
+  <input id="guard-answer-{{ guard.token }}" name="guard_answer" inputmode="numeric" autocomplete="off" required size="4" style="margin-left: 6px;">
+  <p class="help guard-wait" data-wait="{{ guard.wait }}" style="margin: 8px 0 0;">The delete button works in <strong>{{ guard.wait }}</strong> seconds.</p>
+</div>
+<script>
+(function () {
+  var box = document.currentScript.previousElementSibling;
+  var form = box.closest("form");
+  if (!form) return;
+  var buttons = form.querySelectorAll("input[type=submit], button[type=submit]");
+  var note = box.querySelector(".guard-wait");
+  var left = parseInt(note.getAttribute("data-wait"), 10);
+  buttons.forEach(function (b) { b.disabled = true; });
+  var timer = setInterval(function () {
+    left -= 1;
+    if (left <= 0) {
+      clearInterval(timer);
+      buttons.forEach(function (b) { b.disabled = false; });
+      note.textContent = "You can delete now.";
+    } else {
+      note.querySelector("strong").textContent = left;
+    }
+  }, 1000);
+  form.addEventListener("submit", function (event) {
+    if (!window.confirm("Last check: delete permanently? This cannot be undone.")) event.preventDefault();
+  });
+})();
+</script>

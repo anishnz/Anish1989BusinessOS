@@ -23,7 +23,7 @@
               <form method="post" action="{% url 'vault:toggle' c.pk %}" style="display:inline">{% csrf_token %}<button type="submit" class="button">{% if c.status == "disabled" %}Enable{% else %}Disable{% endif %}</button></form>
             {% endif %}
             {% if can_manage %}
-              <form method="post" action="{% url 'vault:delete' c.pk %}" style="display:inline" onsubmit="return confirm('Remove {{ c.label|escapejs }}? Its saved keys will be deleted.');">{% csrf_token %}<button type="submit" class="button" style="background:#ba2121">Remove</button></form>
+              <form method="post" action="{% url 'vault:delete' c.pk %}" style="display:inline">{% csrf_token %}<button type="submit" class="button" style="background:#ba2121">Remove</button></form>
             {% endif %}
           </td>
         </tr>

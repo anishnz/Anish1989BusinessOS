@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 
-from . import security
+from . import login_as, security
 
 # Paths a signed-in but unverified staff user may still use.
 EXEMPT_PREFIXES = (
@@ -36,6 +36,7 @@ class StaffMFAMiddleware:
             and user.is_authenticated
             and not request.path.startswith(EXEMPT_PREFIXES)
             and not user.is_verified()
+            and not login_as.info(request)  # a Super Admin using "Log in as" passed it on the platform (task 1.18)
             # Staff must use MFA; anyone else who turned MFA on must use it too.
             and (user.mfa_required or security.has_mfa(user))
         ):

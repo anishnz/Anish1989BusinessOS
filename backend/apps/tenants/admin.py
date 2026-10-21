@@ -53,8 +53,8 @@ class DomainInline(ReadOnlyDomainMixin, admin.TabularInline):
 
 @admin.register(Tenant)
 class TenantAdmin(TenantAdminMixin, PublicSchemaOnlyAdmin):
-    list_display = ("name", "schema_name", "industry", "status", "created_at")
-    list_filter = ("status", "industry")
+    list_display = ("name", "schema_name", "industry", "status", "is_test", "created_at")
+    list_filter = ("status", "industry", "is_test")
     search_fields = ("name", "schema_name")
     readonly_fields = ("schema_name", "created_at", "updated_at")
     inlines = [DomainInline]

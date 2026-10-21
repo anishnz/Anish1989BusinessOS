@@ -12,7 +12,7 @@
 
 {% block userlinks %}
   {% if user.is_active and user.is_staff %}
-    {% if request.tenant.schema_name == "public" %}<a href="{% url 'platform_people' %}">Businesses and users</a> /{% else %}<a href="{% url 'dashboard' %}">Dashboard</a> /{% endif %}
+    {% if request.tenant.schema_name == "public" %}<a href="{% url 'platform_people' %}">Businesses and users</a> /{% if show_test_data_link %} <a href="{% url 'platform_test_data' %}">Test data</a> /{% endif %}{% else %}<a href="{% url 'dashboard' %}">Dashboard</a> /{% endif %}
     <a href="{% url 'system_check' %}">Check system</a> /
     <a href="{% url 'backups' %}">Backups</a> /
     {% if show_setup_link %}<a href="{% url 'setup' %}">Set up your business</a> /{% endif %}
@@ -27,6 +27,12 @@
 {% block nav-global %}{% endblock %}
 
 {% block messages %}
+  {% if login_as %}
+    <div role="alert" style="margin: 0; padding: 10px 40px; background: #ba2121; color: #fff; font-size: 14px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+      <span><strong>You are logged in as {{ login_as.user }}</strong> (Super Admin {{ login_as.by }}, “Log in as”). Ends by itself in {{ login_as.minutes_left }} minutes.</span>
+      <form method="post" action="{% url 'login_as_stop' %}" style="margin: 0;">{% csrf_token %}<input type="submit" value="Back to Super Admin" style="background: #fff; color: #ba2121;"></form>
+    </div>
+  {% endif %}
   {% if backups_reminder %}
     <div role="status" style="margin: 0 0 0; padding: 10px 40px; background: #fdf1d8; color: #6b4600; border-bottom: 1px solid #f0d9a3; font-size: 14px;">
       <strong>Backups to your Google Drive are not set up yet.</strong>

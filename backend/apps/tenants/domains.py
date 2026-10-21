@@ -160,11 +160,15 @@ def make_main(domain: Domain, *, actor=None, request=None) -> Domain:
 
 
 @transaction.atomic
-def remove(domain: Domain, *, actor=None, request=None) -> None:
-    tenant = domain.tenant
-    _check_business(tenant)
+def check_removable(domain: Domain) -> None:
+    _check_business(domain.tenant)
     if domain.is_primary:
         raise ValidationError("The main address cannot be removed. Make another address the main one first.")
+
+
+def remove(domain: Domain, *, actor=None, request=None) -> None:
+    tenant = domain.tenant
+    check_removable(domain)
     address = domain.domain
     domain.delete()
     _record("tenant.address_removed", tenant, actor=actor, request=request, address=address)

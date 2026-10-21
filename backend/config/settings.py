@@ -65,6 +65,7 @@ SHARED_APPS = [
     "apps.backups",
     "apps.tickets",
     "apps.guide",
+    "apps.demo",  # "Install test data" and "Log in as" (task 1.18), platform site only
     "apps.core",
 ]
 
@@ -112,10 +113,12 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django_otp.middleware.OTPMiddleware",
+    "apps.accounts.login_as.LoginAsMiddleware",  # "Log in as" ends after 60 minutes (task 1.18)
     "apps.accounts.middleware.StaffMFAMiddleware",
     "apps.setup.middleware.SetupWizardMiddleware",  # first-login setup wizard (business sites)
     "apps.audit.middleware.AuditContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.core.middleware.DeleteGuardMiddleware",  # admin deletes need the safety check (task 1.18)
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -134,6 +137,8 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.setup.context.setup",
                 "apps.guide.context.help_link",
+                "apps.accounts.login_as.context",
+                "apps.demo.views.nav",
             ],
         },
     },
@@ -194,6 +199,10 @@ ALLOW_PRIVATE_NETWORK_URLS = env.bool("ALLOW_PRIVATE_NETWORK_URLS", default=Fals
 
 # Licences: every new business starts with a trial (no automatic charge).
 LICENCE_TRIAL_DAYS = env.int("LICENCE_TRIAL_DAYS", default=30)
+
+# "Install test data" (task 1.18): every test account gets this password. Set it in .env only
+# (never in the code). Empty = the button explains that it is not set and does nothing.
+DEMO_PASSWORD = env("DEMO_PASSWORD", default="")
 LICENCE_TRIAL_MAX_USERS = env.int("LICENCE_TRIAL_MAX_USERS", default=10)
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=8 * 60 * 60)  # 8 hours
 

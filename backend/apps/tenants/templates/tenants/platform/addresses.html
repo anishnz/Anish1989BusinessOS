@@ -18,7 +18,7 @@
             <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="main"><input type="hidden" name="domain" value="{{ r.domain.pk }}">
               <input type="submit" value="Make main address" onclick="return confirm('Make {{ r.domain.domain|escapejs }} the main address? People who are signed in must sign in again on the new address.');"></form>
             <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="domain" value="{{ r.domain.pk }}">
-              <input type="submit" value="Remove" style="background:#ba2121" onclick="return confirm('Remove {{ r.domain.domain|escapejs }}? Links, QR codes and webhooks that use it will stop working. Update the WhatsApp webhook first if it uses this address.');"></form>
+              <input type="submit" value="Remove" style="background:#ba2121"></form>
           {% else %}–{% endif %}
         </td>{% endif %}
       </tr>

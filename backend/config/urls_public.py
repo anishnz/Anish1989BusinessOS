@@ -2,7 +2,8 @@
 from django.contrib import admin
 from django.urls import path
 
-from apps.accounts import platform_pages
+from apps.accounts import login_as, platform_pages
+from apps.demo import views as demo_views
 from apps.backups.urls import public_urlpatterns as backup_public_urlpatterns
 from apps.tenants import platform_pages as tenant_pages
 
@@ -14,6 +15,8 @@ platform_urlpatterns = [
     path("platform/people/<slug:schema>/", admin.site.admin_view(platform_pages.people_list), name="platform_people_list"),
     path("platform/people/<slug:schema>/<int:user_id>/", admin.site.admin_view(platform_pages.person_detail), name="platform_person"),
     path("platform/businesses/<slug:schema>/addresses/", admin.site.admin_view(tenant_pages.addresses), name="platform_addresses"),
+    path("platform/login-as/<slug:schema>/<int:user_id>/", admin.site.admin_view(login_as.start), name="platform_login_as"),
+    path("platform/test-data/", admin.site.admin_view(demo_views.test_data), name="platform_test_data"),
 ]
 
 urlpatterns = [

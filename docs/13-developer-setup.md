@@ -289,6 +289,14 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "fulfilment": "
 - Migration `orders.0003` renames the field, adds the columns, and gives `orders.configure` to roles that had every other Orders permission.
 - Check system: "Pickup and delivery" warns when customers cannot choose a time (no hours, no free slots, no delivery areas, both switched off).
 
+## Test data, Log in as and safer deleting (task 1.18)
+
+- `apps.demo` (platform only, no tables): `data.py` (the six test businesses, Nepali names, products, conversations, tickets), `services.install(only=...)` / `remove()` (lock in the cache, progress in `demo:progress`), Celery tasks `demo.install` / `demo.remove`, commands `install_test_data [--only test_butchery]` and `remove_test_data [--yes]`, page `/platform/test-data/` (Super Admin only).
+- `Tenant.is_test` marks test businesses; only those are removed (`tenant.delete(force_drop=True)` after `SET CONSTRAINTS ALL IMMEDIATE`). `DEMO_PASSWORD` (at least 8 characters) comes from `.env`; empty = install refused.
+- Test users: one per default role, `roleas<slug without _>@anish1989.com.np`, `mfa_exempt` with reason "Test account"; platform test users for the non-full-access platform roles keep two-step verification.
+- `apps/accounts/login_as.py`: POST `/platform/login-as/<schema>/<user id>/` (Super Admin = superuser or full-access role; reason required unless `is_test`) signs `{schema, user, by, nonce, reason, back}` (salt `anish1989.login-as`, 60 s, nonce single-use in the public cache); business GET `/login-as/?token=` logs the user in and stores `session["login_as"]` (`by`, `until` = 60 min, `back`); `LoginAsMiddleware` ends it after the time; `StaffMFAMiddleware` does not ask two-step verification while it is set; POST `/login-as/stop/` (JSON when asked) logs out and returns to the platform. `/api/auth/me/` returns `login_as`. Audit: `security.login_as` (platform), `security.login_as_started` / `_ended` (business, as the platform administrator).
+- `apps/core/deleteguard.py`: `issue()` (sum of two numbers 2 to 9, token in the session, at most 20 open), `check()` (answer, at least 5 s, at most 15 min, single use), `require()` for views with their own Remove buttons (renders `core/confirm_delete.html`). `DeleteGuardMiddleware` checks the admin's delete pages (`/admin/<app>/<model>/<id>/delete/` and "delete_selected") and sends the person back with "Not deleted: ..." when the check fails. Templates `admin/delete_confirmation.html` and `admin/delete_selected_confirmation.html` add `{% delete_guard %}`. Tests use `tests.conftest.pass_delete_check()`.
+
 ## WhatsApp and the inbox (task 1.8)
 
 - Business-only app `apps.inbox` (permissions: module `crm`): `Conversation` (one per channel + contact id, linked to a `Customer`), `Message` (direction, kind, text, media id, provider message id unique, status), `WebhookDelivery` (log without message content).
