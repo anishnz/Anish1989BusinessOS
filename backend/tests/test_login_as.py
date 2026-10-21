@@ -107,6 +107,14 @@ class TestOnTheBusinessSite:
         _, again = follow(client_for, tenant_a, url)
         assert first.status_code == 302 and again.status_code == 400 and "used already" in again.content.decode()
 
+    def test_a_person_locked_after_the_link_was_made(self, super_admin, client_for, tenant_a, staff):
+        url = link_for(super_admin, "tenant_a", staff.pk, reason="help")
+        with schema_context("tenant_a"):
+            staff.is_active = False
+            staff.save()
+        _, response = follow(client_for, tenant_a, url)
+        assert response.status_code == 400 and "locked" in response.content.decode()
+
     def test_old_and_fake_links(self, client_for, tenant_a, staff, monkeypatch):
         token = signing.dumps({"s": "tenant_a", "u": staff.pk, "by": "x@y.test", "n": "abc", "back": "/"}, salt="wrong-salt")
         client = client_for(tenant_a)
