@@ -199,7 +199,7 @@ Open a new chat in the ERP CRM project and type:
   - Admin: settings page with "Times customers can choose now", closed days, delivery areas; order list and form with pickup or delivery
   - Check system: "Pickup and delivery" warns when customers cannot choose a time
   - User guide chapter: docs/user-guide/15-pickup-and-delivery.md (chapters 0, 6, 8 and 9 updated)
-  - 734 tests pass (50 new for pickup and delivery)
+  - 735 tests pass (51 new for pickup and delivery) and 8 staff app tests; all 41 deliberate breaks in task 2.1 are caught by tests (4 tests were added or made stronger to catch them)
 - [ ] 2.2 Stock: track stock per product, check it and take it off when an order is confirmed, put it back when cancelled, low-stock alerts
 - [ ] 2.3 WhatsApp status messages and final-price acceptance (approved templates; the customer answers Yes or No)
 - [ ] 2.4 AI order taking on WhatsApp in English and Nepali: AI keys per business, product search, time slots, order summary, the customer confirms, AI log
