@@ -598,6 +598,7 @@ class TestBusinessBackup:
         connect_drive("tenant_a", google)
         first = backup("tenant_a")
         second = backup("tenant_a")
+        assert first.file_name != second.file_name  # even within the same second
         files = list((Path(settings.BACKUP_DIR) / "businesses" / "tenant_a").glob("*.a1989backup"))
         assert [f.name for f in files] == [second.file_name]
         with schema_context("tenant_a"):

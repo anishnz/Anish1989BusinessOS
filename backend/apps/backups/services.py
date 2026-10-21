@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import secrets
 import shutil
 import tempfile
 from pathlib import Path
@@ -398,7 +399,8 @@ def _media_files() -> tuple[list[tuple[str, str]], int]:
 def _backup(run: BackupRun) -> tuple[str, str]:
     source = _source()
     started = timezone.localtime(run.started_at)
-    name = f"{site_code()}-{started:%Y-%m-%d-%H%M%S}{EXTENSION}"
+    # A short random part keeps names unique even for two backups in the same second.
+    name = f"{site_code()}-{started:%Y-%m-%d-%H%M%S}-{secrets.token_hex(2)}{EXTENSION}"
     final = local_dir() / name
     work = work_dir()
     try:

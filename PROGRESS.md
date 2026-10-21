@@ -161,7 +161,7 @@ Open a new chat in the ERP CRM project and type:
   - First restore test passed in the sandbox on 21 Oct 2026 (92 tables, all row counts matched)
   - Still to do by Anish: create the Google sign-in app in Google Cloud (user guide 12.6), save the `BACKUP_ENCRYPTION_KEYS` line from `.env` in a password manager
   - User guide chapter: docs/user-guide/12-backups.md
-  - 690 tests pass
+  - 618 tests pass
 - [ ] 1.15 Basic ticket system
 - [ ] 1.16 First-login setup wizard with per-tenant Google Drive backup connection
 - [ ] 1.17 In-app user guide framework and "Getting started" chapters
