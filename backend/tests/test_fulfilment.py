@@ -373,6 +373,12 @@ class TestApi:
         assert client.get("/api/orders/slots/?date=21-10-2026").status_code == 400
         past = client.get(f"/api/orders/slots/?kind=pickup&date={(timezone.localdate() - timedelta(days=1)).isoformat()}").json()
         assert all(s["past"] for s in past["slots"])
+        assert not any(s["too_soon"] for s in data["slots"])
+        with schema_context("tenant_a"):
+            FulfilmentSettings.objects.update(lead_minutes=3 * 24 * 60)  # 3 days to prepare
+        soon = client.get(f"/api/orders/slots/?kind=pickup&date={tomorrow().isoformat()}").json()
+        assert all(s["too_soon"] and not s["past"] for s in soon["slots"])
+        assert not any(s["too_soon"] for s in past["slots"])  # past, not "too soon"
 
     def test_settings_and_areas(self, client_for, tenant_a, shop):
         client = user_client(client_for, tenant_a, "counter@a.test", "shop_staff")
