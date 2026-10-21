@@ -107,6 +107,20 @@ export default function DashboardPage() {
               <tr><td>Deliveries due (not completed)</td><td className="num"><strong>{data.deliveries_due_today}</strong></td></tr>
             </tbody></table>
           </div>
+          {data.low_stock && data.low_stock.length > 0 && (
+            <div className="card">
+              <h2>Low stock</h2>
+              <table><tbody>
+                {data.low_stock.map((s) => (
+                  <tr key={s.product_id}>
+                    <td>{s.name}<div className={`small ${s.state === "low" ? "muted" : "error"}`}>{s.state_text}{s.warn_at ? ` (warn at ${quantity(s.warn_at, s.unit)})` : ""}</div></td>
+                    <td className="num"><strong>{quantity(s.stock, s.unit)}</strong></td>
+                  </tr>
+                ))}
+              </tbody></table>
+              {can("products.view") && <p className="small" style={{ marginBottom: 0 }}><Link to="/products?stock=low">See products</Link></p>}
+            </div>
+          )}
         </div>
       </div>
     </div>

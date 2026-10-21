@@ -1,6 +1,6 @@
 # 5. Products and customers
 
-*User guide, chapter 5 · Last updated 21 October 2026*
+*User guide, chapter 5 · Last updated 22 October 2026*
 
 **Who this is for:** business owners and staff who look after the product list and the customer list.
 
@@ -90,10 +90,11 @@ You can add or update many products or customers at once with a spreadsheet save
 
 ### Product columns
 
-`sku, name, category, unit, price, cost_price, gst_applies, min_quantity, quantity_step, available, search_terms, description`
+`sku, name, category, unit, price, cost_price, gst_applies, min_quantity, quantity_step, available, search_terms, description, count_stock, warn_at, stock`
 
 - Only **name** and **price** are needed.
 - **unit**: kg, each or pack. **gst_applies** and **available**: yes or no.
+- **count_stock**: yes or no. **warn_at**: the low-stock amount (empty = no warning). **stock**: the amount you counted; it is saved as a *Counted* change in the stock history (5.5). Leave it empty to keep the stock as it is.
 - A row with the same **SKU** as an existing product updates it. Without a SKU, a row updates the product with the same name. New categories are created automatically.
 
 ### Customer columns
@@ -117,3 +118,45 @@ If any row has a problem, **nothing is saved**, so you never get half a file imp
 - Exports include personal data. Keep the files safe and delete them when you no longer need them. Every export is recorded in the audit log.
 - Some cells start with an apostrophe, for example `'+64211234567`. This stops spreadsheet programs from treating the cell as a formula. Leave it there; the import removes it.
 - The cost price column is empty if you cannot edit products.
+
+## 5.5 Stock
+
+The system can count the stock of a product: in **kg** for products sold by weight, in packs or items for the others.
+
+### Switch on counting
+
+1. Open the product (**Products → Products**) and tick **Count stock**.
+2. Optional: fill in **Warn at**, for example *5* (kg). Below or at this amount the product shows **Low**.
+3. Save, then enter the first count (below).
+
+Products without **Count stock** are never counted or blocked.
+
+### Change the stock by hand (Products – Edit)
+
+In the staff app, open **Products**, click **Stock** next to the product, choose why, type the amount and click **Save**. In the admin pages, open the product and click **Adjust stock**.
+
+| Why | What you type | Example |
+|---|---|---|
+| Received | the amount that came in | 20 kg of goat arrived: *20* |
+| Counted | the amount now on the shelf | you counted *12.5* kg |
+| Waste | the amount thrown away (note needed) | *1.2* kg out of date |
+| Correction | a change, with a minus sign to take off (note needed) | *-2* counted wrong yesterday |
+
+Every change is kept in the **stock history** with who, when and why. It cannot be changed or deleted. Shop Staff can see stock but not change it.
+
+### Orders change the stock by themselves
+
+- When an order is **confirmed**, the ordered amount is taken off.
+- When the **real weight** is entered, the difference is taken off or put back (ordered 1 kg, weighed 1.08 kg: another 0.08 kg off).
+- When a confirmed order is **cancelled**, its amount is put back.
+- Drafts and orders waiting for the customer do not hold stock.
+
+### Not enough stock
+
+- **Customers** (WhatsApp and the website, coming next) cannot order more than the stock.
+- **Staff** can still confirm the order. The order shows *Only 1.5 kg of … in stock*, the stock goes **below zero**, and the product shows **Below zero: count again**. Count the product and save a **Counted** change.
+- A counted product with less than its smallest amount shows **Out of stock**.
+
+### Low stock on the dashboard
+
+The **Low stock** card on the dashboard lists products that are low, out of stock or below zero. In the staff app, **Products → Only low or out of stock** shows the same list.

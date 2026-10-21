@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { api, money } from "../api";
+import { api, money, quantity } from "../api";
 import { useAuth } from "../auth";
 import FulfilmentEditor, { EMPTY_FULFILMENT, type FulfilmentValue } from "../components/FulfilmentEditor";
 import type { Customer, Order, Page, Product } from "../types";
@@ -104,7 +104,8 @@ export default function NewOrder() {
         <input aria-label="Find product" placeholder="Type a product name or code" value={productTerm} onChange={(e) => setProductTerm(e.target.value)} style={{ width: "100%" }} />
         {products.map((p) => (
           <div key={p.id}><button style={{ marginTop: 6, width: "100%", justifyContent: "flex-start" }} onClick={() => add(p)}>
-            {p.name} <span className="muted">{money(p.price)}{p.unit === "kg" ? "/kg" : p.unit === "pack" ? "/pack" : ""}</span></button></div>
+            {p.name} <span className="muted">{money(p.price)}{p.unit === "kg" ? "/kg" : p.unit === "pack" ? "/pack" : ""}</span>
+            {p.track_stock && <span className={`small ${p.stock_state === "ok" || p.stock_state === "low" ? "muted" : "error"}`}>· {quantity(p.stock_quantity ?? "0", p.unit)} in stock</span>}</button></div>
         ))}
         {lines.length > 0 && (
           <div className="table-wrap" style={{ marginTop: 12 }}>

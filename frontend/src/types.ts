@@ -132,6 +132,24 @@ export interface Product {
   min_quantity: string;
   quantity_step: string;
   is_available: boolean;
+  /** Stock (task 2.2): only when "Count stock" is on. */
+  track_stock?: boolean;
+  stock_quantity?: string;
+  low_stock_level?: string | null;
+  stock_state?: "not_counted" | "below_zero" | "out" | "low" | "ok";
+  stock_text?: string;
+}
+
+export interface StockMovement {
+  id: number;
+  reason: string;
+  reason_label: string;
+  change: string;
+  quantity_after: string;
+  order_number: number | null;
+  note: string;
+  actor_email: string;
+  at: string;
 }
 
 export interface Customer {
@@ -178,6 +196,7 @@ export interface Dashboard {
   attention: { status: string; label: string; count: number }[];
   pickups_due_today: number;
   deliveries_due_today: number;
+  low_stock?: { product_id: number; name: string; unit: string; state: string; state_text: string; stock: string; warn_at: string | null }[];
   unread_conversations?: number;
   definitions: { sales: string; orders: string; compared_with: string };
 }
