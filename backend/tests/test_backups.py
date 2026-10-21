@@ -634,7 +634,8 @@ class TestBusinessBackup:
         with schema_context("tenant_a"):
             s = services.site_settings()
             assert s.drive_paused_reason and services.drive_connection().status == "failed"
-            assert services.run_due() == []  # nothing runs while paused
+            BackupRun.objects.update(queued_at=timezone.now() - timedelta(hours=7))  # a backup would be due now
+            assert services.run_due() == []  # but nothing runs while paused
             assert AuditEvent.objects.filter(action="backup.drive_paused").count() == 1
         connect_drive("tenant_a", google, passphrase="", refresh="rt-new")
         with schema_context("tenant_a"):
@@ -822,6 +823,27 @@ class TestConnectGoogleDrive:
         with schema_context("tenant_b"):
             assert not Connection.objects.filter(provider="google_drive").exists()
         assert "Google Drive connected" in admin.get(finish, follow=True).content.decode()  # the right person still can
+
+    def test_finishing_in_another_business_is_refused(self, client_for, tenant_a, tenant_b, public_tenant, google):
+        """Even with the right session value, a sign-in started for one business cannot be saved in another."""
+        from types import SimpleNamespace
+
+        from django.test import RequestFactory
+
+        admin, state = self._started(client_for, tenant_a, public_tenant, google)
+        client_for(public_tenant).get("/oauth/google/callback/", {"state": state, "code": "abc"})
+        nonce = google_connect._nonce_from(state)
+        with schema_context("tenant_a"):
+            from apps.accounts.models import User
+
+            user_id = User.objects.get(email="it@a.test").pk
+        request = RequestFactory().get("/backups/google/finish/", {"state": state})
+        request.session = {google_connect.SESSION_KEY: nonce}
+        request.user = SimpleNamespace(pk=user_id, email="it@a.test")
+        with schema_context("tenant_b"):
+            with pytest.raises(ValidationError, match="belongs to someone else"):
+                google_connect.finish(request)
+            assert not Connection.objects.filter(provider="google_drive").exists()
 
     def test_session_from_another_flow_cannot_finish_this_one(self, client_for, tenant_a, public_tenant, google):
         admin, state = self._started(client_for, tenant_a, public_tenant, google)
