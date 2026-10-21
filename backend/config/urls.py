@@ -16,6 +16,7 @@ business_urlpatterns = [
     path("api/inbox/", include("apps.inbox.urls")),
     path("api/reports/", include("apps.reports.urls")),
     path("dashboard/", admin.site.admin_view(dashboard_page), name="dashboard"),
+    path("", include("apps.setup.urls")),
     path("webhooks/whatsapp/", whatsapp_webhook, name="whatsapp_webhook"),
     # Staff screens (React). The page holds no data; the API checks every request.
     path("app/", app_page, name="app"),

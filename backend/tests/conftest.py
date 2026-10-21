@@ -21,6 +21,15 @@ def django_db_setup(django_db_setup, django_db_blocker):
         create_public_tenant()
         create_tenant("Tenant A Butchery", "tenant_a", "butchery")
         create_tenant("Tenant B Catering", "tenant_b", "catering")
+        # The test businesses count as already set up, so the first-login wizard (task 1.16)
+        # does not take over the admin home page. tests/test_setup.py undoes this per test.
+        from django.utils import timezone
+
+        from apps.setup.models import SetupProgress
+
+        for schema in ("tenant_a", "tenant_b"):
+            with schema_context(schema):
+                SetupProgress.objects.update_or_create(pk=1, defaults={"completed_at": timezone.now()})
     yield
 
 

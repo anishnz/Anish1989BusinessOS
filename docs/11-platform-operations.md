@@ -85,7 +85,7 @@ Rules:
 
 ## 5. Backups to Google Drive
 
-Built in task 1.14 (user guide chapter 12, decisions D-094 to D-102). The first-login setup wizard (task 1.16) will walk the IT admin through the same steps as the Backups page.
+Built in task 1.14 (user guide chapter 12, decisions D-094 to D-102). The first-login setup wizard (task 1.16, user guide chapter 14) walks the IT admin through the same steps as the Backups page.
 
 | Item | Plan |
 |---|---|

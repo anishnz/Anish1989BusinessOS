@@ -1,0 +1,138 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+{% block extrahead %}{{ block.super }}{% if backup.active %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .wz { --ink: var(--body-fg); --ink-2: var(--body-quiet-color); --grid: var(--hairline-color); --ok: #0a7d0a; --ok-bg: #e6f4e6; --warn: #8a5a00; --warn-bg: #fdf1d8;
+        --accent: var(--primary); max-width: 860px; color: var(--ink); }
+  @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .wz { --ok: #6fd36f; --ok-bg: #173a17; --warn: #f0c060; --warn-bg: #3d3010; } }
+  :root[data-theme="dark"] .wz { --ok: #6fd36f; --ok-bg: #173a17; --warn: #f0c060; --warn-bg: #3d3010; }
+  .wz .lead { font-size: 15px; margin: 0 0 16px; }
+  .wz ol.track { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0 0 20px; counter-reset: s; }
+  .wz ol.track li { counter-increment: s; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border: 1px solid var(--grid); border-radius: 999px; font-size: 13px; }
+  .wz ol.track li::before { content: counter(s); display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--grid); font-weight: 700; font-size: 12px; }
+  .wz ol.track li.done::before { content: "✓"; background: var(--ok-bg); color: var(--ok); }
+  .wz ol.track li.here { border-color: var(--accent); font-weight: 600; }
+  .wz ol.track a { text-decoration: none; color: inherit; }
+  .wz .card { border: 1px solid var(--grid); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+  .wz .card h2 { font-size: 15px; margin: 0 0 6px; background: none; color: var(--ink); padding: 0; text-transform: none; letter-spacing: 0; }
+  .wz .note { color: var(--ink-2); font-size: 13px; margin: 4px 0; }
+  .wz .ok { color: var(--ok); font-weight: 600; } .wz .warn { color: var(--warn); font-weight: 600; }
+  .wz .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .wz .fields .wide { grid-column: 1 / -1; }
+  .wz .fields label { display: block; font-weight: 600; margin-bottom: 4px; }
+  .wz .fields input { width: 100%; box-sizing: border-box; }
+  .wz .errorlist { margin: 0 0 4px; }
+  .wz form.inline { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; margin: 10px 0 0; }
+  .wz form.inline label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+  .wz .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px; }
+  .wz .actions form { margin: 0; }
+  .wz .big { font-size: 15px; padding: 10px 18px; }
+  .wz ul.list { list-style: none; padding: 0; margin: 0; } .wz ul.list li { padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  @media (max-width: 640px) { .wz .fields { grid-template-columns: 1fr; } .wz form.inline input[type=password] { width: 100%; } .wz form.inline label { width: 100%; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="wz">
+  <p class="lead">Welcome! A few steps get <strong>{{ business_name }}</strong> ready. You can skip any step and come back later.</p>
+  <ol class="track" aria-label="Setup steps">
+    {% for key, label, done, here in steps %}<li class="{% if done %}done{% endif %} {% if here %}here{% endif %}" {% if here %}aria-current="step"{% endif %}><a href="?step={{ key }}">{{ label }}</a></li>{% endfor %}
+  </ol>
+
+  {% if step == "business" %}
+    <div class="card">
+      <h2>Business details</h2>
+      <p class="note">Used later on invoices, your website and messages to customers. Everything is optional and can be changed later.</p>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="business">
+        {{ form.non_field_errors }}
+        <div class="fields">
+          {% for field in form %}
+            <div class="{% if field.name == 'address' or field.name == 'trading_name' %}wide{% endif %}">
+              {{ field.label_tag }}{{ field.errors }}{{ field }}
+              {% if field.help_text %}<div class="note">{{ field.help_text }}</div>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="actions"><input type="submit" value="Save and continue" class="default big"></div>
+      </form>
+    </div>
+
+  {% elif step == "backups" %}
+    <div class="card">
+      <h2>Backups to your own Google Drive</h2>
+      <p class="note">Every 6 hours, an encrypted copy of your business's data goes to your Google Drive. Only you can open it, with your passphrase. User guide chapter 12 explains more.</p>
+      <ul class="list">
+        <li>
+          <strong>1. Backup passphrase</strong>
+          {% if backup.passphrase %}<span class="ok">✓ Set</span>
+          {% else %}
+            <p class="note">The passphrase locks every backup. It is shown once: save it in a password manager.</p>
+            <form method="post" action="{% url 'backups' %}" class="inline">{% csrf_token %}<input type="hidden" name="action" value="passphrase"><input type="hidden" name="next" value="{{ here }}">
+              <label>Your password<input type="password" name="password" autocomplete="current-password" required></label>
+              <input type="submit" name="generate" value="Make a passphrase for me" class="default">
+            </form>
+          {% endif %}
+        </li>
+        <li>
+          <strong>2. Google Drive</strong>
+          {% if backup.drive %}<span class="ok">✓ Connected ({{ backup.drive.config.account_email }})</span>
+          {% else %}
+            <p class="note">You sign in to Google. The platform can only see the backup folder it creates, not the rest of your Drive.</p>
+            <form method="post" action="{% url 'backups' %}" class="inline">{% csrf_token %}<input type="hidden" name="action" value="connect"><input type="hidden" name="next" value="{{ here }}">
+              <label>Your password<input type="password" name="password" autocomplete="current-password" required></label>
+              <input type="submit" value="Connect Google Drive" {% if backup.passphrase %}class="default"{% endif %}>
+            </form>
+          {% endif %}
+        </li>
+        <li>
+          <strong>3. Test backup</strong>
+          {% if backup.active %}<span class="note" aria-live="polite">Running… this page updates every 5 seconds.</span>
+          {% elif backup.good %}<span class="ok">✓ Backup working</span> <span class="note">{{ backup.good.queued_at|date:"j M Y, H:i" }} · {{ backup.good.size_bytes|filesizeformat }}{% if backup.good.drive_status == "uploaded" %} · copied to Google Drive{% endif %}</span>
+          {% elif backup.set_up %}
+            {% if backup.last and backup.last.status == "failed" %}<p class="warn">The last try failed: {{ backup.last.message }}</p>{% endif %}
+            <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="test_backup"><input type="submit" value="Make a test backup" class="default"></form>
+          {% else %}<span class="note">Possible after steps 1 and 2.</span>{% endif %}
+        </li>
+      </ul>
+      <div class="actions">
+        <a class="button {% if backup.good %}default{% endif %} big" href="?step=connections">Continue</a>
+        {% if not backup.good %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="skip"><input type="submit" value="Skip for now"></form>
+        <span class="note">A reminder stays at the top of the admin pages until backups are set up.</span>{% endif %}
+      </div>
+    </div>
+
+  {% elif step == "connections" %}
+    <div class="card">
+      <h2>Connections</h2>
+      <p class="note">Your business uses its own accounts and keys. They are stored encrypted and never shown again (user guide chapter 4). Add them now or later on the Integrations page.</p>
+      <ul class="list">
+        {% for c in connections %}
+          <li><strong>{{ c.label }}</strong>
+            {% if c.connection %}<span class="ok">✓ {{ c.connection.label }} ({{ c.connection.get_status_display }})</span>{% else %} · <a href="{% url 'vault:add' c.add %}">Add</a>{% endif %}
+            <div class="note">{{ c.why }}</div></li>
+        {% endfor %}
+      </ul>
+      <div class="actions">
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="connections"><input type="submit" value="Continue" class="default big"></form>
+        <a href="{% url 'vault:list' %}">Open the Integrations page</a>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="card">
+      <h2>Almost done</h2>
+      <ul class="list">
+        {% for key, label, done, here in steps %}{% if key != "done" %}
+          <li><strong>{{ label }}</strong> {% if done %}<span class="ok">✓ Done</span>{% else %}<span class="warn">Not done yet</span> · <a href="?step={{ key }}">Do it now</a>{% endif %}</li>
+        {% endif %}{% endfor %}
+      </ul>
+      <p class="note">Next: add your staff (Users), your products, and try the staff app at <a href="/app/">/app/</a>. Questions? Click “Report a problem” at the top.</p>
+      <div class="actions"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="finish"><input type="submit" value="Finish setup" class="default big"></form></div>
+    </div>
+  {% endif %}
+
+  {% if step != "done" %}
+    <form method="post" action="{% url 'setup_later' %}" style="margin-top: 8px;">{% csrf_token %}<input type="submit" value="Later – go to the admin home page" class="note" style="background: none; border: 0; text-decoration: underline; cursor: pointer; padding: 0;"></form>
+  {% endif %}
+</div>
+{% endblock %}

@@ -21,6 +21,6 @@
     <li>Without it, nobody can open your backups, not even the platform.</li>
     {% if changed %}<li>New backups use this passphrase. Older backups still need the old one, so keep the old one too.</li>{% endif %}
   </ul>
-  <p><a class="button default" href="{% url 'backups' %}">I have saved it – back to Backups</a></p>
+  <p><a class="button default" href="{{ back }}">I have saved it – back to Backups</a></p>
 </div>
 {% endblock %}

@@ -34,6 +34,7 @@ from apps.rbac import policy
 from . import google_connect, keys, services
 from .models import BackupRun, BackupSettings
 
+RETURN_SESSION_KEY = "backups_return"
 PASSWORD_WRONG = "The password is not correct (or the account is locked for a while after too many tries)."
 
 
@@ -115,9 +116,18 @@ def backups_page(request):
     return render(request, "backups/backups.html", _context(request))
 
 
+def safe_next(value) -> str:
+    """Only the setup wizard may ask to be sent back to (never another site or page)."""
+    value = str(value or "")
+    if value.startswith("/setup/") and "//" not in value and "\\" not in value and len(value) < 200 and value.isprintable():
+        return value
+    return ""
+
+
 def _post(request):
     action = request.POST.get("action", "")
-    here = reverse("backups")
+    nxt = safe_next(request.POST.get("next"))
+    here = nxt or reverse("backups")
     try:
         if action in ("backup", "restore_test"):
             kind = BackupRun.Kind.BACKUP if action == "backup" else BackupRun.Kind.RESTORE_TEST
@@ -133,7 +143,9 @@ def _post(request):
         elif action == "connect":
             if not recheck_password(request):
                 raise ValidationError(PASSWORD_WRONG)
-            return HttpResponseRedirect(google_connect.start(request))
+            target = google_connect.start(request)
+            request.session[RETURN_SESSION_KEY] = nxt
+            return HttpResponseRedirect(target)
         elif action == "disconnect":
             if not recheck_password(request):
                 raise ValidationError(PASSWORD_WRONG)
@@ -163,6 +175,7 @@ def _passphrase(request):
     response = render(request, "backups/passphrase_saved.html", {
         **admin.site.each_context(request), "title": "Backup passphrase saved", "passphrase": passphrase,
         "generated": bool(request.POST.get("generate")), "changed": had_one,
+        "back": safe_next(request.POST.get("next")) or reverse("backups"),
     })
     response["Cache-Control"] = "no-store"
     return response
@@ -171,18 +184,19 @@ def _passphrase(request):
 @never_cache
 def google_finish(request):
     _require(request, "configure")
+    back = safe_next(request.session.pop(RETURN_SESSION_KEY, "")) or reverse("backups")
     try:
         conn = google_connect.finish(request)
     except ValidationError as exc:
         messages.error(request, " ".join(exc.messages))
-        return redirect("backups")
+        return redirect(back)
     try:
         services.prepare_folder(conn)
     except Exception as exc:  # noqa: BLE001 - the connection itself is saved
         messages.warning(request, f"Google Drive connected, but the backup folder could not be made yet ({exc}). It is tried again at the next backup.")
     else:
         messages.success(request, f"Google Drive connected ({conn.config.get('account_email', '')}). Backups are copied to the folder “{services.site_settings().drive_folder_name}”.")
-    return redirect("backups")
+    return redirect(back)
 
 
 @never_cache

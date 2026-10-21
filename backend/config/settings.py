@@ -84,6 +84,7 @@ TENANT_APPS = [
     "apps.backups",
     "apps.tickets",
     # Business data (only inside each business's schema)
+    "apps.setup",
     "apps.catalog",
     "apps.customers",
     "apps.orders",
@@ -110,6 +111,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django_otp.middleware.OTPMiddleware",
     "apps.accounts.middleware.StaffMFAMiddleware",
+    "apps.setup.middleware.SetupWizardMiddleware",  # first-login setup wizard (business sites)
     "apps.audit.middleware.AuditContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -128,6 +130,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.setup.context.setup",
             ],
         },
     },

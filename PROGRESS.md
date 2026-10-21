@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.15 are done. Next: **1.16 First-login setup wizard with per-tenant Google Drive backup connection**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.16 are done. Next: **1.17 In-app user guide framework and "Getting started" chapters**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -172,7 +172,13 @@ Open a new chat in the ERP CRM project and type:
   - Not yet: file uploads (screenshots), in-app notifications, customer tickets from WhatsApp or the website
   - User guide chapter: docs/user-guide/13-tickets.md
   - 640 tests pass
-- [ ] 1.16 First-login setup wizard with per-tenant Google Drive backup connection
+- [x] 1.16 First-login setup wizard with per-tenant Google Drive backup connection (done 21 Oct 2026)
+  - Opens on the admin home page for System Admins and IT Admins of a business that has not finished setup; "Later" closes it for that sign-in
+  - Steps: business details (trading name, phone, email, address, GST number, website; checked), backups (passphrase, Google Drive, test backup "Backup working"), connections (email, WhatsApp, AI), done
+  - Comes back to the wizard after the passphrase page and the Google sign-in (only `/setup/` addresses accepted)
+  - Yellow reminder on every admin page until backups are set up; "Set up your business" link in the header
+  - User guide chapter: docs/user-guide/14-first-login-setup.md
+  - 666 tests pass
 - [ ] 1.17 In-app user guide framework and "Getting started" chapters
 
 ## Step 2: Ordering flow

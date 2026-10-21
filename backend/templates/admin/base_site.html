@@ -15,6 +15,7 @@
     {% if request.tenant.schema_name == "public" %}<a href="{% url 'platform_people' %}">Businesses and users</a> /{% else %}<a href="{% url 'dashboard' %}">Dashboard</a> /{% endif %}
     <a href="{% url 'system_check' %}">Check system</a> /
     <a href="{% url 'backups' %}">Backups</a> /
+    {% if show_setup_link %}<a href="{% url 'setup' %}">Set up your business</a> /{% endif %}
     <a href="{% url 'ticket_list' %}">Tickets</a> /
     <a href="{% url 'ticket_new' %}?from={{ request.path|urlencode }}">Report a problem</a> /
     <a href="{% url 'accounts:mfa_manage' %}">Two-step verification</a> /
@@ -23,3 +24,13 @@
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
+
+{% block messages %}
+  {% if backups_reminder %}
+    <div role="status" style="margin: 0 0 0; padding: 10px 40px; background: #fdf1d8; color: #6b4600; border-bottom: 1px solid #f0d9a3; font-size: 14px;">
+      <strong>Backups to your Google Drive are not set up yet.</strong>
+      {% if backups_reminder.can_fix %}<a href="{% url 'setup' %}?step=backups" style="color: #6b4600; text-decoration: underline;">Set them up now</a> (about 5 minutes).{% else %}Ask your IT Admin or System Admin to set them up.{% endif %}
+    </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

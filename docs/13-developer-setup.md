@@ -486,6 +486,20 @@ Code: `apps/tickets/` (in both SHARED_APPS and TENANT_APPS). Tests: `tests/test_
 | Automatic | `apps/health/services.py` (`_ticket`) and `apps/backups/services.py` (`_ticket`) call `system_ticket` for scheduled failures |
 | Emails | New ticket → handlers; reply → reporter or assignee; status → reporter; platform answers → the business person who sent it. Email errors are logged, never raised |
 
+## First-login setup (task 1.16)
+
+Code: `apps/setup/` (TENANT_APPS only). Tests: `tests/test_setup.py`.
+
+| Piece | Where |
+|---|---|
+| Models | `BusinessProfile` and `SetupProgress`, one row each per business schema |
+| Opening | `SetupWizardMiddleware` (after the MFA middleware): GET `/admin/` → `/setup/` when `services.should_open_wizard()` (business site, staff, `settings.configure`, not finished, not "Later" in this session) |
+| Wizard | `/setup/?step=business|backups|connections|done`, POST actions `business`, `skip`, `test_backup`, `connections`, `finish`; `/setup/later/` |
+| Backups step | Uses the Backups page forms with `next=/setup/?step=backups`. `apps.backups.views.safe_next()` accepts only `/setup/...`; the Google sign-in keeps it in the session (`backups_return`) |
+| Reminder | Context processor `apps.setup.context.setup`: `backups_reminder` (shown in `templates/admin/base_site.html` until backups are set up) and `show_setup_link` |
+
+Tests: the two test businesses are marked "setup finished" in `conftest.py`; `tests/test_setup.py` uses the `fresh` fixture to undo that.
+
 ## Useful commands
 
 | Task | Command |

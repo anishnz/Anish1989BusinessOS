@@ -113,6 +113,10 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-105 | First answer targets | Urgent 1 hour, High 4 hours, Normal 24 hours, Low 3 days (calendar hours for now) | Simple, visible targets; business hours come with the HR/opening-hours settings | Decided (21 Oct 2026) |
 | D-106 | Automatic tickets | A scheduled Check system run that is red, or a scheduled backup or restore test that fails, opens a ticket; while it is open, repeats add a message instead of a new ticket. Only when the Tickets module is on | Problems get an owner and a history without flooding the list | Decided (21 Oct 2026) |
 | D-107 | Ticket details | The page path (without the query string), the browser and the time are added automatically; no file uploads in this first version | Links can hold private codes; uploads need storage, size limits and virus checks, planned later | Decided (21 Oct 2026) |
+| D-108 | When the setup wizard opens | On the admin home page, for System Admins and IT Admins (Settings – Configure) of a business whose setup is not finished. Never on other pages; "Later" closes it for that sign-in; finished = never again (the header link reopens it) | Guides new businesses without trapping anyone or blocking work | Decided (21 Oct 2026) |
+| D-109 | Business details | Stored in the business's own schema (trading name, phone, customer email, address, GST number, website); the registered name stays with the Super Admin | Used later on invoices, websites and messages; the business changes its own details | Decided (21 Oct 2026) |
+| D-110 | Backups reminder | A yellow line on every admin page until the business's backups to its Google Drive are set up (not shown on the platform site) | The wizard can be skipped, the reminder cannot be missed | Decided (21 Oct 2026) |
+| D-111 | Way back from Backups to the wizard | Only addresses starting with `/setup/` are accepted as "next"; anything else goes to the Backups page | Prevents open redirects after a password or Google sign-in | Decided (21 Oct 2026) |
 
 ## Why schema per tenant?
 
