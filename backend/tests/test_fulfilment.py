@@ -236,6 +236,14 @@ class TestDeliveryOrders:
             assert not any("minimum order" in w for w in services.warnings(order))
         assert move(order, S.CONFIRMED, strict=True).status == S.CONFIRMED
 
+    def test_no_warnings_once_ready(self, shop, goods):
+        order = delivery(goods, lines=[L(goods["samosa"].pk, Decimal("1"))])  # below the minimum
+        with schema_context("tenant_a"):
+            assert services.warnings(order)
+        order = move(order, S.CONFIRMED, S.PREPARING, S.READY)
+        with schema_context("tenant_a"):
+            assert services.warnings(order) == []  # too late to change: no more warnings
+
     def test_customers_must_follow_the_rules(self, shop, goods):
         move(delivery(goods), S.CONFIRMED)
         full = delivery(goods)
