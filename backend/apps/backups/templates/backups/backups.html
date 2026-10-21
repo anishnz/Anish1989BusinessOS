@@ -1,0 +1,181 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+{% block extrahead %}{{ block.super }}{% if active %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .bk { --ink: var(--body-fg); --ink-2: var(--body-quiet-color); --grid: var(--hairline-color);
+        --ok: #0a7d0a; --ok-bg: #e6f4e6; --warn: #8a5a00; --warn-bg: #fdf1d8; --bad: #b42323; --bad-bg: #fbe5e5; --none: #5c6370; --none-bg: #eceef1;
+        max-width: 980px; color: var(--ink); }
+  @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .bk {
+        --ok: #6fd36f; --ok-bg: #173a17; --warn: #f0c060; --warn-bg: #3d3010; --bad: #ff8a8a; --bad-bg: #451c1c; --none: #b5bcc6; --none-bg: #2c3038; } }
+  :root[data-theme="dark"] .bk { --ok: #6fd36f; --ok-bg: #173a17; --warn: #f0c060; --warn-bg: #3d3010; --bad: #ff8a8a; --bad-bg: #451c1c; --none: #b5bcc6; --none-bg: #2c3038; }
+  .bk .note { color: var(--ink-2); font-size: 13px; margin: 4px 0; }
+  .bk .card { border: 1px solid var(--grid); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
+  .bk .card h2 { font-size: 15px; margin: 0 0 8px; background: none; color: var(--ink); padding: 0; text-transform: none; letter-spacing: 0; }
+  .bk .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 20px; }
+  .bk .summary .label { color: var(--ink-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .bk .summary .value { font-size: 15px; margin-top: 2px; overflow-wrap: anywhere; }
+  .bk .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .bk .pill::before { font-weight: 700; }
+  .bk .ok { color: var(--ok); background: var(--ok-bg); } .bk .ok::before { content: "✓"; }
+  .bk .warning { color: var(--warn); background: var(--warn-bg); } .bk .warning::before { content: "!"; }
+  .bk .failed { color: var(--bad); background: var(--bad-bg); } .bk .failed::before { content: "✕"; }
+  .bk .none, .bk .queued, .bk .running { color: var(--none); background: var(--none-bg); }
+  .bk .none::before { content: "–"; } .bk .queued::before, .bk .running::before { content: "…"; }
+  .bk .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
+  .bk .buttons form { margin: 0; }
+  .bk .big-button { font-size: 15px; padding: 10px 18px; }
+  .bk form.inline { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; margin: 8px 0 0; }
+  .bk form.inline label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+  .bk form.inline input[type=password], .bk form.inline input[type=text], .bk form.inline select { min-width: 220px; max-width: 100%; box-sizing: border-box; }
+  .bk form.inline input[name=folder_name] { min-width: 320px; }
+  .bk ol.steps { margin: 6px 0 0 18px; padding: 0; } .bk ol.steps li { margin: 4px 0; }
+  .bk code { overflow-wrap: anywhere; }
+  .bk .banner { border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; }
+  .bk .banner.failed::before, .bk .banner.warning::before, .bk .banner.none::before { content: none; }
+  .bk table { width: 100%; border-collapse: collapse; }
+  .bk td, .bk th { vertical-align: top; padding: 7px 8px; border-bottom: 1px solid var(--grid); text-align: left; }
+  .bk td.msg { color: var(--ink-2); font-size: 13px; }
+  @media (max-width: 640px) {
+    .bk table, .bk tbody, .bk tr, .bk td { display: block; width: auto; }
+    .bk thead { display: none; }
+    .bk tr { border-bottom: 1px solid var(--grid); padding: 6px 0; }
+    .bk td { border: 0; padding: 2px 0; }
+    .bk form.inline input[type=password], .bk form.inline input[type=text], .bk form.inline select { min-width: 0; width: 100%; }
+    .bk form.inline label { width: 100%; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="bk">
+  <p class="note">
+    {% if on_platform %}Encrypted backups of the whole platform (every business), kept on this server{% if drive %} and copied to Google Drive{% endif %}.
+    {% else %}Encrypted backups of {{ site_name }}'s own data, copied to your own Google Drive. The platform also keeps its own full backups.{% endif %}
+  </p>
+
+  {% if key_problem %}<div class="banner failed"><strong>Backups cannot run:</strong> {{ key_problem }} See the setup guide, “Backups”.</div>{% endif %}
+  {% if dev_key %}<div class="banner warning"><strong>Development key.</strong> Backups are encrypted with a key made from DJANGO_SECRET_KEY because BACKUP_ENCRYPTION_KEYS is not set. That is fine on a laptop, never on a real server.</div>{% endif %}
+  {% if settings_row.drive_paused_reason %}<div class="banner failed"><strong>Copies to Google Drive have stopped:</strong> {{ settings_row.drive_paused_reason }}</div>{% endif %}
+  {% if active %}<div class="banner none" aria-live="polite"><strong>{{ active.get_kind_display }} {% if active.status == "running" %}running{% else %}waiting to start{% endif %}…</strong> Started {{ active.queued_at|naturaltime }}{% if active.run_by_email %} by {{ active.run_by_email }}{% endif %}. This page updates every 5 seconds.{% if active.status == "queued" %} If it keeps waiting, check that the background worker runs (Check system).{% endif %}</div>{% endif %}
+
+  {% if not set_up %}
+    <div class="card">
+      <h2>Set up backups to your Google Drive</h2>
+      <ol class="steps">
+        <li>{% if settings_row.has_passphrase %}✓ {% endif %}Set a <strong>backup passphrase</strong> (below). It is needed to open a backup. Keep it somewhere safe.</li>
+        <li>{% if drive %}✓ {% endif %}<strong>Connect Google Drive</strong> (below). The platform can only see the backup folder it creates, not the rest of your Drive.</li>
+        <li>Click <strong>Back up now</strong>, then <strong>Test restore</strong>.</li>
+      </ol>
+    </div>
+  {% else %}
+    <div class="card summary">
+      <div><div class="label">Last backup</div><div class="value">
+        {% if last_backup %}<span class="pill {{ last_backup.status }}">{{ last_backup.get_status_display }}</span> {{ last_backup.queued_at|date:"j M Y, H:i" }} <span class="note">({{ last_backup.queued_at|naturaltime }})</span>{% else %}<span class="pill none">None yet</span>{% endif %}
+      </div></div>
+      <div><div class="label">Last good backup</div><div class="value">
+        {% if last_good %}{{ last_good.queued_at|date:"j M Y, H:i" }} · {{ last_good.size_bytes|filesizeformat }} · {% if last_good.drive_status == "uploaded" %}in Google Drive{% else %}on the server{% endif %}{% else %}–{% endif %}
+      </div></div>
+      <div><div class="label">Next backup</div><div class="value">{% if next_backup <= now %}due now (starts within 15 minutes){% else %}{{ next_backup|date:"j M Y, H:i" }} <span class="note">({{ next_backup|naturaltime }})</span>{% endif %}</div></div>
+      <div><div class="label">Last restore test</div><div class="value">
+        {% if last_test %}<span class="pill {{ last_test.status }}">{{ last_test.get_status_display }}</span> {{ last_test.queued_at|date:"j M Y, H:i" }}{% else %}<span class="pill warning">Never</span>{% endif %}
+      </div></div>
+    </div>
+  {% endif %}
+
+  {% if can_configure %}
+    <div class="buttons">
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="backup">
+        <input type="submit" value="Back up now" class="default big-button" {% if active or not set_up or key_problem %}disabled{% endif %}></form>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="restore_test">
+        <input type="submit" value="Test restore" class="big-button" {% if active or not last_good %}disabled{% endif %}></form>
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Google Drive</h2>
+    {% if drive %}
+      <p>Connected: <strong>{{ drive.config.account_email|default:"Google account" }}</strong> ·
+        folder “{{ settings_row.drive_folder_name|default:default_folder }}” · <span class="pill {% if drive.status == 'failed' %}failed{% elif drive.status == 'connected' %}ok{% else %}none{% endif %}">{{ drive.get_status_display }}</span></p>
+      {% if drive.last_test_message %}<p class="note">{{ drive.last_test_message }}</p>{% endif %}
+    {% else %}
+      <p>{% if on_platform %}Not connected. Backups stay on this server only. Connect a Google Drive for an off-site copy.{% else %}Not connected.{% endif %}</p>
+    {% endif %}
+    {% if not has_sign_in_app %}
+      <p class="note">{% if on_platform %}First add the <strong>Google sign-in app</strong> on the <a href="{% url 'vault:list' %}">Integrations page</a> (user guide 12.6). Its authorised redirect URI in Google Cloud must be <code>{{ redirect_uri }}</code>.{% else %}Google Drive cannot be connected yet: the platform's Google sign-in app is not set up. Ask the platform Super Admin.{% endif %}</p>
+    {% elif can_configure %}
+      <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="connect">
+        <label>Your password<input type="password" name="password" autocomplete="current-password" required></label>
+        <input type="submit" value="{% if drive %}Connect again or another account{% else %}Connect Google Drive{% endif %}" {% if not drive %}class="default"{% endif %}>
+      </form>
+      {% if drive %}
+        <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="disconnect">
+          <label>Your password<input type="password" name="password" autocomplete="current-password" required></label>
+          <input type="submit" value="Disconnect">
+        </form>
+      {% endif %}
+      {% if on_platform %}<p class="note">Redirect URI registered in Google Cloud: <code>{{ redirect_uri }}</code></p>{% endif %}
+    {% endif %}
+  </div>
+
+  {% if not on_platform %}
+    <div class="card">
+      <h2>Backup passphrase</h2>
+      {% if settings_row.has_passphrase %}
+        <p>Set {{ settings_row.passphrase_set_at|date:"j M Y, H:i" }}{% if settings_row.passphrase_set_by_email %} by {{ settings_row.passphrase_set_by_email }}{% endif %}. It is not shown again.</p>
+        <p class="note">If you change it, new backups use the new passphrase. Older backups still need the old one.</p>
+      {% else %}
+        <p>Not set. Every backup is locked with this passphrase. Without it, nobody can open the backup, not even the platform.</p>
+      {% endif %}
+      {% if can_configure %}
+        <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="passphrase">
+          <label>Your password<input type="password" name="password" autocomplete="current-password" required></label>
+          <input type="submit" name="generate" value="Make a passphrase for me" class="default">
+        </form>
+        <details><summary class="note">Or type your own</summary>
+          <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="passphrase">
+            <label>Your password<input type="password" name="password" autocomplete="current-password" required></label>
+            <label>New passphrase (16+ characters)<input type="password" name="passphrase" autocomplete="new-password" minlength="16" required></label>
+            <label>Same again<input type="password" name="passphrase_again" autocomplete="new-password" minlength="16" required></label>
+            <input type="submit" value="Save passphrase">
+          </form>
+        </details>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Settings</h2>
+    {% if can_configure %}
+      <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="settings">
+        <label>How often<select name="every_hours">{% for value, label in every_choices %}<option value="{{ value }}" {% if value == settings_row.every_hours %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label>Google Drive folder<input type="text" name="folder_name" maxlength="120" value="{{ settings_row.drive_folder_name|default:default_folder }}"></label>
+        <input type="submit" value="Save">
+      </form>
+    {% else %}
+      <p>{{ settings_row.get_every_hours_display }} · folder “{{ settings_row.drive_folder_name|default:default_folder }}”</p>
+    {% endif %}
+    <p class="note">Kept: every backup for 7 days, then one a day for 30 days, then one a month for 12 months. A restore test runs by itself every 7 days.
+      {% if on_platform %}On this server now: {{ server_count }} backup{{ server_count|pluralize }}, {{ server_size|filesizeformat }}.{% if key_id %} Encryption key: <code>{{ key_id }}</code>.{% endif %}{% endif %}</p>
+  </div>
+
+  {% if history %}
+    <h2 style="font-size: 15px; margin: 20px 0 6px;">History</h2>
+    <table><thead><tr><th>When</th><th>What</th><th>Result</th><th>Size</th><th>Google Drive</th><th>Started by</th></tr></thead><tbody>
+      {% for run in history %}
+        <tr>
+          <td>{{ run.queued_at|date:"j M Y, H:i" }}</td>
+          <td>{{ run.get_kind_display }}</td>
+          <td><span class="pill {{ run.status }}">{{ run.get_status_display }}</span></td>
+          <td>{% if run.size_bytes %}{{ run.size_bytes|filesizeformat }}{% else %}–{% endif %}</td>
+          <td>{% if run.kind == "backup" and run.finished %}{{ run.get_drive_status_display }}{% elif run.details.source %}from {{ run.details.source }}{% else %}–{% endif %}</td>
+          <td>{% if run.run_by_email %}{{ run.run_by_email }}{% else %}{{ run.get_trigger_display }}{% endif %}</td>
+        </tr>
+        {% if run.message %}<tr><td colspan="6" class="msg">{{ run.message }}{% for t in run.details.missing %}<br>Missing table: {{ t }}{% endfor %}{% for t in run.details.different %}<br>{{ t.0 }}: {{ t.1 }} rows at backup time, {{ t.2 }} after restore{% endfor %}</td></tr>{% endif %}
+      {% endfor %}
+    </tbody></table>
+  {% endif %}
+
+  <p class="note" style="margin-top: 18px;">To open a backup file without the platform (for example after downloading it from Google Drive), use the
+    <a href="{% url 'backups_tool' %}">backup tool</a> (Python 3.12+ and the <code>cryptography</code> package). User guide chapter 12 explains it.</p>
+</div>
+{% endblock %}

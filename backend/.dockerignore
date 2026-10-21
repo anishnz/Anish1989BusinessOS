@@ -5,3 +5,4 @@ staticfiles/
 media/
 .env
 *.env
+backups/

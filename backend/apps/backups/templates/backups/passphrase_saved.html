@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .pp { max-width: 720px; }
+  .pp .phrase { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 20px; padding: 14px 16px; border: 2px dashed var(--hairline-color);
+                border-radius: 8px; margin: 12px 0; overflow-wrap: anywhere; user-select: all; }
+  .pp ul { margin-left: 18px; padding: 0; } .pp li { margin: 4px 0; }
+  .pp a.button { display: inline-block; padding: 10px 16px; margin-top: 8px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="pp">
+  {% if generated %}
+    <p><strong>Your new backup passphrase.</strong> Save it now, for example in a password manager. It is shown only this once.</p>
+    <div class="phrase">{{ passphrase }}</div>
+  {% else %}
+    <p><strong>Your backup passphrase is saved.</strong> Make sure you have a copy somewhere safe. It is not shown again.</p>
+  {% endif %}
+  <ul>
+    <li>You need it to open a backup, for example one downloaded from Google Drive.</li>
+    <li>Without it, nobody can open your backups, not even the platform.</li>
+    {% if changed %}<li>New backups use this passphrase. Older backups still need the old one, so keep the old one too.</li>{% endif %}
+  </ul>
+  <p><a class="button default" href="{% url 'backups' %}">I have saved it – back to Backups</a></p>
+</div>
+{% endblock %}

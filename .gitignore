@@ -21,7 +21,8 @@ backend/media/
 *.dump
 *.sql.gz
 *.a1989backup
-backups/
+/backups/
+backend/backups/
 
 # Editors and OS
 .vscode/
