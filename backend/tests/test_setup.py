@@ -124,7 +124,7 @@ class TestBackupsStep:
         response = admin_of(client_for, fresh).post("/backups/", {"action": "passphrase", "password": "wrong", "generate": "1", "next": "/setup/?step=backups"})
         assert response.status_code == 302 and response["Location"] == "/setup/?step=backups"
 
-    @pytest.mark.parametrize("bad", ["https://evil.test/", "//evil.test/setup/", "/admin/", "/setup/\\\\evil", "javascript:alert(1)"])
+    @pytest.mark.parametrize("bad", ["https://evil.test/", "//evil.test/setup/", "/admin/", "/setup/\\\\evil", "javascript:alert(1)", "/setup//evil.test/"])
     def test_only_the_wizard_can_be_the_way_back(self, client_for, fresh, bad):
         response = admin_of(client_for, fresh).post("/backups/", {"action": "settings", "every_hours": "6", "next": bad})
         assert response["Location"] == "/backups/"

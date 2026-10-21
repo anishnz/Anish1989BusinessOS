@@ -21,6 +21,7 @@ def chapters(settings, tmp_path):
     (folder / "99-extra.md").write_text("# Extra notes\n\nSomething else.\n", encoding="utf-8")
     (folder / "README.txt").write_text("not a chapter", encoding="utf-8")
     (folder / "images" / "backups-page.png").write_bytes(b"\x89PNG fake")
+    (folder / "images" / "notes.txt").write_text("not a picture", encoding="utf-8")
     settings.GUIDE_DIR = folder
     return folder
 
@@ -83,7 +84,8 @@ class TestPages:
         assert 'src="/guide/images/backups-page.png"' in page and "← Getting started" in page
         image = client.get("/guide/images/backups-page.png")
         assert image.status_code == 200 and image["Content-Type"] == "image/png"
-        for bad in ("/guide/images/..%2Fsecret.png", "/guide/images/missing.png", "/guide/images/x.svg", "/guide/nope/", "/guide/README/"):
+        for bad in ("/guide/images/..%2Fsecret.png", "/guide/images/missing.png", "/guide/images/x.svg", "/guide/images/notes.txt",
+                    "/guide/images/Backups-Page.PNG", "/guide/nope/", "/guide/README/"):
             assert client.get(bad).status_code == 404, bad
 
     def test_search(self, chapters, client_for, tenant_a):

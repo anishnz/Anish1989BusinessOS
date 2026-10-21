@@ -186,7 +186,7 @@ Open a new chat in the ERP CRM project and type:
   - Automatic screenshots: `tools/guide_screenshots.py` + `docs/user-guide/screenshots.json` (8 pictures added to the chapters)
   - New "Getting started" chapter; "Getting started" group: getting started, logging in, first-login setup, staff app, tickets
   - The Docker image carries the guide (`/opt/guide`)
-  - 682 tests pass
+  - 682 tests pass; all 45 deliberate breaks in tasks 1.14 to 1.17 are caught by tests
 
 ## Step 2: Ordering flow
 
