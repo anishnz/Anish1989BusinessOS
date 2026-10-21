@@ -47,6 +47,8 @@ AI content generation:
 
 ## 3. Ticket system (issue reporting)
 
+The basic version was built in task 1.15 (user guide chapter 13, decisions D-103 to D-107): reporting, two levels, statuses, priorities with first-answer targets, assignment, comments and internal notes, email notices, automatic tickets for failed checks and backups, and simple numbers. Screenshots, in-app and WhatsApp notices, customer tickets and reports come later.
+
 | Feature | Description |
 |---|---|
 | Report an issue | A "Report a problem" button on every page, with title, description, screenshot and priority |

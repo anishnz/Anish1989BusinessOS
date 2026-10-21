@@ -50,6 +50,7 @@
     <div class="summary" aria-live="polite">
       <span class="pill {{ record.status }} big">{{ record.get_status_display }}</span>
       <span>{{ record.started_at|date:"j M Y, H:i" }} · {{ record.seconds }} s · {{ record.get_trigger_display }}{% if record.run_by_email %} by {{ record.run_by_email }}{% endif %}</span>
+      {% if record.status == "failed" and can_ticket %}<form method="post" action="{% url 'ticket_from_check' record.pk %}" style="margin: 0;">{% csrf_token %}<input type="submit" value="Create ticket"></form>{% endif %}
       <span class="note">
         {% for key, label, n in counts %}<span class="pill {{ key }}">{{ n }} {{ label }}</span> {% endfor %}
       </span>

@@ -474,6 +474,18 @@ Notes:
 - Disaster recovery: new server with the same `.env` keys, `python manage.py open_backup <file> <folder>`, then `pg_restore --no-owner --no-privileges -d <empty database> <folder>/database.dump`, then copy `media/` back. Practise it on a test server before the pilots.
 - Google sign-in app: see user guide 12.6. Redirect URI: `https://<platform address>/oauth/google/callback/` (laptop: `http://localhost:8000/oauth/google/callback/`).
 
+## Tickets (task 1.15)
+
+Code: `apps/tickets/` (in both SHARED_APPS and TENANT_APPS). Tests: `tests/test_tickets.py`.
+
+| Piece | Where |
+|---|---|
+| Models | `Ticket` (status, priority, category, source, reporter, assignee, page, browser, response targets) and `TicketComment` (`internal` = note for handlers only). Platform copies keep `from_schema`, `from_business`, `from_ticket_id`; the business ticket keeps `platform_ticket_id` |
+| Rules | `services.py`: module `tickets` on business sites, `support` on the platform. `visible()` = all with `.edit`, else own tickets. `report`, `comment`, `set_status`, `assign`, `send_to_platform`, `platform_view` / `reply_to_platform` (always filtered by `from_schema` and `from_ticket_id`), `system_ticket` (one open ticket per `source_key`) |
+| Pages / API | `/tickets/`, `/tickets/new/?from=<path>`, `/tickets/<id>/`, `POST /tickets/from-check/<run>/`, `POST /tickets/from-backup/<run>/`; `GET/POST /api/tickets/`, `GET/PATCH /api/tickets/<id>/`, `POST /api/tickets/<id>/comments/`. Someone else's ticket answers 404 |
+| Automatic | `apps/health/services.py` (`_ticket`) and `apps/backups/services.py` (`_ticket`) call `system_ticket` for scheduled failures |
+| Emails | New ticket → handlers; reply → reporter or assignee; status → reporter; platform answers → the business person who sent it. Email errors are logged, never raised |
+
 ## Useful commands
 
 | Task | Command |

@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% block extrastyle %}{{ block.super }}{% include "tickets/_style.html" %}{% endblock %}
+{% block content %}
+<div class="tk" style="max-width: 680px;">
+  <p class="note">{% if on_platform %}Platform support sees this ticket.{% else %}Your business's admins see this ticket. They can send it on to platform support if needed.{% endif %}
+    The page you came from{% if from_page %} (<code>{{ from_page }}</code>){% endif %}, your browser and the time are added automatically.</p>
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.page }}
+    {% for field in form.visible_fields %}
+      <div class="form-row">
+        {{ field.label_tag }}{{ field.errors }}{{ field }}
+        {% if field.help_text %}<div class="note">{{ field.help_text }}</div>{% endif %}
+      </div>
+    {% endfor %}
+    <input type="submit" value="Send" class="default" style="padding: 9px 18px;">
+  </form>
+</div>
+{% endblock %}

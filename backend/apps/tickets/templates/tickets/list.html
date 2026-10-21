@@ -1,0 +1,39 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+{% block extrastyle %}{{ block.super }}{% include "tickets/_style.html" %}{% endblock %}
+{% block content %}
+<div class="tk">
+  <div class="bar">
+    {% if can_report %}<a class="button default" href="{% url 'ticket_new' %}" style="padding: 9px 16px;">Report a problem</a>{% endif %}
+    <span class="tabs">{% for key, label in filters.items %}<a href="?show={{ key }}" {% if key == show %}class="on" aria-current="page"{% endif %}>{{ label }}</a> {% endfor %}</span>
+  </div>
+  {% if not handler %}<p class="note">You see the tickets you reported.</p>{% endif %}
+  {% if stats %}
+    <div class="stats">
+      <span><b>{{ stats.open }}</b> open</span><span><b>{{ stats.new }}</b> new</span>
+      <span {% if stats.overdue %}class="overdue"{% endif %}><b>{{ stats.overdue }}</b> waiting too long for a first answer</span>
+      <span>First answer on average: <b>{% if stats.avg_first_response_hours is not None %}{{ stats.avg_first_response_hours }} h{% else %}–{% endif %}</b></span>
+    </div>
+  {% endif %}
+  {% if tickets %}
+    <table>
+      <thead><tr><th>#</th><th>Title</th><th>Status</th><th>Priority</th><th>{% if on_platform %}Business{% else %}Reported by{% endif %}</th><th>Assigned to</th><th>Reported</th></tr></thead>
+      <tbody>
+      {% for t in tickets %}
+        <tr>
+          <td>{{ t.pk }}</td>
+          <td><a href="{% url 'ticket_detail' t.pk %}">{{ t.title }}</a>{% if t.response_overdue %} <span class="overdue">· answer overdue</span>{% endif %}{% if t.platform_ticket_id %} <span class="note">· with platform support</span>{% endif %}</td>
+          <td><span class="pill s-{{ t.status }}">{{ t.get_status_display }}</span></td>
+          <td><span class="pill p-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+          <td>{% if on_platform and t.from_business %}{{ t.from_business }}{% else %}{{ t.reporter_label }}{% endif %}</td>
+          <td>{{ t.assigned_to.email|default:"–" }}</td>
+          <td>{{ t.created_at|naturaltime }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No tickets here.{% if can_report %} Something not working? Click <strong>Report a problem</strong>.{% endif %}</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+{% block extrastyle %}{{ block.super }}{% include "tickets/_style.html" %}{% endblock %}
+{% block content %}
+<div class="tk">
+  <p><a href="{% url 'ticket_list' %}">← All tickets</a></p>
+  <h2 style="margin: 0 0 6px;">{{ ticket.title }}</h2>
+  <p class="bar"><span class="pill s-{{ ticket.status }}">{{ ticket.get_status_display }}</span> <span class="pill p-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
+    {% if ticket.response_overdue %}<span class="overdue">First answer was due {{ ticket.response_due|naturaltime }}</span>{% endif %}</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="msg"><div class="who">{{ ticket.reporter_label }} · {{ ticket.created_at|date:"j M Y, H:i" }}</div><p class="text">{{ ticket.description }}</p></div>
+        {% for c in comments %}
+          <div class="msg {% if c.internal %}internal{% endif %}"><div class="who">{{ c.author_label }} · {{ c.created_at|date:"j M Y, H:i" }}{% if c.internal %} · internal note{% endif %}</div><p class="text">{{ c.body }}</p></div>
+        {% endfor %}
+        {% if ticket.status != "closed" or handler %}
+          <form method="post">{% csrf_token %}<input type="hidden" name="action" value="comment">
+            <label for="body" class="note">Your message</label>
+            <textarea id="body" name="body" rows="4" maxlength="10000" required></textarea>
+            <p class="bar" style="margin-top: 8px;">
+              <input type="submit" value="Send" class="default">
+              {% if handler %}<label class="note"><input type="checkbox" name="internal" value="1"> Internal note (the reporter does not see it)</label>{% endif %}
+            </p>
+          </form>
+        {% endif %}
+      </div>
+
+      {% if remote %}
+        <div class="card">
+          <h2>Platform support (their ticket #{{ remote.pk }})</h2>
+          <p><span class="pill s-{{ remote.status }}">{{ remote.get_status_display }}</span> <span class="note">Sent {{ remote.created_at|date:"j M Y, H:i" }}</span></p>
+          {% for c in remote_notes %}<div class="msg"><div class="who">{{ c.author_label }} · {{ c.created_at|date:"j M Y, H:i" }}</div><p class="text">{{ c.body }}</p></div>{% empty %}<p class="note">No answer yet.</p>{% endfor %}
+          <form method="post">{% csrf_token %}<input type="hidden" name="action" value="platform_reply">
+            <textarea name="body" rows="3" maxlength="10000" required aria-label="Message to platform support"></textarea>
+            <p style="margin-top: 8px;"><input type="submit" value="Send to platform support"></p>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+
+    <div>
+      <div class="card">
+        <dl>
+          <dt>Number</dt><dd>#{{ ticket.pk }}</dd>
+          <dt>Type</dt><dd>{{ ticket.get_category_display }}</dd>
+          <dt>Reported</dt><dd>{{ ticket.created_at|date:"j M Y, H:i" }} by {{ ticket.reporter_label }}</dd>
+          {% if ticket.from_business %}<dt>Business</dt><dd>{{ ticket.from_business }} (their ticket #{{ ticket.from_ticket_id }})</dd>{% endif %}
+          {% if ticket.page %}<dt>Page</dt><dd><code>{{ ticket.page }}</code></dd>{% endif %}
+          {% if handler and ticket.browser %}<dt>Browser</dt><dd class="note">{{ ticket.browser }}</dd>{% endif %}
+          <dt>First answer due</dt><dd>{{ ticket.response_due|date:"j M Y, H:i" }}{% if ticket.first_response_at %} · answered {{ ticket.first_response_at|date:"j M Y, H:i" }}{% endif %}</dd>
+          <dt>Assigned to</dt><dd>{{ ticket.assigned_to.email|default:"Nobody yet" }}</dd>
+        </dl>
+      </div>
+      {% if handler %}
+        <div class="card">
+          <h2>Change</h2>
+          <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="status">
+            <label>Status<select name="status">{% for value, label in statuses %}<option value="{{ value }}" {% if value == ticket.status %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+            <input type="submit" value="Save">
+          </form>
+          {% if can_assign %}
+            <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="assign">
+              <label>Assign to<select name="assigned_to"><option value="">Nobody</option>{% for p in people %}<option value="{{ p.pk }}" {% if ticket.assigned_to_id == p.pk %}selected{% endif %}>{{ p.email }}</option>{% endfor %}</select></label>
+              <input type="submit" value="Save">
+            </form>
+          {% endif %}
+        </div>
+        {% if can_assign and not on_platform and not ticket.platform_ticket_id %}
+          <div class="card">
+            <h2>Need help from platform support?</h2>
+            <p class="note">Sends a copy of this ticket (title, description, page, browser) to the platform team. You see their answers here.</p>
+            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="platform">
+              <textarea name="note" rows="2" maxlength="2000" placeholder="Optional note for platform support" aria-label="Note for platform support"></textarea>
+              <p style="margin-top: 8px;"><input type="submit" value="Send to platform support"></p>
+            </form>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

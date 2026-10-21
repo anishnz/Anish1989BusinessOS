@@ -307,15 +307,17 @@ class TestRuns:
         give_role("tenant_a", clerk, "shop_staff")
         self._fail(monkeypatch)
 
+        alerts = lambda: [m for m in mail.outbox if m.subject.startswith("System check failed")]  # noqa: E731 - tickets also email (test_tickets.py)
         first = run_in("tenant_a", SCHEDULE, live=False)
         assert first.status == "failed" and first.alert_sent
-        assert len(mail.outbox) == 1
+        assert len(alerts()) == 1
+        mail.outbox[:] = alerts()
         assert sorted(mail.outbox[0].to) == ["it@a.test", "sysadmin@a.test"]
         assert "Cache (Redis): Broken." in mail.outbox[0].body and "Tenant A Butchery" in mail.outbox[0].subject
         assert "https://tenant-a.localhost/system-check/" in mail.outbox[0].body
 
         run_in("tenant_a", SCHEDULE, live=False)  # still red: no second email
-        assert len(mail.outbox) == 1
+        assert len(alerts()) == 1
         monkeypatch.undo()
         import apps.health.checks as health_checks
 
@@ -323,7 +325,7 @@ class TestRuns:
         run_in("tenant_a", SCHEDULE, live=False)  # back to amber
         self._fail(monkeypatch)
         run_in("tenant_a", SCHEDULE, live=False)  # red again: new email
-        assert len(mail.outbox) == 2
+        assert len(alerts()) == 2
 
     def test_button_failures_do_not_email(self, tenant_a, monkeypatch):
         admin = make_user("tenant_a", "sysadmin@a.test", staff=True)

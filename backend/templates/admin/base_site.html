@@ -15,6 +15,8 @@
     {% if request.tenant.schema_name == "public" %}<a href="{% url 'platform_people' %}">Businesses and users</a> /{% else %}<a href="{% url 'dashboard' %}">Dashboard</a> /{% endif %}
     <a href="{% url 'system_check' %}">Check system</a> /
     <a href="{% url 'backups' %}">Backups</a> /
+    <a href="{% url 'ticket_list' %}">Tickets</a> /
+    <a href="{% url 'ticket_new' %}?from={{ request.path|urlencode }}">Report a problem</a> /
     <a href="{% url 'accounts:mfa_manage' %}">Two-step verification</a> /
   {% endif %}
   {{ block.super }}

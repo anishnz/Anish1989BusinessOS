@@ -50,6 +50,12 @@ def _can(request, action: str) -> bool:
     return policy.require(request.user, _code(action), request=request)
 
 
+def _can_ticket(request) -> bool:
+    from apps.tickets.services import can
+
+    return can(request.user, "create")
+
+
 def _key_info() -> dict:
     if not on_platform():
         return {}
@@ -88,6 +94,7 @@ def _context(request, **extra) -> dict:
         "active": active,
         "history": services.history(),
         "can_configure": _can(request, "configure"),
+        "can_ticket": _can_ticket(request),
         "default_folder": services.default_folder_name(),
         "server_size": _folder_size(),
         "server_count": BackupRun.objects.filter(kind=BackupRun.Kind.BACKUP, kept_locally=True).count(),

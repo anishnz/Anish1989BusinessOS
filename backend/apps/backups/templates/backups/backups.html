@@ -170,7 +170,7 @@
           <td>{% if run.kind == "backup" and run.finished %}{{ run.get_drive_status_display }}{% elif run.details.source %}from {{ run.details.source }}{% else %}–{% endif %}</td>
           <td>{% if run.run_by_email %}{{ run.run_by_email }}{% else %}{{ run.get_trigger_display }}{% endif %}</td>
         </tr>
-        {% if run.message %}<tr><td colspan="6" class="msg">{{ run.message }}{% for t in run.details.missing %}<br>Missing table: {{ t }}{% endfor %}{% for t in run.details.different %}<br>{{ t.0 }}: {{ t.1 }} rows at backup time, {{ t.2 }} after restore{% endfor %}</td></tr>{% endif %}
+        {% if run.message %}<tr><td colspan="6" class="msg">{% if can_ticket and run.status == "failed" %}<form method="post" action="{% url 'ticket_from_backup' run.pk %}" style="float: right; margin: 0 0 4px 8px;">{% csrf_token %}<input type="submit" value="Create ticket"></form>{% endif %}{{ run.message }}{% for t in run.details.missing %}<br>Missing table: {{ t }}{% endfor %}{% for t in run.details.different %}<br>{{ t.0 }}: {{ t.1 }} rows at backup time, {{ t.2 }} after restore{% endfor %}</td></tr>{% endif %}
       {% endfor %}
     </tbody></table>
   {% endif %}

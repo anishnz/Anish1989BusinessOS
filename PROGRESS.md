@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.14 are done. Next: **1.15 Basic ticket system**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.15 are done. Next: **1.16 First-login setup wizard with per-tenant Google Drive backup connection**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -162,7 +162,16 @@ Open a new chat in the ERP CRM project and type:
   - Still to do by Anish: create the Google sign-in app in Google Cloud (user guide 12.6), save the `BACKUP_ENCRYPTION_KEYS` line from `.env` in a password manager
   - User guide chapter: docs/user-guide/12-backups.md
   - 618 tests pass
-- [ ] 1.15 Basic ticket system
+- [x] 1.15 Basic ticket system (done 21 Oct 2026)
+  - "Report a problem" on every admin page (page path, browser and time added; no secrets), "Tickets" list with tabs and numbers (open, new, overdue, average first answer)
+  - Staff see their own tickets; Tickets – Edit sees all and writes internal notes; Tickets – Assign assigns and sends to platform support
+  - Statuses New / In progress / Waiting for reply / Resolved / Closed; first-answer targets by priority (1 h, 4 h, 24 h, 3 days)
+  - Platform support: a copy in the platform, answers shown on the business's ticket, replies both ways, emails to the right people
+  - Automatic tickets for failed scheduled checks and backups (one open ticket per problem); "Create ticket" buttons on Check system and Backups
+  - API for the staff app; IT Admins get the Tickets permissions in new businesses
+  - Not yet: file uploads (screenshots), in-app notifications, customer tickets from WhatsApp or the website
+  - User guide chapter: docs/user-guide/13-tickets.md
+  - 640 tests pass
 - [ ] 1.16 First-login setup wizard with per-tenant Google Drive backup connection
 - [ ] 1.17 In-app user guide framework and "Getting started" chapters
 

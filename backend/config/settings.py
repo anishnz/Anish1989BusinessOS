@@ -63,6 +63,7 @@ SHARED_APPS = [
     "apps.vault",
     "apps.health",
     "apps.backups",
+    "apps.tickets",
     "apps.core",
 ]
 
@@ -81,6 +82,7 @@ TENANT_APPS = [
     "apps.vault",
     "apps.health",
     "apps.backups",
+    "apps.tickets",
     # Business data (only inside each business's schema)
     "apps.catalog",
     "apps.customers",

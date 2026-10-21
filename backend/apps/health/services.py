@@ -59,8 +59,23 @@ def run(trigger: str, *, user=None, live: bool = True) -> CheckRun:
     if trigger == CheckRun.Trigger.SCHEDULE and status == checks.FAILED and (previous is None or previous.status != checks.FAILED):
         record.alert_sent = send_alert(record)
         record.save(update_fields=["alert_sent"])
+    if trigger == CheckRun.Trigger.SCHEDULE and status == checks.FAILED:
+        _ticket(record)
     _trim_history()
     return record
+
+
+def _ticket(record: CheckRun) -> None:
+    """One open ticket while the scheduled checks stay red (task 1.15)."""
+    from apps.tickets.services import system_ticket
+
+    red = [r for r in record.results if r["status"] == checks.FAILED]
+    lines = "\n".join(f"- {r['area']} / {r['label']}: {r['message']}" for r in red)
+    try:
+        system_ticket(source="check", key="check:scheduled", title=f"Check system: {len(red)} failed check(s)",
+                      description=f"The automatic check at {timezone.localtime(record.started_at):%H:%M on %d %b %Y} found:\n\n{lines}")
+    except Exception:  # noqa: BLE001 - a ticket problem must not break the checks
+        log.exception("Could not create a ticket for a failed check")
 
 
 def _trim_history() -> None:

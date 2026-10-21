@@ -5,6 +5,8 @@ from django.urls import include, path
 from apps.accounts.urls import api_urlpatterns, password_reset_urlpatterns, web_urlpatterns
 from apps.backups.urls import api_urlpatterns as backup_api_urlpatterns
 from apps.backups.urls import web_urlpatterns as backup_web_urlpatterns
+from apps.tickets.urls import api_urlpatterns as ticket_api_urlpatterns
+from apps.tickets.urls import web_urlpatterns as ticket_web_urlpatterns
 from apps.core.views import health
 from apps.health.urls import api_urlpatterns as check_api_urlpatterns
 from apps.health.urls import web_urlpatterns as check_web_urlpatterns
@@ -24,5 +26,7 @@ shared_urlpatterns = [
     path("api/system-check/", include(check_api_urlpatterns)),
     *backup_web_urlpatterns,
     path("api/backups/", include(backup_api_urlpatterns)),
+    *ticket_web_urlpatterns,
+    path("api/tickets/", include(ticket_api_urlpatterns)),
     path("admin/", admin.site.urls),
 ]

@@ -90,7 +90,7 @@ def test_route_lists_are_complete():
         assert expected in BUSINESS_ROUTES, expected
     assert "platform/people/<slug:schema>/<int:user_id>/" in PLATFORM_ROUTES
     assert "platform/businesses/<slug:schema>/addresses/" in PLATFORM_ROUTES
-    for both in ("backups/", "backups/google/finish/", "backups/tool/", "api/backups/run/"):
+    for both in ("backups/", "backups/google/finish/", "backups/tool/", "api/backups/run/", "tickets/", "tickets/<int:pk>/", "api/tickets/<int:pk>/comments/"):
         assert both in BUSINESS_ROUTES and both in PLATFORM_ROUTES, both
     assert "oauth/google/callback/" in PLATFORM_ROUTES and "oauth/google/callback/" not in BUSINESS_ROUTES
     assert "api/products/" not in PLATFORM_ROUTES and "dashboard/" not in PLATFORM_ROUTES

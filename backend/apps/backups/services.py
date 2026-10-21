@@ -352,9 +352,23 @@ def _finish(run: BackupRun, status: str, message: str) -> None:
           metadata={"trigger": run.trigger, "by": run.run_by_email, "status": status, "size": run.size_bytes,
                     "drive": run.drive_status, "tables": run.details.get("tables"), "rows": run.details.get("rows")})
     newly_failed = status == BackupRun.Status.FAILED and (previous is None or previous.status != BackupRun.Status.FAILED)
+    if run.trigger == BackupRun.Trigger.SCHEDULE and status == BackupRun.Status.FAILED:
+        _ticket(run)
     if run.trigger == BackupRun.Trigger.SCHEDULE and (newly_failed or run.details.get("drive_newly_paused")):
         run.alert_sent = send_alert(run)
         run.save(update_fields=["alert_sent"])
+
+
+def _ticket(run: BackupRun) -> None:
+    """One open ticket while scheduled backups (or restore tests) keep failing (task 1.15)."""
+    from apps.tickets.services import system_ticket
+
+    what = run.get_kind_display()
+    try:
+        system_ticket(source="backup", key=f"backup:{run.kind}", title=f"{what} failed",
+                      description=f"The automatic {what.lower()} at {timezone.localtime(run.queued_at):%H:%M on %d %b %Y} failed:\n\n{run.message}")
+    except Exception:  # noqa: BLE001 - a ticket problem must not break the backup
+        log.exception("Could not create a ticket for a failed backup")
 
 
 def send_alert(run: BackupRun) -> bool:

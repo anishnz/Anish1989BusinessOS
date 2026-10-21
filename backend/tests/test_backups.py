@@ -208,6 +208,11 @@ def open_file(path, **kw):
         return fileformat.extract_archive(fh, str(folder), **kw), folder
 
 
+def alerts():
+    """Alert emails only (failures also open a ticket, which sends its own email: test_tickets.py)."""
+    return [m for m in mail.outbox if "needs attention" in m.subject]
+
+
 def platform_keys_now():
     return keys.platform_keys()
 
@@ -629,8 +634,8 @@ class TestBusinessBackup:
         google.revoked.add("rt-good")
         run = backup("tenant_a", trigger=SCHED)
         assert run.status == "failed" and run.drive_status == "paused" and "Connect Google Drive again" in run.message
-        assert len(mail.outbox) == 1 and mail.outbox[0].to == ["it@a.test"] and "Backup needs attention" in mail.outbox[0].subject
-        assert "rt-good" not in mail.outbox[0].body
+        assert len(alerts()) == 1 and alerts()[0].to == ["it@a.test"] and "Backup needs attention" in alerts()[0].subject
+        assert "rt-good" not in alerts()[0].body
         with schema_context("tenant_a"):
             s = services.site_settings()
             assert s.drive_paused_reason and services.drive_connection().status == "failed"
@@ -686,14 +691,14 @@ class TestSchedule:
         make_user("public", "root@platform.test", superuser=True)
         monkeypatch.setattr(dbtools, "dump", lambda *a, **k: (_ for _ in ()).throw(dbtools.DatabaseToolError("Disk full.")))
         assert backup(trigger=BUTTON).status == "failed"
-        assert mail.outbox == []  # a button run is watched by the person who clicked
+        assert alerts() == []  # a button run is watched by the person who clicked
         assert backup(trigger=SCHED).alert_sent is False  # already failing: no new email
         with schema_context("public"):
             BackupRun.objects.filter(status="failed").update(status="ok")
         run = backup(trigger=SCHED)
-        assert run.alert_sent and len(mail.outbox) == 1 and mail.outbox[0].to == ["root@platform.test"]
-        assert "Disk full." in mail.outbox[0].body and "/backups/" in mail.outbox[0].body
-        assert backup(trigger=SCHED).alert_sent is False and len(mail.outbox) == 1
+        assert run.alert_sent and len(alerts()) == 1 and alerts()[0].to == ["root@platform.test"]
+        assert "Disk full." in alerts()[0].body and "/backups/" in alerts()[0].body
+        assert backup(trigger=SCHED).alert_sent is False and len(alerts()) == 1
 
     def test_run_everywhere(self, public_tenant, tenant_a, tenant_b, google):
         from apps.licensing.services import suspend

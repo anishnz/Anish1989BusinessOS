@@ -35,6 +35,12 @@ def _require(request) -> None:
         raise PermissionDenied
 
 
+def _can_ticket(request) -> bool:
+    from apps.tickets.services import can
+
+    return can(request.user, "create")
+
+
 def _context(request, record, **extra):
     return {
         **admin.site.each_context(request),
@@ -45,6 +51,7 @@ def _context(request, record, **extra):
         "covers": "database, every business's database, background jobs, disk space, licences, saved connections, security and backups"
         if services.on_platform() else
         "database, background jobs, licence, web address, saved connections (API keys), email, WhatsApp, security and backups",
+        "can_ticket": _can_ticket(request),
         "where": "the platform" if services.on_platform() else (services.current_tenant().name if services.current_tenant() else ""),
         **extra,
     }

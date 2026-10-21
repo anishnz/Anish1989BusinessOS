@@ -26,7 +26,8 @@ TENANT_ROLES = {
     "it_admin": (
         "IT Admin",
         "Users, integrations, security settings and technical support.",
-        _all("users") | _all("integrations") | _only("settings", "view", "configure") | _only("roles", "view", "assign") | _only("audit", "view_audit"),
+        _all("users") | _all("integrations") | _only("settings", "view", "configure") | _only("roles", "view", "assign") | _only("audit", "view_audit")
+        | _all("tickets"),
     ),
     "business_owner": (
         "Business Owner",
