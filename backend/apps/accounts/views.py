@@ -97,15 +97,7 @@ def mfa_verify(request):
 
 def _password_ok(request) -> bool:
     """Re-check the password before changing MFA (with the normal lockout)."""
-    user = request.user
-    if security.is_locked_out(user.email):
-        return False
-    if user.check_password(request.POST.get("password", "")):
-        security.clear_failures(user.email)
-        return True
-    security.register_failure(user.email)
-    security.record_event(LoginEvent.Event.LOGIN_FAILED, request, user=user)
-    return False
+    return security.recheck_password(request)
 
 
 @never_cache

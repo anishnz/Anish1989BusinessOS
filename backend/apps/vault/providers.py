@@ -58,6 +58,7 @@ CATEGORIES = {
     "sms": "SMS",
     "payments": "Payments",
     "search": "Search and maps",
+    "backup": "Backups",
 }
 
 
@@ -213,6 +214,27 @@ def test_google_places(s, c):
     return _from_status(r, "Connected to Google Places.")
 
 
+def test_google_oauth_app(s, c):
+    from apps.backups import gdrive
+
+    try:
+        ok, message = gdrive.check_sign_in_app(c["client_id"], s["client_secret"])
+    except gdrive.DriveError as exc:
+        return TestResult(False, str(exc))
+    return TestResult(ok, message)
+
+
+def test_google_drive(s, c):
+    from apps.backups import gdrive
+
+    try:
+        token = gdrive.access_token(gdrive.Account(c["client_id"], s["client_secret"], s["refresh_token"]))
+        email = gdrive.account_email(token)
+    except gdrive.DriveError as exc:
+        return TestResult(False, str(exc))
+    return TestResult(True, f"Connected to Google Drive ({email}).")
+
+
 def test_bank_transfer(s, c):
     return TestResult(True, "Bank details saved. They are shown on invoices for manual bank transfer.")
 
@@ -265,6 +287,20 @@ PROVIDERS = {
         Provider("windcave", "Windcave", "payments", available=False, help="Coming in a later phase."),
         Provider("paypal", "PayPal", "payments", available=False, help="Coming in a later phase."),
         Provider("google_places", "Google Places (competitor search)", "search", (Field("api_key", "API key"),), (), test_google_places),
+        Provider(
+            "google_oauth_app", "Google sign-in app (for Google Drive backups)", "backup",
+            (Field("client_secret", "Client secret"),), (Field("client_id", "Client ID"),), test_google_oauth_app,
+            docs_url="https://console.cloud.google.com/apis/credentials",
+            help="An OAuth client of type 'Web application' from Google Cloud, with the Google Drive API turned on. "
+                 "Businesses without their own sign-in app use the platform's. See user guide 12.6.",
+        ),
+        Provider(
+            "google_drive", "Google Drive (backup copies)", "backup",
+            (Field("refresh_token", "Google access"), Field("client_secret", "Client secret")),
+            (Field("client_id", "Client ID"), Field("account_email", "Google account", False, kind="email")),
+            test_google_drive, extra={"connect_page": "backups"},
+            help="Connect it on the Backups page with 'Connect Google Drive'.",
+        ),
     ]
 }
 

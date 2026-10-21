@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.urls import path
 
 from apps.accounts import platform_pages
+from apps.backups.urls import public_urlpatterns as backup_public_urlpatterns
 from apps.tenants import platform_pages as tenant_pages
 
 from .urls_shared import shared_urlpatterns
@@ -17,5 +18,6 @@ platform_urlpatterns = [
 
 urlpatterns = [
     *platform_urlpatterns,
+    *backup_public_urlpatterns,
     *shared_urlpatterns,
 ]

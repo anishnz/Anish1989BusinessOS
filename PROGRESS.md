@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.13 are done. Next: **1.14 Backups every 6 hours to Google Drive (encrypted) and restore test**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) in progress.** Tasks 1.1 to 1.14 are done. Next: **1.15 Basic ticket system**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -150,7 +150,18 @@ Open a new chat in the ERP CRM project and type:
   - Page `/system-check/` and API `/api/system-check/`; "Check system" link in the admin header
   - User guide chapter: docs/user-guide/11-check-system.md
   - 546 tests pass
-- [ ] 1.14 Backups every 6 hours to Google Drive (encrypted) and restore test
+- [x] 1.14 Backups every 6 hours to Google Drive (encrypted) and restore test (done 21 Oct 2026)
+  - Platform: the whole database (every business) and uploaded files every 6 hours, encrypted with `BACKUP_ENCRYPTION_KEYS` (start scripts create it), kept on the server (Docker volume) and copied to Google Drive when connected
+  - Business: its own data only, encrypted with its own passphrase (shown once), copied to its own Google Drive
+  - Own encrypted file format (AES-256-GCM in chunks; changes and cut-off files detected) and a stand-alone tool to open a backup anywhere
+  - "Connect Google Drive" with Google sign-in (drive.file permission only, PKCE, one return address on the platform domain, finish only in the same session); access stored in the vault; password needed again
+  - Restore test every 7 days and with a button: newest backup (from Google Drive when there is a copy) loaded into a temporary database, every table's row count compared
+  - Keeps every backup 7 days, then daily to 30 days, then monthly for 12 months; failures email the admins once; removed Google access pauses copies until reconnected
+  - Backups page `/backups/`, API `/api/backups/`, Check system lines, `backup_now` and `open_backup` commands; Docker image now has the PostgreSQL 16 tools
+  - First restore test passed in the sandbox on 21 Oct 2026 (92 tables, all row counts matched)
+  - Still to do by Anish: create the Google sign-in app in Google Cloud (user guide 12.6), save the `BACKUP_ENCRYPTION_KEYS` line from `.env` in a password manager
+  - User guide chapter: docs/user-guide/12-backups.md
+  - 690 tests pass
 - [ ] 1.15 Basic ticket system
 - [ ] 1.16 First-login setup wizard with per-tenant Google Drive backup connection
 - [ ] 1.17 In-app user guide framework and "Getting started" chapters

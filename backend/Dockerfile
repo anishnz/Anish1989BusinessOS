@@ -22,10 +22,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# postgresql-client provides pg_isready and pg_dump (needed for backups later).
+# PostgreSQL 16 client tools (pg_isready, pg_dump, pg_restore) for backups. Debian 12's own
+# postgresql-client is version 15, and pg_dump refuses to copy a newer server, so they come
+# from the official PostgreSQL apt repository (key checked against its published fingerprint).
+ARG PG_MAJOR=16
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client curl \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /tmp/pgdg.asc \
+    && gpg --show-keys --with-colons /tmp/pgdg.asc | grep -q "^fpr:*B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8:" \
+    && gpg --dearmor -o /usr/share/keyrings/pgdg.gpg /tmp/pgdg.asc \
+    && echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client-${PG_MAJOR} \
+    && apt-get purge -y gnupg && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* /tmp/pgdg.asc \
+    && pg_dump --version | grep -q " ${PG_MAJOR}\."
 
 WORKDIR /app
 
@@ -46,7 +57,7 @@ RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoin
 
 # Run as a non-root user.
 RUN useradd --create-home --uid 1000 app \
-    && mkdir -p /app/staticfiles /app/media \
+    && mkdir -p /app/staticfiles /app/media /app/backups \
     && chown -R app:app /app
 USER app
 

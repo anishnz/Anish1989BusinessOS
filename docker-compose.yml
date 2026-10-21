@@ -16,6 +16,9 @@ x-app: &app
       frontend-src: ./frontend   # the React staff app, built inside the image
   env_file: .env
   restart: unless-stopped
+  volumes:
+    # Encrypted backups (task 1.14). Also copy them off this computer: Google Drive (Backups page).
+    - backups_data:/app/backups
   depends_on:
     db:
       condition: service_healthy
@@ -75,3 +78,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  backups_data:

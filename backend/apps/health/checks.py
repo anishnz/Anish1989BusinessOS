@@ -133,7 +133,7 @@ def check_workers() -> Result:
         workers = 0
     if not workers:
         return Result("workers", "System", label, WARNING,
-                      "No background worker answered. Scheduled checks, reminders and (later) backups will not run. Start the worker service.")
+                      "No background worker answered. Scheduled checks, reminders and backups will not run. Start the worker service.")
     return Result("workers", "System", label, OK, f"{workers} worker(s) answered.")
 
 
@@ -194,9 +194,10 @@ def check_staff_mfa(label: str = "Two-step verification") -> Result:
     return Result("mfa", "Security", label, OK, f"On for all {len(staff)} active staff account(s).")
 
 
-def check_backups() -> Result:
-    # Task 1.14 adds backups; this check then reports the last backup.
-    return Result("backups", "Backups", "Backups", NOT_SET_UP, "Backups are not set up yet.")
+def check_backups() -> list[Result]:
+    from apps.backups.checks import results
+
+    return results()
 
 
 # ---------------------------------------------------------------------------

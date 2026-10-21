@@ -61,11 +61,15 @@ def connection_list(request):
     available = [p for p in providers.PROVIDERS.values()]
     on_business_site = connection.schema_name != "public"
     webhook_url = request.build_absolute_uri("/webhooks/whatsapp/").replace("http://", "https://", 1) if on_business_site else ""
+    from apps.backups.google_connect import redirect_uri
+
+    google_redirect_url = redirect_uri(request)
     return render(
         request,
         "vault/connection_list.html",
         _context(request, title="Integrations and API keys", by_category=by_category, available=available, categories=providers.CATEGORIES,
-                 can_manage=access.allowed(request, "manage"), can_configure=access.allowed(request, "configure"), webhook_url=webhook_url),
+                 can_manage=access.allowed(request, "manage"), can_configure=access.allowed(request, "configure"), webhook_url=webhook_url,
+                 google_redirect_url=google_redirect_url),
     )
 
 

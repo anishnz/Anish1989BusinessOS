@@ -20,6 +20,7 @@ backend/media/
 # Backups and dumps (never commit data)
 *.dump
 *.sql.gz
+*.a1989backup
 backups/
 
 # Editors and OS

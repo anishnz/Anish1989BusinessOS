@@ -11,7 +11,7 @@
       {% for c in connections %}
         <tr>
           <td>{{ c.label }}{% if c.is_backup %} <em>(backup)</em>{% endif %}
-            {% if c.provider == "whatsapp_cloud" and webhook_url %}<br><small>Meta webhook callback URL: <code>{{ webhook_url }}</code><br>Verify token: <code>{{ c.config.webhook_verify_token }}</code></small>{% endif %}</td>
+            {% if c.provider == "google_oauth_app" and google_redirect_url %}<br><small>Authorised redirect URI in Google Cloud: <code>{{ google_redirect_url }}</code></small>{% endif %}{% if c.provider == "whatsapp_cloud" and webhook_url %}<br><small>Meta webhook callback URL: <code>{{ webhook_url }}</code><br>Verify token: <code>{{ c.config.webhook_verify_token }}</code></small>{% endif %}</td>
           <td>{{ c.provider }}</td>
           <td>{% for name, hint in c.secret_hints.items %}<code>{{ name }}: {{ hint }}</code><br>{% empty %}–{% endfor %}</td>
           <td>{{ c.get_status_display }}</td>
@@ -38,7 +38,7 @@
     <h2>Add a connection</h2>
     <ul>
     {% for p in available %}
-      <li>{% if p.available %}<a href="{% url 'vault:add' p.code %}">{{ p.label }}</a>{% else %}{{ p.label }} <em>(coming later)</em>{% endif %}
+      <li>{% if p.extra.connect_page %}<a href="{% url 'backups' %}">{{ p.label }}</a>{% elif p.available %}<a href="{% url 'vault:add' p.code %}">{{ p.label }}</a>{% else %}{{ p.label }} <em>(coming later)</em>{% endif %}
         {% if p.help %}<small> – {{ p.help }}</small>{% endif %}</li>
     {% endfor %}
     </ul>

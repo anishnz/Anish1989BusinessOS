@@ -62,6 +62,7 @@ SHARED_APPS = [
     "apps.licensing",
     "apps.vault",
     "apps.health",
+    "apps.backups",
     "apps.core",
 ]
 
@@ -79,6 +80,7 @@ TENANT_APPS = [
     "apps.rbac",
     "apps.vault",
     "apps.health",
+    "apps.backups",
     # Business data (only inside each business's schema)
     "apps.catalog",
     "apps.customers",
@@ -218,7 +220,24 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_BEAT_SCHEDULE = {
     "heartbeat": {"task": "health.heartbeat", "schedule": 5 * 60},
     "system-checks": {"task": "health.scheduled_checks", "schedule": env.int("SYSTEM_CHECK_EVERY_MINUTES", default=60) * 60},
+    # Looks every 15 minutes for sites whose next backup (every 6 hours by default) or restore test is due.
+    "backups": {"task": "backups.scheduled", "schedule": 15 * 60},
 }
+
+# ---------------------------------------------------------------------------
+# Backups (task 1.14). See docs/13-developer-setup.md, "Backups".
+# ---------------------------------------------------------------------------
+# Folder for the platform's own encrypted backups (a Docker volume in production).
+BACKUP_DIR = Path(env("BACKUP_DIR", default=str(BASE_DIR / "backups")))
+# Key(s) that encrypt the platform's full backups, like VAULT_MASTER_KEYS: "b1:<base64 32 bytes>".
+# Keep a copy outside the server: without it the backups cannot be opened.
+BACKUP_ENCRYPTION_KEYS = env("BACKUP_ENCRYPTION_KEYS", default="")
+# Keep every backup for 7 days, then one a day for 30 days, then one a month for 12 months.
+BACKUP_KEEP_ALL_DAYS = env.int("BACKUP_KEEP_ALL_DAYS", default=7)
+BACKUP_KEEP_DAILY_DAYS = env.int("BACKUP_KEEP_DAILY_DAYS", default=30)
+BACKUP_KEEP_MONTHLY = env.int("BACKUP_KEEP_MONTHLY", default=12)
+# Automatic restore test of the newest backup.
+BACKUP_RESTORE_TEST_EVERY_DAYS = env.int("BACKUP_RESTORE_TEST_EVERY_DAYS", default=7)
 
 # ---------------------------------------------------------------------------
 # REST API

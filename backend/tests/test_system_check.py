@@ -209,8 +209,9 @@ class TestChecks:
         with schema_context("tenant_a"):
             assert checks.check_audit_chain().status == "failed"
 
-    def test_backups_are_not_set_up_yet(self):
-        assert checks.check_backups().status == "not_set_up"
+    def test_business_backups_are_not_set_up_yet(self, tenant_a):
+        with schema_context("tenant_a"):
+            assert [r.status for r in checks.check_backups()] == ["not_set_up"]  # details: tests/test_backups.py
 
     def test_business_checks_cover_every_area(self, tenant_a):
         with schema_context("tenant_a"):
@@ -370,7 +371,7 @@ class TestPageAndApi:
         assert 'value="Check system"' in page and "have not run yet" in page
         response = admin.post("/system-check/", follow=True)
         page = response.content.decode()
-        assert "Checks finished" in page and "Database" in page and "Backups are not set up yet." in page
+        assert "Checks finished" in page and "Database" in page and "Backups to your own Google Drive are not set up" in page
         assert 'class="pill warning big"' in page
         again = admin.post("/system-check/", follow=True).content.decode()
         assert "less than a minute ago" in again

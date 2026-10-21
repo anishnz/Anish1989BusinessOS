@@ -84,11 +84,13 @@ def read_secrets(conn: Connection) -> dict:
 
 
 @transaction.atomic
-def create_connection(*, provider_code: str, label: str, config: dict, secrets: dict, is_backup=False, actor=None) -> Connection:
+def create_connection(*, provider_code: str, label: str, config: dict, secrets: dict, is_backup=False, actor=None, connect_page: str = "") -> Connection:
     try:
         provider = providers.get(provider_code)
     except KeyError:
         raise ValidationError("This provider is not available.") from None
+    if provider.extra.get("connect_page") and provider.extra["connect_page"] != connect_page:
+        raise ValidationError(f"{provider.label}: {provider.help}")
     clean_config, clean_secrets = _validate(provider, config, secrets, is_new=True)
     conn = Connection(
         provider=provider.code, category=provider.category, label=(label or provider.label).strip()[:100],
@@ -107,6 +109,8 @@ def update_connection(conn: Connection, *, label=None, config=None, secrets=None
     provider = providers.get(conn.provider)
     merged_config = {**conn.config, **(config or {})}
     clean_config, new_secrets = _validate(provider, merged_config, secrets or {}, is_new=False)
+    if provider.extra.get("connect_page") and (new_secrets or clean_config != conn.config):
+        raise ValidationError(f"{provider.label}: only the name can be changed here. {provider.help}")
     changed_secrets = sorted(new_secrets)
     if new_secrets:
         _store_secrets(conn, {**read_secrets(conn), **new_secrets})

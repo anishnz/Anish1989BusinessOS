@@ -42,6 +42,7 @@ PUBLIC_ROUTES = {
     "webhooks/whatsapp/",  # checked by the Meta signature instead (test_inbox.py)
     "app/",  # the React page itself holds no data; its API calls are checked
     "app/<path:rest>",
+    "oauth/google/callback/",  # Google's return address: protected by the signed state and the session check (test_backups.py)
 }
 # Pages about the logged-in person themselves.
 SELF_ROUTES = {r for r in [
@@ -89,6 +90,9 @@ def test_route_lists_are_complete():
         assert expected in BUSINESS_ROUTES, expected
     assert "platform/people/<slug:schema>/<int:user_id>/" in PLATFORM_ROUTES
     assert "platform/businesses/<slug:schema>/addresses/" in PLATFORM_ROUTES
+    for both in ("backups/", "backups/google/finish/", "backups/tool/", "api/backups/run/"):
+        assert both in BUSINESS_ROUTES and both in PLATFORM_ROUTES, both
+    assert "oauth/google/callback/" in PLATFORM_ROUTES and "oauth/google/callback/" not in BUSINESS_ROUTES
     assert "api/products/" not in PLATFORM_ROUTES and "dashboard/" not in PLATFORM_ROUTES
     # Regex routes only exist inside Django's admin, which wraps every view in its login check.
     for urlconf in ("config.urls", "config.urls_public"):

@@ -64,6 +64,25 @@ if ($envText -notmatch "(?m)^VAULT_MASTER_KEYS=\S+") {
     Write-Host "IMPORTANT: back up the VAULT_MASTER_KEYS line from .env (for example in a password manager)." -ForegroundColor Yellow
 }
 
+# 2c. Make sure there is a backup encryption key (task 1.14; also for older .env files).
+$envText = Get-Content ".env" -Raw
+if ($envText -notmatch "(?m)^BACKUP_ENCRYPTION_KEYS=\S+") {
+    Write-Host "Creating the backup encryption key..."
+    $keyBytes = New-Object byte[] 32
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $rng.GetBytes($keyBytes)
+    $rng.Dispose()
+    $backupKey = "b1:" + [Convert]::ToBase64String($keyBytes)
+    if ($envText -match "(?m)^BACKUP_ENCRYPTION_KEYS=") {
+        $envText = $envText -replace "(?m)^BACKUP_ENCRYPTION_KEYS=.*$", "BACKUP_ENCRYPTION_KEYS=$backupKey"
+    } else {
+        $envText = $envText.TrimEnd() + "`nBACKUP_ENCRYPTION_KEYS=$backupKey`n"
+    }
+    $envText = $envText -replace "`r`n", "`n"
+    [System.IO.File]::WriteAllText((Join-Path $PSScriptRoot ".env"), $envText, (New-Object System.Text.UTF8Encoding $false))
+    Write-Host "IMPORTANT: back up the BACKUP_ENCRYPTION_KEYS line from .env too. Without it, backups cannot be opened." -ForegroundColor Yellow
+}
+
 # 3. Get images: pull pre-built ones, build only what could not be pulled.
 Write-Host "Pulling images (first time can take a few minutes)..."
 docker compose pull --ignore-pull-failures

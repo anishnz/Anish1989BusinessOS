@@ -34,6 +34,17 @@ if ! grep -Eq '^VAULT_MASTER_KEYS=[^[:space:]]+' .env; then
   echo "IMPORTANT: back up the VAULT_MASTER_KEYS line from .env (for example in a password manager)."
 fi
 
+if ! grep -Eq '^BACKUP_ENCRYPTION_KEYS=[^[:space:]]+' .env; then
+  echo "Creating the backup encryption key..."
+  key="b1:$(openssl rand -base64 32)"
+  if grep -q '^BACKUP_ENCRYPTION_KEYS=' .env; then
+    sed -i.bak "s|^BACKUP_ENCRYPTION_KEYS=.*|BACKUP_ENCRYPTION_KEYS=${key}|" .env && rm -f .env.bak
+  else
+    printf '\nBACKUP_ENCRYPTION_KEYS=%s\n' "$key" >> .env
+  fi
+  echo "IMPORTANT: back up the BACKUP_ENCRYPTION_KEYS line from .env too. Without it, backups cannot be opened."
+fi
+
 echo "Pulling images (first time can take a few minutes)..."
 docker compose pull --ignore-pull-failures
 echo "Starting services..."

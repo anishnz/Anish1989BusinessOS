@@ -448,6 +448,32 @@ Tests replace `ping_workers` (conftest) so no test waits for a Celery reply.
 
 Adding a check: write a function that returns a `Result` (or a list), and add it to `business_checks()` or `platform_checks()` through `_safe()`. Messages must say what to do, in plain words, and never include secrets, host names or exception text.
 
+## Backups (task 1.14)
+
+Code: `apps/backups/` (in both SHARED_APPS and TENANT_APPS). Tests: `tests/test_backups.py` (real `pg_dump` and `pg_restore` against the test database, and a fake Google).
+
+| Piece | Where |
+|---|---|
+| File format | `fileformat.py`: `.a1989backup` = header + AES-256-GCM chunks; inside, a tar with `manifest.json`, `database.dump` (pg_dump custom format) and `media/`. No Django code, so the same file is the stand-alone tool (`/backups/tool/`) |
+| Keys | `keys.py`: platform key from `BACKUP_ENCRYPTION_KEYS` (dev key from `DJANGO_SECRET_KEY` only with DEBUG on); business passphrase sealed with the vault key in `BackupSettings` |
+| Database | `dbtools.py`: `dump()` exports a snapshot, counts every table's rows in it, then runs `pg_dump --snapshot`; `restored_copy()` makes a temporary database `a1989_restoretest_<time>_<hex>`, runs `pg_restore`, yields a cursor and always drops it. The password goes in `PGPASSWORD`, never on the command line |
+| Runs | `services.py`: `queue()` (button: a `BackupRun`, then the `backups.run` task after commit), `execute()` (one run at a time per site, cache lock), `_backup()`, `_restore_test()`, `cleanup()`, `run_due()`, `run_everywhere()` |
+| Google | `gdrive.py` (token refresh, folder, resumable upload in 8 MiB parts with MD5 check, list, delete, download) and `google_connect.py` (sign-in with PKCE through `/oauth/google/callback/` on the platform address) |
+| Page / API | `/backups/`, `/backups/google/finish/`, `/backups/tool/`, `GET /api/backups/`, `POST /api/backups/run/` (`{"kind": "backup" or "restore_test"}`; 202, or 409 if not possible). View: `settings.view` / `platform_settings.view`; buttons and changes: `settings.configure` / `platform_settings.configure` |
+| Schedule | `backups.scheduled` every 15 minutes: platform first, then every open business that is set up. A backup is due `every_hours` after the last one (1 hour after a failed one); a restore test every `BACKUP_RESTORE_TEST_EVERY_DAYS` days (1 day after a failed one) |
+| Check system | `apps/backups/checks.py`: backup key (platform), last backup, Google Drive copy, restore test |
+| Storage | `BACKUP_DIR` (`/app/backups`, the `backups_data` Docker volume): `platform/`, `businesses/<schema>/`, `tmp/` (work folders, removed after each run) |
+
+Settings (`.env`): `BACKUP_ENCRYPTION_KEYS` (required when DEBUG is off; the start scripts create `b1:...`), `BACKUP_DIR`, `BACKUP_KEEP_ALL_DAYS` (7), `BACKUP_KEEP_DAILY_DAYS` (30), `BACKUP_KEEP_MONTHLY` (12), `BACKUP_RESTORE_TEST_EVERY_DAYS` (7).
+
+Notes:
+- `pg_dump` must be at least as new as the server. The Docker image installs PostgreSQL 16 client tools; a mismatch gives a clear message.
+- Backups need a direct database connection (not a transaction-pooling proxy such as PgBouncer), because `pg_dump --snapshot` uses an exported snapshot.
+- The restore test needs the CREATEDB right (the Docker database user has it). Without it the test reads all data but cannot load it, and shows amber.
+- To rotate the backup key: put a new key first, keep the old one after it (`b2:NEW,b1:OLD`). New backups use `b2`; old ones still open. Remove `b1` only after the old backups have expired.
+- Disaster recovery: new server with the same `.env` keys, `python manage.py open_backup <file> <folder>`, then `pg_restore --no-owner --no-privileges -d <empty database> <folder>/database.dump`, then copy `media/` back. Practise it on a test server before the pilots.
+- Google sign-in app: see user guide 12.6. Redirect URI: `https://<platform address>/oauth/google/callback/` (laptop: `http://localhost:8000/oauth/google/callback/`).
+
 ## Useful commands
 
 | Task | Command |
@@ -466,6 +492,8 @@ Adding a check: write a function that returns a `Result` (or a list), and add it
 | Expire orders not confirmed in time | `python manage.py expire_orders --minutes 60` |
 | Send a test email through the saved Gmail/SMTP connection | `python manage.py send_test_email --to you@example.com [--schema <slug>]` |
 | Run the system checks (platform, one business, or all) | `python manage.py check_system [--schema <slug>] [--all] [--no-live]` |
+| Make a backup now (platform, or one business), and test restoring it | `python manage.py backup_now [--schema <slug>] [--restore-test]` |
+| Open a backup file into a folder (asks for a business passphrase) | `python manage.py open_backup <file> <folder>` |
 | Make migrations after model changes | `python manage.py makemigrations` |
 
 Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail`, `services`, `education_consultancy`, `e_learning`, `jobs`, `other`.

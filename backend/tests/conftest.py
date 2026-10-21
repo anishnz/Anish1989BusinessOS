@@ -50,6 +50,14 @@ def vault_master_key(settings):
 
 
 @pytest.fixture(autouse=True)
+def backup_key(settings, tmp_path):
+    """Every test gets a test-only backup key and its own backup folder (task 1.14)."""
+    if not settings.BACKUP_ENCRYPTION_KEYS:
+        settings.BACKUP_ENCRYPTION_KEYS = "test:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="
+    settings.BACKUP_DIR = tmp_path / "backups"
+
+
+@pytest.fixture(autouse=True)
 def reset_schema_to_public():
     yield
     connection.set_schema_to_public()

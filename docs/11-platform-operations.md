@@ -64,7 +64,7 @@ AI content generation:
 
 Each dashboard has a **Check system** button. One click runs the checks for that dashboard and shows the results as green (OK), amber (warning) or red (failed).
 
-Done in task 1.13 for the Super Admin and tenant admin rows below (core checks; user guide chapter 11). Backups, SSL certificates and the error rate are added with their features. The other dashboards get their checks with their modules.
+Done in task 1.13 for the Super Admin and tenant admin rows below (core checks; user guide chapter 11). Backups were added in task 1.14. SSL certificates and the error rate are added with their features. The other dashboards get their checks with their modules.
 
 | Dashboard | What it checks |
 |---|---|
@@ -83,6 +83,8 @@ Rules:
 
 ## 5. Backups to Google Drive
 
+Built in task 1.14 (user guide chapter 12, decisions D-094 to D-102). The first-login setup wizard (task 1.16) will walk the IT admin through the same steps as the Backups page.
+
 | Item | Plan |
 |---|---|
 | Frequency | Every 6 hours (4 times a day), configurable |
@@ -91,9 +93,9 @@ Rules:
 | Off-site copy | Uploaded to the platform owner's Google Drive |
 | Encryption | Each backup is encrypted **before** upload. The encryption key is kept separately, never in Google Drive. |
 | Google Drive access | A dedicated Google account or service account with access to one backup folder only |
-| Retention | For example: keep 6-hourly backups for 7 days, daily for 30 days, monthly for 12 months (to confirm) |
+| Retention | Keep every backup for 7 days, then one a day for 30 days, then one a month for 12 months (settings; D-099) |
 | Monitoring | Each run is logged (time, size, checksum, status). A failed backup alerts an admin and can create a ticket. |
-| Restore tests | Restore a backup to a test server regularly (for example monthly) and record the result |
+| Restore tests | Automatic every 7 days and with a button: the newest backup is loaded into a temporary database and every table's row count is compared (D-098). A full disaster-recovery practice on a test server is still planned before the pilots |
 | Per-tenant export | A tenant admin can download its own data at any time |
 | Per-tenant Google Drive | Each business sends backups of its own data to its own Google Drive (see below) |
 

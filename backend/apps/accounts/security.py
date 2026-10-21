@@ -102,6 +102,22 @@ def clear_failures(email: str) -> None:
 # ---------------------------------------------------------------------------
 # MFA
 # ---------------------------------------------------------------------------
+def recheck_password(request) -> bool:
+    """
+    Ask for the password again before a sensitive change (MFA, backups). Uses
+    the normal lockout: 5 wrong passwords lock the account for a while.
+    """
+    user = request.user
+    if is_locked_out(user.email):
+        return False
+    if user.check_password(request.POST.get("password", "")):
+        clear_failures(user.email)
+        return True
+    register_failure(user.email)
+    record_event(LoginEvent.Event.LOGIN_FAILED, request, user=user)
+    return False
+
+
 def totp_issuer(device) -> str:
     tenant = getattr(connection, "tenant", None)
     base = "Anish1989 Business OS"

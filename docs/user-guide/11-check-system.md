@@ -1,6 +1,6 @@
 # 11. Check system
 
-*User guide, chapter 11 · Last updated 21 October 2026*
+*User guide, chapter 11 · Last updated 21 October 2026 (backups added)*
 
 **Who this is for:** System Admins, IT Admins and Business Owners of a business, and the platform Super Admin.
 
@@ -46,13 +46,17 @@ Each check shows a short message that says what to do. Messages never show passw
 | Connections | WhatsApp messages | When the last call from Meta arrived, and whether it was accepted |
 | Security | Two-step verification | Staff who have not set it up, or have it switched off |
 | Security | Audit log | The audit log is complete and unchanged |
-| Backups | Backups | Not set up yet (comes in task 1.14) |
+| Backups | Backups | The last backup worked and is not older than planned. Grey "Not set up" until backups to your Google Drive are set up (chapter 12) |
+| Backups | Copy in Google Drive | The last backup was copied to your Google Drive, and Google still accepts the access |
+| Backups | Restore test | The last restore test passed, and it is not older than about two weeks |
 
 The checks only read and test. They never send messages, charge money or change business data. Testing a connection updates its **Connected / Failed** status, like the Test button.
 
 ## 11.4 What the platform check tests (Super Admin)
 
-Database, every business's database, cache, background worker, scheduled jobs, disk space, licences that need attention (ending within 7 days, grace period, expired), businesses with failed connections or a failed last check, the platform's own connections, the secret vault master key, security settings, platform admins' two-step verification, the platform audit log, and backups.
+Database, every business's database, cache, background worker, scheduled jobs, disk space, licences that need attention (ending within 7 days, grace period, expired), businesses with failed connections or a failed last check, the platform's own connections, the secret vault master key, security settings, platform admins' two-step verification, the platform audit log, and backups (the backup encryption key, the last backup, the copy in Google Drive and the last restore test; chapter 12).
+
+On a laptop, **Copy in Google Drive** shows **Needs attention** until a Google Drive is connected on the platform's Backups page.
 
 On a laptop, **Security settings** always shows **Needs attention**, because development mode is on there. That is fine on a laptop, but never on a real server.
 
