@@ -117,6 +117,11 @@ This document records each decision, the reason for it, and its status. A decisi
 | D-109 | Business details | Stored in the business's own schema (trading name, phone, customer email, address, GST number, website); the registered name stays with the Super Admin | Used later on invoices, websites and messages; the business changes its own details | Decided (21 Oct 2026) |
 | D-110 | Backups reminder | A yellow line on every admin page until the business's backups to its Google Drive are set up (not shown on the platform site) | The wizard can be skipped, the reminder cannot be missed | Decided (21 Oct 2026) |
 | D-111 | Way back from Backups to the wizard | Only addresses starting with `/setup/` are accepted as "next"; anything else goes to the Backups page | Prevents open redirects after a password or Google sign-in | Decided (21 Oct 2026) |
+| D-112 | One source for the user guide | The chapters in `docs/user-guide/` are shown inside the app at `/guide/` (copied into the Docker image) and on GitHub | Written once, never out of step between the two | Decided (22 Oct 2026) |
+| D-113 | Showing the guide | A small built-in Markdown reader that escapes all HTML and allows only relative, http(s) and mailto links; no new Python package | Chapters can never add scripts; no change to the locked packages | Decided (22 Oct 2026) |
+| D-114 | Who can read the guide | Every signed-in person of the site, staff app users included; login still needed | Help must be there for everyone who uses the system; the guide has no business data but describes internal procedures | Decided (22 Oct 2026) |
+| D-115 | Guide screenshots | `tools/guide_screenshots.py` (Playwright, run on a computer, not the server) signs in to a test business and saves the pages listed in `docs/user-guide/screenshots.json`; pictures are committed with the chapters | Pictures stay up to date with one command; never made from real customer data | Decided (22 Oct 2026) |
+| D-116 | Help for each page | The header's **Help** link opens the chapter about the current page (a fixed list in `apps/guide/services.py`); the staff app has a Help item | People find the right chapter without searching | Decided (22 Oct 2026) |
 
 ## Why schema per tenant?
 

@@ -21,6 +21,8 @@ Checks on business details:
 - Postcode: 4 digits.
 - Website: `www.example.co.nz` is fine. `https://` is added for you.
 
+![The first step of the setup: business details](images/setup-business.png)
+
 ## 14.2 The backups step
 
 1. **Backup passphrase.** Enter your password and click **Make a passphrase for me**. Save the passphrase now (it is shown once), then click **I have saved it**. You come back to the setup.
@@ -28,6 +30,8 @@ Checks on business details:
 3. **Test backup.** Click **Make a test backup**. The page updates by itself. When it shows **✓ Backup working**, the backup was made, encrypted and copied to your Google Drive.
 
 If **Connect Google Drive** is not offered, the platform's Google sign-in app is not set up yet. Skip the step and ask the platform Super Admin.
+
+![The backups step of the setup](images/setup-backups.png)
 
 ## 14.3 Later
 

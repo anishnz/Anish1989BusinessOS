@@ -1,0 +1,12 @@
+{% extends "guide/base.html" %}
+{% block main %}
+  <h1>User guide</h1>
+  <p>How to use Anish1989 Business OS, step by step. New here? Start with <a href="{% url 'guide_chapter' '00-getting-started' %}">Getting started</a>.</p>
+  <p class="quiet">Tip: every admin page has a <strong>Help</strong> link at the top that opens the chapter about that page.</p>
+  {% for group, items in contents %}
+    <h2>{{ group }}</h2>
+    <ul>{% for c in items %}<li><a href="{% url 'guide_chapter' c.slug %}">{{ c.title }}</a></li>{% endfor %}</ul>
+  {% empty %}
+    <p>The guide chapters are missing on this server (GUIDE_DIR).</p>
+  {% endfor %}
+{% endblock %}

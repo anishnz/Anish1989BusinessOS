@@ -1,0 +1,17 @@
+{% extends "guide/base.html" %}
+{% block main %}
+  <article>
+    {{ chapter.title_html|safe }}
+    {% if chapter.headings|length > 2 %}
+      <div class="on-this-page" role="navigation" aria-label="On this page">
+        <strong>On this page</strong>
+        <ul>{% for h in chapter.headings %}{% if h.level == 2 %}<li><a href="#{{ h.anchor }}">{{ h.text }}</a></li>{% endif %}{% endfor %}</ul>
+      </div>
+    {% endif %}
+    {{ chapter.body_html|safe }}
+  </article>
+  <nav class="pager" aria-label="Previous and next chapter">
+    <span>{% if previous %}<a href="{% url 'guide_chapter' previous.slug %}">← {{ previous.title }}</a>{% endif %}</span>
+    <span>{% if following %}<a href="{% url 'guide_chapter' following.slug %}">{{ following.title }} →</a>{% endif %}</span>
+  </nav>
+{% endblock %}

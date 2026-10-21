@@ -15,6 +15,8 @@ The page you came from, your browser and the time are added automatically. Only 
 
 You get an email when someone answers or changes the status. Click **Tickets** at the top to see your tickets. You can add messages to them, for example to answer a question.
 
+![The Report a problem page](images/report-a-problem.png)
+
 ## 13.2 Who sees a ticket
 
 | Person | Sees |
@@ -55,6 +57,8 @@ On a ticket you can:
 | Low | 3 days |
 
 A ticket without an answer after this time shows **answer overdue**.
+
+![The list of tickets](images/tickets-list.png)
 
 ## 13.4 Send a ticket to platform support
 

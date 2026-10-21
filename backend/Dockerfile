@@ -52,6 +52,11 @@ COPY . .
 COPY --from=frontend-build /frontend/dist /opt/frontend-dist
 ENV FRONTEND_DIST=/opt/frontend-dist
 
+# The user guide chapters and pictures (docs/user-guide), shown inside the app at /guide/.
+# They arrive as a third build context called "guide-src".
+COPY --from=guide-src . /opt/guide
+ENV GUIDE_DIR=/opt/guide
+
 # Make the entrypoint work even if it was checked out with Windows line endings.
 RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 

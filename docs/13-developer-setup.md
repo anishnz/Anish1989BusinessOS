@@ -500,6 +500,21 @@ Code: `apps/setup/` (TENANT_APPS only). Tests: `tests/test_setup.py`.
 
 Tests: the two test businesses are marked "setup finished" in `conftest.py`; `tests/test_setup.py` uses the `fresh` fixture to undo that.
 
+## In-app user guide (task 1.17)
+
+Code: `apps/guide/` (no models). Tests: `tests/test_guide.py`.
+
+| Piece | Where |
+|---|---|
+| Chapters | `docs/user-guide/NN-name.md`. `GUIDE_DIR` points there on a laptop; the Docker image copies the folder to `/opt/guide` (third build context `guide-src`, in `docker-compose*.yml` and CI) |
+| Order and groups | `GROUPS` in `apps/guide/services.py`; chapters not listed appear under "More" |
+| Markdown | `apps/guide/markdown.py`: headings (with anchors), paragraphs, lists, tables, quotes, code, bold, italics, links, images. Everything is HTML-escaped; links may only be relative, http(s) or mailto. `chapter.md` links become `/guide/chapter/`, `images/x.png` becomes `/guide/images/x.png` |
+| Pages | `/guide/`, `/guide/search/?q=`, `/guide/<chapter>/`, `/guide/images/<name>` (letters, numbers and dashes; .png/.jpg/.webp). Login needed; any signed-in person |
+| Help link | Context processor `apps.guide.context.help_link` → `help_url` (longest matching prefix in `PAGE_HELP`) |
+| Screenshots | `tools/guide_screenshots.py` with `docs/user-guide/screenshots.json`. Run on a computer with `pip install playwright` and `playwright install chromium`, against a test business; set `GUIDE_BASE`, `GUIDE_EMAIL`, `GUIDE_PASSWORD` (typed, never saved) and `GUIDE_TOTP_SECRET` |
+
+With `docker-compose.dev.yml` the chapters come from the image: rebuild (`--build`) after editing them, or set `GUIDE_DIR` to a mounted folder.
+
 ## Useful commands
 
 | Task | Command |
@@ -520,6 +535,7 @@ Tests: the two test businesses are marked "setup finished" in `conftest.py`; `te
 | Run the system checks (platform, one business, or all) | `python manage.py check_system [--schema <slug>] [--all] [--no-live]` |
 | Make a backup now (platform, or one business), and test restoring it | `python manage.py backup_now [--schema <slug>] [--restore-test]` |
 | Open a backup file into a folder (asks for a business passphrase) | `python manage.py open_backup <file> <folder>` |
+| Make new screenshots for the user guide (on your computer) | `python tools/guide_screenshots.py [name ...]` |
 | Make migrations after model changes | `python manage.py makemigrations` |
 
 Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail`, `services`, `education_consultancy`, `e_learning`, `jobs`, `other`.

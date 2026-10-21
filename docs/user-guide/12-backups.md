@@ -61,6 +61,8 @@ Results: ✓ **OK**, ! **Needs attention**, ✕ **Failed**, … **Waiting** or *
 
 Messages never show passwords, passphrases, keys or technical errors. Those stay in the server log.
 
+![The Backups page of a business that has not set up backups yet](images/backups-business.png)
+
 ## 12.5 When something goes wrong
 
 - **A scheduled backup or restore test fails:** your System Admins and IT Admins get **one email**. They do not get another one until it works again and fails again later. The problem also shows in **Check system** (chapter 11).

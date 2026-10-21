@@ -19,6 +19,7 @@
     <a href="{% url 'ticket_list' %}">Tickets</a> /
     <a href="{% url 'ticket_new' %}?from={{ request.path|urlencode }}">Report a problem</a> /
     <a href="{% url 'accounts:mfa_manage' %}">Two-step verification</a> /
+    <a href="{{ help_url|default:'/guide/' }}">Help</a> /
   {% endif %}
   {{ block.super }}
 {% endblock %}

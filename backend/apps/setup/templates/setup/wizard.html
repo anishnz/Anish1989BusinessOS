@@ -28,7 +28,7 @@
   .wz .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px; }
   .wz .actions form { margin: 0; }
   .wz .big { font-size: 15px; padding: 10px 18px; }
-  .wz ul.list { list-style: none; padding: 0; margin: 0; } .wz ul.list li { padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .wz ul.list { list-style: none; padding: 0; margin: 0; } .wz ul.list li { list-style: none; padding: 10px 0; border-bottom: 1px solid var(--grid); }
   @media (max-width: 640px) { .wz .fields { grid-template-columns: 1fr; } .wz form.inline input[type=password] { width: 100%; } .wz form.inline label { width: 100%; } }
 </style>
 {% endblock %}
@@ -76,6 +76,8 @@
         <li>
           <strong>2. Google Drive</strong>
           {% if backup.drive %}<span class="ok">✓ Connected ({{ backup.drive.config.account_email }})</span>
+          {% elif not backup.can_connect %}
+            <p class="note">Not possible yet: the platform's Google sign-in app is not set up. Skip this step for now and ask the platform Super Admin (user guide 12.6).</p>
           {% else %}
             <p class="note">You sign in to Google. The platform can only see the backup folder it creates, not the rest of your Drive.</p>
             <form method="post" action="{% url 'backups' %}" class="inline">{% csrf_token %}<input type="hidden" name="action" value="connect"><input type="hidden" name="next" value="{{ here }}">

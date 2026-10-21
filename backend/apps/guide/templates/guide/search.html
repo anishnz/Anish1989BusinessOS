@@ -1,0 +1,18 @@
+{% extends "guide/base.html" %}
+{% block main %}
+  <h1>Search the guide</h1>
+  {% if query %}
+    <p class="quiet">{{ results|length }} result{{ results|length|pluralize }} for “{{ query }}”{% if results|length == 20 %} (the best 20){% endif %}.</p>
+    {% for r in results %}
+      <section style="margin: 0 0 18px;">
+        <h2 style="font-size: 17px; margin: 0; border: 0; padding: 0;"><a href="{% url 'guide_chapter' r.chapter.slug %}{% if r.anchor %}#{{ r.anchor }}{% endif %}">{{ r.heading }}</a></h2>
+        <div class="quiet">{{ r.chapter.title }}</div>
+        <p style="margin: 4px 0 0;">{{ r.snippet|safe }}</p>
+      </section>
+    {% empty %}
+      <p>Nothing found. Try fewer or other words, for example “backup” or “password”.</p>
+    {% endfor %}
+  {% else %}
+    <p>Type a word or two in the search box above, for example “backup”, “WhatsApp” or “password”.</p>
+  {% endif %}
+{% endblock %}

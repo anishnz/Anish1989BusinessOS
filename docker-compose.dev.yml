@@ -9,6 +9,7 @@ x-dev-app: &dev-app
     context: ./backend
     additional_contexts:
       frontend-src: ./frontend   # the React staff app, built inside the image
+      guide-src: ./docs/user-guide   # the user guide shown at /guide/
     args:
       REQUIREMENTS: dev.lock
   volumes:

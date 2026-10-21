@@ -116,6 +116,10 @@ class TestBackupsStep:
         page = client.get("/setup/?step=backups").content.decode()
         assert "✓ Set" in page and "✓ Connected (owner@gmail.test)" in page and "Make a test backup" in page
 
+    def test_without_a_google_sign_in_app_it_says_so(self, client_for, fresh):
+        page = admin_of(client_for, fresh).get("/setup/?step=backups").content.decode()
+        assert "the platform's Google sign-in app is not set up" in page and 'value="Connect Google Drive"' not in page
+
     def test_wrong_password_returns_to_the_wizard(self, client_for, fresh):
         response = admin_of(client_for, fresh).post("/backups/", {"action": "passphrase", "password": "wrong", "generate": "1", "next": "/setup/?step=backups"})
         assert response.status_code == 302 and response["Location"] == "/setup/?step=backups"

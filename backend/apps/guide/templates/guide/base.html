@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · Anish1989 Business OS</title>
+  <style>
+    :root { --bg: #ffffff; --panel: #f6f8fa; --ink: #1f2328; --ink-2: #59636e; --line: #d1d9e0; --accent: #417690; --accent-ink: #ffffff; --mark: #fff3b0; --code: #eff2f5; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0d1117; --panel: #151b23; --ink: #e6edf3; --ink-2: #9198a1; --line: #3d444d; --accent: #5b9bbf; --accent-ink: #0d1117; --mark: #5a4a00; --code: #1f2630; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    a { color: var(--accent); }
+    header.top { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
+    header.top .brand { font-weight: 700; text-decoration: none; color: var(--ink); }
+    header.top form { margin-left: auto; display: flex; gap: 6px; flex: 1 1 260px; max-width: 420px; }
+    header.top input[type=search] { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); font: inherit; }
+    header.top button { padding: 7px 14px; border: 0; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font: inherit; cursor: pointer; }
+    header.top .back { font-size: 14px; }
+    .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 32px; max-width: 1180px; margin: 0 auto; padding: 20px; }
+    nav.toc { font-size: 14px; position: sticky; top: 12px; align-self: start; max-height: calc(100vh - 24px); overflow: auto; }
+    nav.toc h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); margin: 16px 0 6px; }
+    nav.toc ul { list-style: none; margin: 0; padding: 0; }
+    nav.toc li a { display: block; padding: 3px 8px; border-radius: 6px; text-decoration: none; color: var(--ink); }
+    nav.toc li a[aria-current] { background: var(--panel); font-weight: 600; }
+    main { min-width: 0; max-width: 820px; }
+    main h1 { font-size: 28px; line-height: 1.25; margin: 0 0 12px; }
+    main h2 { font-size: 21px; margin: 32px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+    main h3 { font-size: 17px; margin: 22px 0 6px; }
+    main .anchor { opacity: 0; text-decoration: none; font-weight: 400; margin-left: 4px; }
+    main h2:hover .anchor, main h3:hover .anchor, main .anchor:focus { opacity: .6; }
+    main code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: .9em; overflow-wrap: anywhere; }
+    main pre { background: var(--code); padding: 12px; border-radius: 6px; overflow-x: auto; }
+    main pre code { padding: 0; }
+    main blockquote { margin: 14px 0; padding: 4px 16px; border-left: 4px solid var(--accent); background: var(--panel); border-radius: 0 6px 6px 0; }
+    main .table { overflow-x: auto; margin: 12px 0; }
+    main table { border-collapse: collapse; min-width: 60%; font-size: 15px; }
+    main th, main td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+    main th { background: var(--panel); }
+    main img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; margin: 8px 0; }
+    main mark { background: var(--mark); color: inherit; padding: 0 2px; border-radius: 3px; }
+    .pager { display: flex; justify-content: space-between; gap: 12px; margin: 40px 0 20px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; }
+    .on-this-page { font-size: 14px; background: var(--panel); border-radius: 8px; padding: 10px 14px; margin: 0 0 18px; }
+    .on-this-page ul { margin: 4px 0 0; padding-left: 18px; }
+    .quiet { color: var(--ink-2); font-size: 14px; }
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; padding: 16px; }
+      nav.toc { position: static; max-height: none; order: 2; border-top: 1px solid var(--line); }
+      header.top form { margin-left: 0; max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="{% url 'guide' %}">User guide</a>
+    <a class="back" href="{% if is_staff %}/admin/{% else %}/app/{% endif %}">← Back to {% if is_staff %}the admin pages{% else %}the staff app{% endif %}</a>
+    <form method="get" action="{% url 'guide_search' %}" role="search">
+      <input type="search" name="q" value="{{ query|default:'' }}" placeholder="Search the guide" aria-label="Search the guide" maxlength="100">
+      <button type="submit">Search</button>
+    </form>
+  </header>
+  <div class="layout">
+    <nav class="toc" aria-label="Chapters">
+      {% for group, items in contents %}
+        <h2>{{ group }}</h2>
+        <ul>{% for c in items %}<li><a href="{% url 'guide_chapter' c.slug %}" {% if chapter.slug == c.slug %}aria-current="page"{% endif %}>{{ c.title }}</a></li>{% endfor %}</ul>
+      {% endfor %}
+    </nav>
+    <main>{% block main %}{% endblock %}</main>
+  </div>
+</body>
+</html>

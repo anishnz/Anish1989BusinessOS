@@ -14,6 +14,7 @@ x-app: &app
     context: ./backend
     additional_contexts:
       frontend-src: ./frontend   # the React staff app, built inside the image
+      guide-src: ./docs/user-guide   # the user guide shown at /guide/
   env_file: .env
   restart: unless-stopped
   volumes:

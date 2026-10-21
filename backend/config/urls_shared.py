@@ -28,5 +28,6 @@ shared_urlpatterns = [
     path("api/backups/", include(backup_api_urlpatterns)),
     *ticket_web_urlpatterns,
     path("api/tickets/", include(ticket_api_urlpatterns)),
+    path("", include("apps.guide.urls")),
     path("admin/", admin.site.urls),
 ]

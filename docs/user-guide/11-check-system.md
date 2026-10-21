@@ -31,6 +31,8 @@ The result at the top is the worst result of all the checks.
 
 Each check shows a short message that says what to do. Messages never show passwords, keys or technical error details. Those go to the server log only.
 
+![Check system results](images/check-system.png)
+
 ## 11.3 What a business check tests
 
 | Area | Check | What it tests |

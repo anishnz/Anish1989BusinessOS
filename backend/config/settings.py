@@ -64,6 +64,7 @@ SHARED_APPS = [
     "apps.health",
     "apps.backups",
     "apps.tickets",
+    "apps.guide",
     "apps.core",
 ]
 
@@ -131,6 +132,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.setup.context.setup",
+                "apps.guide.context.help_link",
             ],
         },
     },
@@ -299,6 +301,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # and served at /app/; its files are collected under /static/app/.
 FRONTEND_DIST = Path(env("FRONTEND_DIST", default=str(BASE_DIR.parent / "frontend" / "dist")))
 STATICFILES_DIRS = [("app", FRONTEND_DIST)] if FRONTEND_DIST.is_dir() else []
+# In-app user guide (task 1.17): the Markdown chapters in docs/user-guide/ (copied to /opt/guide in the Docker image).
+GUIDE_DIR = Path(env("GUIDE_DIR", default=str(BASE_DIR.parent / "docs" / "user-guide")))
 MEDIA_URL = "media/"
 MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")
 STORAGES = {

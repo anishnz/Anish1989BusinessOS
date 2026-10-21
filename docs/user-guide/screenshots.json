@@ -1,0 +1,10 @@
+[
+  {"name": "setup-business", "site": "business", "path": "/setup/?step=business", "selector": "#content"},
+  {"name": "setup-backups", "site": "business", "path": "/setup/?step=backups", "selector": "#content"},
+  {"name": "backups-business", "site": "business", "path": "/backups/", "selector": "#content"},
+  {"name": "report-a-problem", "site": "business", "path": "/tickets/new/?from=/admin/orders/order/", "selector": "#content"},
+  {"name": "tickets-list", "site": "business", "path": "/tickets/?show=all", "selector": "#content"},
+  {"name": "check-system", "site": "business", "path": "/system-check/", "selector": "#content"},
+  {"name": "staff-app-phone", "site": "business", "path": "/app/", "width": 390, "height": 760, "wait_for": "main h1"},
+  {"name": "guide-search", "site": "business", "path": "/guide/search/?q=backup"}
+]

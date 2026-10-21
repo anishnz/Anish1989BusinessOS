@@ -65,6 +65,9 @@ export default function Layout() {
           {themePicker}
           <a className="small" href="/account/mfa/">Two-step verification</a>
         </div>
+        <a className="nav" href="/guide/" title="User guide: how to use the system">
+          <span className="icon" aria-hidden="true">?</span><span className="label">Help</span>
+        </a>
         <a className="nav" href="/admin/" title="Classic admin (settings, roles, users)">
           <span className="icon" aria-hidden="true">⚙</span><span className="label">Classic admin</span>
         </a>
@@ -80,6 +83,7 @@ export default function Layout() {
           <span className="top-extra">{themePicker}</span>
           <span className="muted small top-extra" title={state?.user.email}>{name}</span>
           <a className="small top-extra" href="/account/mfa/">Two-step verification</a>
+          <a className="small" href="/guide/">Help</a>
           <button onClick={() => logout()}>Log out</button>
         </header>
         <main>

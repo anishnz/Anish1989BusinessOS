@@ -116,8 +116,11 @@ def save_profile(data: dict, *, actor=None) -> BusinessProfile:
 def backup_state() -> dict:
     from apps.backups import services as backups
 
+    from apps.backups.google_connect import sign_in_app
+
     good = backups.latest_good_backup()
     return {
+        "can_connect": sign_in_app() is not None,
         "passphrase": backups.site_settings().has_passphrase,
         "drive": backups.drive_connection(),
         "set_up": backups.is_set_up(),

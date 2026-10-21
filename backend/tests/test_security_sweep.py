@@ -48,6 +48,8 @@ PUBLIC_ROUTES = {
 SELF_ROUTES = {r for r in [
     "api/auth/logout/", "api/auth/me/", "api/auth/mfa/verify/", "api/auth/mfa/totp/setup/", "api/auth/mfa/totp/confirm/",
     "api/auth/mfa/backup-codes/", "api/rbac/me/permissions/", "account/mfa/setup/", "account/mfa/verify/", "account/mfa/",
+    # The user guide: every signed-in person may read it (no business data; login still needed, see test_guide.py).
+    "guide/", "guide/search/", "guide/images/<str:name>", "guide/<slug:slug>/",
 ]}
 
 

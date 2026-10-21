@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 21 October 2026
+Last updated: 22 October 2026
 
 This file shows where the project is, so any new session can continue from the right place.
 
@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) in progress.** Tasks 1.1 to 1.16 are done. Next: **1.17 In-app user guide framework and "Getting started" chapters**. See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Next: **Step 2, ordering flow** (see the delivery plan). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -179,7 +179,14 @@ Open a new chat in the ERP CRM project and type:
   - Yellow reminder on every admin page until backups are set up; "Set up your business" link in the header
   - User guide chapter: docs/user-guide/14-first-login-setup.md
   - 666 tests pass
-- [ ] 1.17 In-app user guide framework and "Getting started" chapters
+- [x] 1.17 In-app user guide framework and "Getting started" chapters (done 22 Oct 2026)
+  - The chapters in docs/user-guide/ are shown inside the app at `/guide/`: contents by group, chapter pages with "On this page" and previous/next, search with highlighted results
+  - Safe built-in Markdown reader (no HTML or scripts from chapters, safe links only); no new package
+  - "Help" link on every admin page opens the chapter about that page; "Help" in the staff app
+  - Automatic screenshots: `tools/guide_screenshots.py` + `docs/user-guide/screenshots.json` (8 pictures added to the chapters)
+  - New "Getting started" chapter; "Getting started" group: getting started, logging in, first-login setup, staff app, tickets
+  - The Docker image carries the guide (`/opt/guide`)
+  - 682 tests pass
 
 ## Step 2: Ordering flow
 

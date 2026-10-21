@@ -19,6 +19,8 @@ Forgotten your password? Click **Forgotten your password?** on the login screen 
 
 Tip: on a phone or tablet, add the page to your home screen so it opens like an app.
 
+![The staff app on a phone](images/staff-app-phone.png)
+
 ## 9.2 The menu
 
 You only see the pages your role allows:
