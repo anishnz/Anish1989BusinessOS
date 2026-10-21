@@ -30,8 +30,13 @@ MAX_STOCK = Decimal("1000000")
 MANUAL_REASONS = (R.RECEIVED, R.COUNTED, R.WASTE, R.CORRECTION)
 
 
+def number_text(quantity: Decimal) -> str:
+    """40.000 -> "40", 2.500 -> "2.5" (normalize() alone would give "4E+1")."""
+    return f"{quantity.normalize():f}"
+
+
 def amount_text(quantity: Decimal, product: Product) -> str:
-    text = f"{quantity.normalize():f}"
+    text = number_text(quantity)
     if product.unit == Product.Unit.KG:
         return f"{text} kg"
     if product.unit == Product.Unit.PACK:
@@ -106,7 +111,7 @@ def adjust(product: Product, *, reason: str, quantity, note: str = "", actor=Non
         raise ValidationError("Write a short note (for example: out of date, dropped, counted wrong).")
     movement = _record(product, change, reason, actor=actor, note=note)
     audit("products.stock_adjusted", target=product, actor=actor,
-          metadata={"reason": reason, "change": str(change), "after": str(product.stock_quantity)})
+          metadata={"reason": reason, "change": number_text(change), "after": number_text(product.stock_quantity)})
     return movement
 
 
@@ -186,7 +191,7 @@ def low_stock(limit: int = 10) -> list[dict]:
         s = state(product)
         if s in ("below_zero", "out", "low"):
             found.append({"product_id": product.pk, "name": product.name, "unit": product.unit, "state": s, "state_text": STATE_TEXT[s],
-                          "stock": f"{product.stock_quantity.normalize():f}",
-                          "warn_at": f"{product.low_stock_level.normalize():f}" if product.low_stock_level is not None else None})
+                          "stock": number_text(product.stock_quantity),
+                          "warn_at": number_text(product.low_stock_level) if product.low_stock_level is not None else None})
     order = {"below_zero": 0, "out": 1, "low": 2}
     return sorted(found, key=lambda r: (order[r["state"]], r["name"]))[:limit]

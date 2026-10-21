@@ -142,6 +142,8 @@ In the staff app, open **Products**, click **Stock** next to the product, choose
 | Waste | the amount thrown away (note needed) | *1.2* kg out of date |
 | Correction | a change, with a minus sign to take off (note needed) | *-2* counted wrong yesterday |
 
+![The Products page in the staff app with stock, and the stock history of one product](images/stock-products.png)
+
 Every change is kept in the **stock history** with who, when and why. It cannot be changed or deleted. Shop Staff can see stock but not change it.
 
 ### Orders change the stock by themselves

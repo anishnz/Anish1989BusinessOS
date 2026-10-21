@@ -67,6 +67,14 @@ class Product(models.Model):
         blank=True, help_text="Other names customers use, separated by commas (e.g. goat curry cut, khasi ko masu). Helps search and the AI.",
     )
     is_available = models.BooleanField("Available to order", default=True)
+    track_stock = models.BooleanField("Count stock", default=False,
+                                      help_text="Count how much is in stock. Orders take it off when they are confirmed (task 2.2).")
+    stock_quantity = models.DecimalField("In stock", max_digits=12, decimal_places=3, default=Decimal("0"), editable=False,
+                                         help_text="In kg for products sold by weight, otherwise packs or items. Change it with Adjust stock.")
+    low_stock_level = models.DecimalField(
+        "Warn at", max_digits=12, decimal_places=3, null=True, blank=True, validators=[MinValueValidator(ZERO)],
+        help_text="Show the product as low on stock at or below this amount. Empty = no warning.",
+    )
     is_archived = models.BooleanField("Archived", default=False, help_text="Archived products are hidden but kept for old orders and reports.")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -100,3 +108,52 @@ class Product(models.Model):
 def gst_in(amount: Decimal, rate: Decimal | None = None) -> Decimal:
     rate = Decimal(str(rate if rate is not None else getattr(settings, "GST_RATE", "0.15")))
     return (Decimal(amount) * rate / (1 + rate)).quantize(CENT, rounding=ROUND_HALF_UP)
+
+
+class StockMovementQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise PermissionError("Stock history cannot be changed.")
+
+    def delete(self):
+        raise PermissionError("Stock history cannot be deleted.")
+
+
+class StockMovement(models.Model):
+    """One change of a product's stock (task 2.2). Kept for ever; never changed or deleted."""
+
+    class Reason(models.TextChoices):
+        ORDER = "order", "Order confirmed"
+        WEIGHT = "weight", "Real weight"
+        CANCELLED = "cancelled", "Order cancelled"
+        RECEIVED = "received", "Received"
+        COUNTED = "counted", "Counted"
+        WASTE = "waste", "Waste"
+        CORRECTION = "correction", "Correction"
+
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="stock_movements")
+    change = models.DecimalField(max_digits=12, decimal_places=3)
+    quantity_after = models.DecimalField("In stock after", max_digits=12, decimal_places=3)
+    reason = models.CharField(max_length=20, choices=Reason.choices)
+    order_id = models.PositiveIntegerField(null=True, blank=True)
+    order_number = models.PositiveIntegerField(null=True, blank=True)
+    note = models.CharField(max_length=200, blank=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
+    actor_email = models.EmailField(blank=True)
+    at = models.DateTimeField(auto_now_add=True)
+
+    objects = StockMovementQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-at", "-id"]
+        indexes = [models.Index(fields=["product", "-at"])]
+
+    def __str__(self):
+        return f"{self.product}: {self.change:+} ({self.get_reason_display()})"
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise PermissionError("Stock history cannot be changed.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise PermissionError("Stock history cannot be deleted.")

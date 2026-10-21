@@ -34,7 +34,11 @@ The five products with the most sales in completed orders, with the amount sold 
 
 How many orders are waiting at each step: awaiting the customer's confirmation, confirmed (to prepare), being prepared, final price sent or accepted, ready, and out for delivery. Click a step to open those orders. **Pickups due** and **Deliveries due** count today's booked orders (not drafts) with a time today that are not completed yet.
 
-## 8.5 Another day
+## 8.5 Low stock
+
+Products whose stock is counted and that are **Low** (at or below their *Warn at* amount), **Out of stock** or **Below zero**, worst first (up to 10). The card only shows when there is something to see. Click **See products** for the full list. See chapter 5.5.
+
+## 8.6 Another day
 
 Choose a date in **Day** and click **Show**. **Back to today** returns to today.
 

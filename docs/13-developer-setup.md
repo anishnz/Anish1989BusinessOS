@@ -235,6 +235,9 @@ Body for POST: `{"provider": "openai", "label": "Main AI", "config": {"model": "
 | GET, PATCH, DELETE | `/api/products/categories/<id>/` | `products.view`, `products.edit`, `products.delete` |
 | POST | `/api/products/import/` (multipart `file`, `dry_run`) | `products.import` |
 | GET | `/api/products/export/` | `products.export` |
+| GET, POST | `/api/products/<id>/stock/` (GET: last 50 changes; POST `{"reason": "received\|counted\|waste\|correction", "quantity": "5", "note": ""}`) | `products.view`, `products.edit` |
+
+The product list also takes `stock=low` (counted products that are low, out of stock or below zero).
 
 ### Customers API
 
@@ -288,6 +291,16 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "fulfilment": "
 - Status `out_for_delivery`: delivery orders go ready → out_for_delivery → completed; out_for_delivery → ready needs a note (D-123). `change_status(..., strict=True)` and `update_order(..., strict=True)` apply every slot and area rule (for the WhatsApp AI and website); staff calls only need the delivery must-haves, and `warnings(order)` lists the rest (D-121).
 - Migration `orders.0003` renames the field, adds the columns, and gives `orders.configure` to roles that had every other Orders permission.
 - Check system: "Pickup and delivery" warns when customers cannot choose a time (no hours, no free slots, no delivery areas, both switched off).
+
+## Stock (task 2.2)
+
+- `Product.track_stock` ("Count stock", D-130), `stock_quantity` (not editable; changes only through `apps/catalog/stock.py`) and `low_stock_level` ("Warn at"). `StockMovement` (product, change, quantity after, reason `order|weight|cancelled|received|counted|waste|correction`, order id and number, note, who, when) cannot be changed or deleted (save with a pk, `delete()`, `QuerySet.update()` and `.delete()` raise `PermissionError`; the product is `PROTECT`ed, so products with history are archived).
+- `stock.adjust()` (changes by hand, D-133): waste and correction need a note; counted cannot be below zero; at most 3 decimal places. Audit `products.stock_adjusted`.
+- Orders (D-131): `change_status(..., CONFIRMED)` calls `take_for_order()` and sets `Order.stock_taken`; `set_weights()` calls `weight_changed()` with the amounts counted before; cancelling calls `give_back()` (the real weight when entered). Orders confirmed before this task have `stock_taken = False`, so nothing is given back for them. Products are locked with `select_for_update()` in id order.
+- Not enough stock (D-132): `booking_problems(strict=True)` adds `shortages()` (customers and the AI cannot confirm); staff can confirm and `warnings()` lists the shortage until the order is confirmed. A confirmed order is not checked again (its stock is already taken).
+- `state()`: `not_counted`, `below_zero`, `out` (less than the smallest amount), `low` (at or below "Warn at"), `ok`. `low_stock()` feeds the dashboard's `low_stock` list (D-134).
+- Admin: "In stock" column and "stock" filter in the product list, page `/admin/catalog/product/<id>/stock/` (history for Products – View, form for Products – Edit). CSV columns `count_stock`, `warn_at`, `stock` (a "Counted" change).
+- Migrations: `catalog.0003_stock`, `orders.0004_stock_taken`. Tests: `tests/test_stock.py`.
 
 ## Test data, Log in as and safer deleting (task 1.18)
 

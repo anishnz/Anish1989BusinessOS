@@ -22,6 +22,7 @@ Each one is at **2 White Street, Auckland City, Auckland 1010, New Zealand** and
 - a user for **every role**, with a Nepali name;
 - business details, pickup and delivery hours, closed days and delivery areas;
 - categories and products (with prices, cost prices and Nepali search words);
+- stock for the butchery, restaurant, catering and events products: a delivery, the orders taking stock, some waste, one product **Low** and one **Out of stock** (services such as visa help and job adverts are not counted);
 - 16 customers (emails end with `@example.com`, which can never receive email);
 - orders in every step: completed orders of the last days (for the dashboard), and open orders from Draft to Out for delivery;
 - WhatsApp conversations and tickets.

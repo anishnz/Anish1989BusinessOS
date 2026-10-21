@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Task 2.1 (pickup and delivery) and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.2 (stock). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery) and 2.2 (stock), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.3 (WhatsApp status messages and final-price acceptance). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -208,7 +208,17 @@ Open a new chat in the ERP CRM project and type:
   - Check system: "Pickup and delivery" warns when customers cannot choose a time
   - User guide chapter: docs/user-guide/15-pickup-and-delivery.md (chapters 0, 6, 8 and 9 updated)
   - 735 tests pass (51 new for pickup and delivery) and 8 staff app tests; all 41 deliberate breaks in task 2.1 are caught by tests (4 tests were added or made stronger to catch them)
-- [ ] 2.2 Stock: track stock per product, check it and take it off when an order is confirmed, put it back when cancelled, low-stock alerts
+- [x] 2.2 Stock: track stock per product, check it and take it off when an order is confirmed, put it back when cancelled, low-stock alerts (done 22 Oct 2026)
+  - Decisions D-130 to D-134
+  - Products: **Count stock** (off by default), **Warn at**, stock in kg, packs or items; states In stock, Low, Out of stock, Below zero
+  - Orders: confirming takes the ordered amount off, the real weight changes it by the difference, cancelling a confirmed order puts it back; drafts and orders waiting for the customer hold no stock
+  - Not enough stock: customers (WhatsApp AI and website, coming next) cannot confirm; staff can, and see a warning on the order
+  - Changes by hand (Products – Edit): Received, Counted, Waste, Correction (waste and corrections need a note); the stock history cannot be changed or deleted
+  - Staff app: **In stock** column, **Stock** button with the form and history, **Only low or out of stock**, **Low stock** card on the dashboard, stock shown when adding an order
+  - Admin: **In stock** column and filter, **Adjust stock** / **Stock history** page; CSV columns `count_stock`, `warn_at`, `stock`
+  - Test data: the butchery, restaurant, catering and events test businesses now have stock (one product low and one out of stock each)
+  - User guide: chapter 5.5 (with a picture), chapters 6 and 8 updated
+  - 826 tests pass (56 new for stock, 1 more in the test data tests) and 8 staff app tests; 59 of 60 deliberate breaks in task 2.2 are caught by tests (4 tests were added to catch them); the 60th (stock_quantity listed as read-only in the API) changes nothing, because the field cannot be edited anyway
 - [ ] 2.3 WhatsApp status messages and final-price acceptance (approved templates; the customer answers Yes or No)
 - [ ] 2.4 AI order taking on WhatsApp in English and Nepali: AI keys per business, product search, time slots, order summary, the customer confirms, AI log
 - [ ] 2.5 Quick reorder ("same as last time") and human handover in the inbox

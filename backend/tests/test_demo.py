@@ -89,6 +89,20 @@ class TestInstall:
         assert accounts.count() == 3 and not accounts.filter(mfa_exempt=True).exists()
         assert not accounts.filter(email="roleassuperadmin@anish1989.com.np").exists()  # never a test Super Admin
 
+    def test_stock(self, butchery):
+        """Task 2.2: counted products, a delivery before the orders, then waste, one low and one out of stock."""
+        from apps.catalog import stock
+        from apps.catalog.models import Product, StockMovement
+        from apps.orders.models import Order
+
+        with schema_context("test_butchery"):
+            assert Product.objects.filter(track_stock=True).count() == 9
+            assert [(r["name"], r["state"]) for r in stock.low_stock()] == [("Sukuti (dried meat) 250 g", "out"), ("Lamb chops", "low")]
+            assert {"received", "order", "weight", "cancelled", "waste", "counted"} <= set(StockMovement.objects.values_list("reason", flat=True))
+            took = set(Order.objects.filter(stock_taken=True).values_list("status", flat=True))
+            assert took == {"confirmed", "preparing", "ready", "out_for_delivery", "completed"}
+            assert not Order.objects.filter(status__in=["draft", "awaiting_confirmation", "expired", "cancelled_by_customer"], stock_taken=True).exists()
+
     def test_running_again_changes_nothing(self, butchery):
         assert services.install(only=["test_butchery"]) == ["Kathmandu Khasi Pasal: already there (not changed)"]
 

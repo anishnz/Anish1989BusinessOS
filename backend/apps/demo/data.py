@@ -57,6 +57,11 @@ BUSINESSES = [
             ("Sukuti (dried meat) 250 g", 4, "pack", D("16.00"), D("9.50"), D("1"), D("1"), "sukuti, dried buff", ""),
             ("Chicken momo filling", 4, "pack", D("9.50"), D("5.20"), D("1"), D("1"), "momo masu", "Ready mixed, 1 kg."),
         ],
+        # Stock (task 2.2): product number -> (received before the orders, warn at). After the orders, "low" is
+        # counted down to its warning level and "out" is counted as 0, so the dashboard shows both.
+        "stock": {0: (D("40"), D("8")), 1: (D("25"), D("5")), 2: (D("40"), D("8")), 3: (D("30"), D("6")), 4: (D("20"), D("5")),
+                  5: (D("35"), D("8")), 6: (D("25"), D("5")), 7: (D("60"), D("10")), 8: (D("50"), D("10"))},
+        "stock_low": 4, "stock_out": 8,
     },
     {
         "slug": "test_restaurant", "name": "Thamel Momo Ghar", "industry": "restaurant", "type": "Restaurant",
@@ -73,6 +78,8 @@ BUSINESSES = [
             ("Masala chiya", 4, "each", D("4.50"), D("0.90"), D("1"), D("1"), "chiya, tea, masala tea", ""),
             ("Mango lassi", 4, "each", D("6.00"), D("1.50"), D("1"), D("1"), "lassi", ""),
         ],
+        "stock": {0: (D("80"), D("15")), 1: (D("60"), D("15")), 2: (D("60"), D("10")), 7: (D("40"), D("10"))},
+        "stock_low": 1, "stock_out": 7,
     },
     {
         "slug": "test_catering", "name": "Himalayan Bhoj Catering", "industry": "catering", "type": "Catering",
@@ -86,6 +93,8 @@ BUSINESSES = [
             ("Jeri and swari", 2, "pack", D("55.00"), D("18.00"), D("1"), D("1"), "jeri, swari, jalebi", ""),
             ("Serving staff (per hour)", 3, "each", D("45.00"), D("30.00"), D("2"), D("1"), "waiter, staff", "Minimum 2 hours."),
         ],
+        "stock": {2: (D("40"), D("5")), 3: (D("40"), D("5")), 4: (D("30"), D("4"))},
+        "stock_low": 3, "stock_out": 4,
     },
     {
         "slug": "test_events", "name": "Basantapur Utsav Events", "industry": "events", "type": "Events",
@@ -98,6 +107,8 @@ BUSINESSES = [
             ("DJ and sound (per hour)", 2, "each", D("120.00"), D("50.00"), D("2"), D("1"), "dj, music, geet", ""),
             ("Photography package", 2, "pack", D("900.00"), D("350.00"), D("1"), D("1"), "photo, video", "4 hours, 200 edited photos."),
         ],
+        "stock": {2: (D("40"), D("3")), 3: (D("20"), D("2"))},  # decoration kits and mandap sets
+        "stock_low": 2,
     },
     {
         "slug": "test_education", "name": "Sagarmatha Education Consultancy", "industry": "education_consultancy", "type": "Education consultancy",

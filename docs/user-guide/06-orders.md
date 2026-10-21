@@ -45,7 +45,7 @@ Draft → (Awaiting customer confirmation) → Confirmed → Being prepared
 |---|---|
 | Draft | Being written. Products can be changed. |
 | Awaiting customer confirmation | Sent to the customer to check (used by WhatsApp ordering). If they do not confirm, it becomes **Expired**. |
-| Confirmed | The customer agreed. Products can no longer be changed. |
+| Confirmed | The customer agreed. Products can no longer be changed. Counted stock is taken off now (chapter 5.5). |
 | Being prepared | Staff are packing it. Enter the real weights now. |
 | Final price sent | The real weight changed the price, and the new price was sent to the customer. |
 | Final price accepted | The customer agreed to the new price. |
@@ -68,6 +68,8 @@ A customer orders 1.5 kg of goat, but the pack weighs 1.58 kg.
 
 The order cannot be marked ready until every weight is entered, and it cannot skip the customer's agreement when the price changed.
 
+For products whose stock is counted, the stock changes by the difference (chapter 5.5).
+
 ## 6.5 Payment
 
 On **Status and payment**, choose how the customer paid (cash, card, bank transfer or other) and click **Mark as paid**. Only confirmed orders can be marked as paid.
@@ -78,7 +80,7 @@ If you give the money back, click **Mark as not paid**. A paid order cannot be c
 
 - **Products** can only change while the order is a **Draft** or **Awaiting customer confirmation**. If you change products while waiting for the customer, the order goes back to **Draft** and the customer must confirm again.
 - **Customer, the time, the address and notes** can change until the order is completed or cancelled (the address and time not while it is out for delivery). Changing pickup to delivery or the area changes the delivery fee, so it is not possible while the order is marked as paid.
-- **Cancel** from **Status and payment**: choose *Cancelled by customer* or *Cancelled by shop* and write the reason.
+- **Cancel** from **Status and payment**: choose *Cancelled by customer* or *Cancelled by shop* and write the reason. If the order was confirmed, its stock is put back.
 - **Delete** is only possible for drafts. Other orders are cancelled instead, so the history stays complete.
 
 ## 6.7 History and export

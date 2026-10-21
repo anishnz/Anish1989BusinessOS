@@ -15,6 +15,7 @@ from django.db.models import Count, DecimalField, Q, Sum
 from django.db.models.functions import Coalesce, TruncDate
 from django.utils import timezone
 
+from apps.catalog.stock import low_stock
 from apps.orders.models import Order, OrderLine
 
 S = Order.Status
@@ -111,6 +112,7 @@ def summary(day: date | None = None, *, include_inbox: bool = False) -> dict:
         "attention": attention,
         "pickups_due_today": due_today.get("pickup", 0),
         "deliveries_due_today": due_today.get("delivery", 0),
+        "low_stock": low_stock(),
         "definitions": {
             "sales": "Totals of orders completed (picked up or delivered) that day, NZ$ incl. GST and delivery fees.",
             "orders": "Orders confirmed that day that were not cancelled or expired.",

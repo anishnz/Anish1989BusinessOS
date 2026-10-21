@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 980px;">
+  <p><a href="{{ back }}">← {{ product.name }}</a></p>
+  {% if product.track_stock %}
+    <p style="font-size: 1.2em;">In stock: <strong>{{ amount }}</strong> ({{ state }}){% if warn_at %} · warn at {{ warn_at }}{% endif %}</p>
+  {% else %}
+    <p>Stock is not counted for this product. Tick <strong>Count stock</strong> on the product first.</p>
+  {% endif %}
+  {% if can_change %}
+    <form method="post" style="margin: 14px 0 22px;">{% csrf_token %}
+      {{ form.non_field_errors }}
+      <table><tbody>
+        {% for field in form %}<tr><th><label for="{{ field.id_for_label }}">{{ field.label }}</label></th>
+          <td>{{ field.errors }}{{ field }}<div class="help">{{ field.help_text }}</div></td></tr>{% endfor %}
+      </tbody></table>
+      <input type="submit" value="Save">
+    </form>
+  {% endif %}
+  <h2>Stock history</h2>
+  <table style="width: 100%;">
+    <thead><tr><th>When</th><th>Why</th><th>Change</th><th>In stock after</th><th>Order</th><th>Note</th><th>Who</th></tr></thead>
+    <tbody>
+    {% for row in movements %}{% with m=row.m %}
+      <tr><td>{{ m.at|date:"j M Y H:i" }}</td><td>{{ m.get_reason_display }}</td><td>{{ row.change }}</td>
+          <td>{{ row.after }}</td><td>{% if m.order_number %}#{{ m.order_number }}{% endif %}</td><td>{{ m.note }}</td><td>{{ m.actor_email|default:"system" }}</td></tr>{% endwith %}
+    {% empty %}
+      <tr><td colspan="7">No changes yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

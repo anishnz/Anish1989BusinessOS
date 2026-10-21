@@ -16,6 +16,7 @@ from .models import Category, Product
 CSV_COLUMNS = [
     "sku", "name", "category", "unit", "price", "cost_price", "gst_applies",
     "min_quantity", "quantity_step", "available", "search_terms", "description",
+    "count_stock", "warn_at", "stock",  # task 2.2; "stock" is saved as a "Counted" stock change
 ]
 UNIT_WORDS = {
     "kg": Product.Unit.KG, "per kg": Product.Unit.KG, "kilo": Product.Unit.KG, "kilogram": Product.Unit.KG,
@@ -102,6 +103,18 @@ def _parse_row(row: dict) -> dict:
         data["search_terms"] = row["search_terms"]
     if "description" in row:
         data["description"] = row["description"]
+    if "count_stock" in row and row["count_stock"] != "":
+        data["track_stock"] = csvtools.parse_bool(row.get("count_stock"), default=False)
+    if "warn_at" in row:
+        warn = csvtools.parse_decimal(row.get("warn_at"), label="warn_at")
+        if warn is not None and warn < 0:
+            raise csvtools.RowError("warn_at cannot be below 0.")
+        data["low_stock_level"] = warn.quantize(Decimal("0.001")) if warn is not None else None
+    counted = csvtools.parse_decimal(row.get("stock"), label="stock") if row.get("stock", "") != "" else None
+    if counted is not None:
+        if counted < 0 or counted != counted.quantize(Decimal("0.001")):
+            raise csvtools.RowError("stock must be 0 or more, with at most 3 decimal places.")
+        data["_counted"] = counted
     return data
 
 
@@ -139,6 +152,7 @@ def import_products(upload, *, actor=None, dry_run: bool = False) -> ImportResul
     sid = transaction.savepoint()
     for number, data in parsed:
         category_name = data.pop("category_name")
+        counted = data.pop("_counted", None)
         if category_name:
             category = categories.get(category_name.lower())
             if category is None:
@@ -160,6 +174,14 @@ def import_products(upload, *, actor=None, dry_run: bool = False) -> ImportResul
                 result.updated += 1
         except ValidationError as exc:
             result.errors.append({"row": number, "error": "; ".join(exc.messages)})
+            continue
+        if counted is not None:
+            from . import stock
+
+            if not product.track_stock:
+                result.errors.append({"row": number, "error": "stock needs count_stock = yes."})
+            elif counted != product.stock_quantity:
+                stock.adjust(product, reason="counted", quantity=counted, note="CSV import", actor=actor)
     if result.errors or dry_run:
         transaction.savepoint_rollback(sid)
         if result.errors:
@@ -182,4 +204,6 @@ def export_rows(queryset, *, include_cost: bool):
             (p.cost_price if p.cost_price is not None else "") if include_cost else "",
             "yes" if p.gst_applies else "no", _number(p.min_quantity), _number(p.quantity_step),
             "yes" if p.is_available else "no", p.search_terms, p.description,
+            "yes" if p.track_stock else "no", _number(p.low_stock_level) if p.low_stock_level is not None else "",
+            _number(p.stock_quantity) if p.track_stock else "",
         ]

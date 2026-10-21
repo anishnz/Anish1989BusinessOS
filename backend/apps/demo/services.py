@@ -5,7 +5,8 @@ install() creates the six test businesses in apps/demo/data.py, each with:
 users for every role (roleas<role>@anish1989.com.np, password DEMO_PASSWORD,
 two-step verification switched off as test accounts), business details,
 pickup and delivery settings, products, customers, orders in every step,
-WhatsApp conversations and tickets. It also adds test accounts for the
+WhatsApp conversations and tickets, and stock for the products that are
+counted (task 2.2). It also adds test accounts for the
 platform roles except Super Admin; those keep two-step verification, because
 platform accounts can see every business.
 
@@ -168,8 +169,10 @@ def _fill_business(spec: dict, index: int, pw: str) -> None:
     _profile(spec, owner)
     _fulfilment()
     products = _products(spec, owner)
+    _stock_received(spec, products, owner)
     customers = _customers(index)
     _orders(spec, products, customers, users)
+    _stock_counted(spec, products, owner)
     _conversations(customers, users)
     _tickets(users)
 
@@ -251,6 +254,33 @@ def _products(spec: dict, owner) -> list:
             gst_applies=True, is_available=n != len(spec["products"]) - 1 or len(spec["products"]) < 5, created_by=owner,
         ))
     return products
+
+
+def _stock_received(spec: dict, products: list, owner) -> None:
+    """Count stock for the products in spec["stock"] and record a delivery, before the orders take some (task 2.2)."""
+    from apps.catalog import stock
+    from apps.catalog.models import Product
+
+    for n, (received, warn_at) in spec.get("stock", {}).items():
+        product = products[n]
+        Product.objects.filter(pk=product.pk).update(track_stock=True, low_stock_level=warn_at)
+        stock.adjust(product, reason="received", quantity=received, note="Delivery from the supplier (made-up)", actor=owner)
+
+
+def _stock_counted(spec: dict, products: list, owner) -> None:
+    """After the orders: a stock count, some waste, one product low and one out of stock."""
+    from apps.catalog import stock
+
+    counted = list(spec.get("stock", {}))
+    if not counted:
+        return
+    first = products[counted[0]]
+    stock.adjust(first, reason="waste", quantity=first.min_quantity, note="Out of date (made-up)", actor=owner)
+    if "stock_low" in spec:
+        stock.adjust(products[spec["stock_low"]], reason="counted", quantity=spec["stock"][spec["stock_low"]][1],
+                     note="Weekly stock count", actor=owner)
+    if "stock_out" in spec:
+        stock.adjust(products[spec["stock_out"]], reason="counted", quantity=0, note="Sold out", actor=owner)
 
 
 def _customers(index: int) -> list:

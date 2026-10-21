@@ -68,6 +68,8 @@ class Order(models.Model):
                                       help_text="Found from the postcode or suburb when left empty.")
     delivery_fee = models.DecimalField("Delivery fee (NZ$)", max_digits=8, decimal_places=2, default=Decimal("0"), editable=False)
     delivery_fee_gst = models.BooleanField("GST in the delivery fee", default=True, editable=False)
+    stock_taken = models.BooleanField(default=False, editable=False,
+                                      help_text="This order took its products off the stock when it was confirmed (task 2.2).")
     notes = models.TextField(blank=True, help_text="Customer requests, for example 'cut into small pieces'.")
     estimated_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"), editable=False)
     total = models.DecimalField("Total (NZ$, incl. GST)", max_digits=12, decimal_places=2, default=Decimal("0"), editable=False)

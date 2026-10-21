@@ -12,4 +12,4 @@ class CatalogConfig(AppConfig):
         from .models import Category, Product
 
         track(Category, exclude={"updated_at"})
-        track(Product, exclude={"updated_at"})
+        track(Product, exclude={"updated_at", "stock_quantity"})  # stock changes are in the stock history

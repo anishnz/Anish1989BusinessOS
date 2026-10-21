@@ -10,6 +10,9 @@ admin and (later) the WhatsApp AI all follow the same rules:
   and a time before it is sent to the customer or confirmed; the delivery fee
   comes from the area and is part of the total. Slot, area and minimum-order
   rules are strict for customers and warnings for staff (D-121);
+- stock (task 2.2): confirming takes the ordered amounts off counted
+  products, real weights correct it, cancelling a confirmed order puts it
+  back. Customers cannot confirm more than the stock; staff get a warning;
 - everything is recorded in the order history and the audit log.
 """
 from __future__ import annotations
@@ -24,6 +27,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.audit.services import audit
+from apps.catalog import stock
 from apps.catalog.models import Product, gst_in
 from apps.customers.models import Customer
 from apps.fulfilment import services as fulfilment
@@ -180,11 +184,13 @@ def _clean_fulfilment(order: Order) -> None:
 
 
 def booking_problems(order: Order, *, strict: bool = False) -> list[str]:
-    """What stops the order being sent to the customer or confirmed. Staff: only the must-haves (D-121, D-122)."""
+    """What stops the order being sent to the customer or confirmed. Staff: only the must-haves (D-121, D-122, D-132)."""
     problems = fulfilment.required_problems(order)
     if strict:
         fulfilment.lock_bookings()
         problems += fulfilment.rule_problems(order, order.products_estimate, exact=True)
+        if not order.stock_taken:  # a confirmed order (new time, say) already holds its stock
+            problems += stock.shortages(order, lock=True)
     return problems
 
 
@@ -193,6 +199,8 @@ def warnings(order: Order) -> list[str]:
     if order.status not in BEFORE_READY:
         return []
     found = fulfilment.required_problems(order) + fulfilment.rule_problems(order, order.products_estimate)
+    if not order.stock_taken:
+        found += stock.shortages(order)  # once confirmed, the stock is already taken (it may be below zero)
     return list(dict.fromkeys(found))
 
 
@@ -378,6 +386,8 @@ def change_status(order: Order, to_status: str, *, actor=None, note: str = "", s
             f"The final price (${order.total}) differs from the estimate (${order.estimated_total}). "
             "Send the final price to the customer first."
         )
+    if to_status == S.CONFIRMED and not order.stock_taken:
+        stock.take_for_order(order, actor=actor)
     return _move(order, to_status, actor, note)
 
 
@@ -388,6 +398,7 @@ def _cancel(order: Order, to_status: str, *, actor=None, note: str = "") -> Orde
         raise ValidationError("Give a reason for cancelling.")
     if order.is_paid:
         raise ValidationError("This order is paid. Record the refund first (mark it as not paid), then cancel it.")
+    stock.give_back(order, actor=actor)
     return _move(order, to_status, actor, note)
 
 
@@ -398,6 +409,7 @@ def set_weights(order: Order, weights: dict[int, object], *, actor=None) -> Orde
     if order.status != S.PREPARING:
         raise ValidationError("Weights can only be entered while the order is being prepared.")
     lines = {line.pk: line for line in order.lines.all()}
+    counted_before = {pk: line.effective_quantity for pk, line in lines.items()}
     for line_id, value in weights.items():
         line = lines.get(int(line_id))
         if line is None:
@@ -410,6 +422,7 @@ def set_weights(order: Order, weights: dict[int, object], *, actor=None) -> Orde
         line.final_quantity = weight
         line.save(update_fields=["final_quantity"])
     recalculate(order)
+    stock.weight_changed(order, counted_before, actor=actor)
     audit("orders.weights", target=order, actor=actor, metadata={"lines": len(weights), "total": str(order.total), "estimate": str(order.estimated_total)})
     return order
 
