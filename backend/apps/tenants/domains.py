@@ -7,8 +7,8 @@ one is the main address. The others send visitors to the main address
 (see apps.tenants.middleware), so links in old emails, posters and the
 WhatsApp webhook keep working after a change.
 
-Custom domains (for example `gorkhabutchery.co.nz`) come in Step 2. They need
-a DNS ownership check and HTTPS certificates first.
+A business's own domains (for example `gorkhabutchery.co.nz`, task 2.8) are
+in apps.tenants.custom_domains: a DNS ownership check first, then HTTPS.
 
 Only the Super Admin changes addresses in Step 1. Every change is written to
 the platform audit log and to the business's own audit log.
@@ -24,7 +24,7 @@ from django_tenants.utils import get_public_schema_name, schema_context
 
 from apps.audit.services import audit, platform_actor
 
-from .models import Domain, Tenant
+from .models import CustomDomain, Domain, Tenant
 
 # One DNS label: letters, digits and hyphens, no hyphen at either end.
 LABEL_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$")
@@ -137,7 +137,7 @@ def add_subdomain(tenant, label: str, *, make_main: bool = False, actor=None, re
     _check_business(tenant)
     Tenant.objects.select_for_update().filter(pk=tenant.pk).first()  # one change at a time per business
     label = validate_label(label)
-    if Domain.objects.filter(tenant=tenant).count() >= MAX_SUBDOMAINS:
+    if Domain.objects.filter(tenant=tenant, custom__isnull=True).count() >= MAX_SUBDOMAINS:  # own domains count separately (task 2.8)
         raise ValidationError(f"A business can have up to {MAX_SUBDOMAINS} web addresses. Remove one first.")
     # is_primary must be set on purpose: the library makes a new domain the main one by default.
     domain = Domain(tenant=tenant, domain=subdomain_host(label), is_primary=make_main)
@@ -164,6 +164,8 @@ def check_removable(domain: Domain) -> None:
     _check_business(domain.tenant)
     if domain.is_primary:
         raise ValidationError("The main address cannot be removed. Make another address the main one first.")
+    if CustomDomain.objects.filter(domain=domain).exists():
+        raise ValidationError("This is the business's own domain. Remove it in the list of own domains.")
 
 
 def remove(domain: Domain, *, actor=None, request=None) -> None:

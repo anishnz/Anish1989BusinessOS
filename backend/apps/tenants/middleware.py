@@ -11,15 +11,29 @@ Replaces django-tenants' TenantMainMiddleware (it must stay first in MIDDLEWARE)
   which would break a business that changes back to an earlier address.
 - Webhooks, the API, health checks and static files are never redirected, so
   services such as the WhatsApp webhook keep working on an old address.
+- A business's own domain (task 2.8) is not in DJANGO_ALLOWED_HOSTS. It is
+  let in when it is a live custom domain in the database (D-162).
+- /internal/tls-allowed/?domain=<name> answers Caddy's "may I get a
+  certificate for this name?" (200 yes, 404 no) before any host check. The
+  public site never reaches it: the Caddyfile answers /internal/* with 404.
 """
 from django.core.exceptions import DisallowedHost
 from django.db import connection
-from django.http import HttpResponseNotFound, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django.http.request import split_domain_port
 from django_tenants.middleware.main import TenantMainMiddleware
 from django_tenants.utils import get_tenant_domain_model, remove_www
 
 NEVER_REDIRECT = ("/webhooks/", "/api/", "/health/", "/static/")
+TLS_ASK_PATH = "/internal/tls-allowed/"
+
+
+def tls_answer(request):
+    from .custom_domains import tls_allowed
+
+    if request.method != "GET":
+        return HttpResponseNotFound()
+    return HttpResponse("ok", content_type="text/plain") if tls_allowed(request.GET.get("domain", "")) else HttpResponseNotFound()
 
 
 def request_host(request) -> tuple[str, str]:
@@ -31,10 +45,19 @@ def request_host(request) -> tuple[str, str]:
 class TenantRoutingMiddleware(TenantMainMiddleware):
     def process_request(self, request):
         connection.set_schema_to_public()
+        if request.path == TLS_ASK_PATH:
+            return tls_answer(request)
         try:
             name, port = request_host(request)
         except DisallowedHost:
-            return HttpResponseNotFound()
+            from .custom_domains import is_live
+
+            raw = request._get_raw_host()
+            name, port = split_domain_port(raw)
+            if not name or not is_live(name):
+                return HttpResponseNotFound()
+            request.get_host = lambda raw=raw: raw  # a live custom domain, checked just now against the database
+            port = f":{port}" if port else ""
         hostname = remove_www(name)
 
         domain_model = get_tenant_domain_model()

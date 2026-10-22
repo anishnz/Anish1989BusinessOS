@@ -101,11 +101,15 @@ def audit(
     actor=None,
     actor_type: str | None = None,
     actor_email: str = "",
+    actor_elsewhere: bool = False,
 ) -> AuditEvent:
+    """`actor_elsewhere`: the person is a user of another schema (a business admin seen in the platform log): keep only `actor_email`."""
     request = request if request is not None else current_request()
     a_type, a_id, a_email = _actor(request, actor)
     if actor_type:
         a_type = actor_type
+    if actor_elsewhere:
+        a_id, a_email = None, actor_email
     if actor_email and not a_email:
         a_email = actor_email
 

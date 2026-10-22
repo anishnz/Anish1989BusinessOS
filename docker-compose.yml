@@ -76,7 +76,29 @@ services:
     <<: *app
     command: celery -A config beat --loglevel=info --schedule /tmp/celerybeat-schedule
 
+  # HTTPS for a real server (task 2.8). Not started on a laptop; on a server run:
+  #   docker compose --profile server up -d
+  # Needs ports 80 and 443 open, ACME_EMAIL in .env, and DNS of the platform domain pointing here.
+  caddy:
+    image: caddy:2.10.2-alpine
+    profiles: ["server"]
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+
 volumes:
+  caddy_data:
+  caddy_config:
   postgres_data:
   redis_data:
   backups_data:

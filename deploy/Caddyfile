@@ -1,0 +1,31 @@
+# Caddy in front of the platform on a server (task 2.8). Start it with:
+#   docker compose --profile server up -d
+#
+# - Gets free HTTPS certificates from Let's Encrypt for every address, the
+#   first time it is visited ("on-demand TLS").
+# - Before it asks for a certificate, it asks our app whether the name is a
+#   real address of the platform or a business (a live own domain). This stops
+#   strangers from making the server request certificates for any name.
+# - Set ACME_EMAIL in .env: Let's Encrypt writes there about expiring
+#   certificates and problems.
+{
+	email {$ACME_EMAIL}
+	on_demand_tls {
+		ask http://web:8000/internal/tls-allowed/
+	}
+}
+
+https:// {
+	tls {
+		on_demand
+	}
+	encode gzip
+	# The certificate question is only for Caddy, never for visitors.
+	@internal path /internal/*
+	respond @internal 404
+	reverse_proxy web:8000 {
+		header_up X-Forwarded-Proto https
+	}
+}
+
+# Plain http:// is sent to https:// by Caddy automatically.

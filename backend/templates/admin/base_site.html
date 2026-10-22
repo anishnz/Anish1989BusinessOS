@@ -15,6 +15,7 @@
     {% if request.tenant.schema_name == "public" %}<a href="{% url 'platform_people' %}">Businesses and users</a> /{% if show_test_data_link %} <a href="{% url 'platform_test_data' %}">Test data</a> /{% endif %}{% else %}<a href="{% url 'dashboard' %}">Dashboard</a> /{% endif %}
     <a href="{% url 'system_check' %}">Check system</a> /
     <a href="{% url 'backups' %}">Backups</a> /
+    {% if request.tenant.schema_name != "public" %}<a href="{% url 'web_addresses' %}">Web addresses</a> /{% endif %}
     {% if show_setup_link %}<a href="{% url 'setup' %}">Set up your business</a> /{% endif %}
     <a href="{% url 'ticket_list' %}">Tickets</a> /
     <a href="{% url 'ticket_new' %}?from={{ request.path|urlencode }}">Report a problem</a> /

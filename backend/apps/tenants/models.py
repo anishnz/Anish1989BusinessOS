@@ -65,3 +65,44 @@ class Domain(DomainMixin):
 
     def __str__(self) -> str:
         return self.domain
+
+
+class CustomDomain(models.Model):
+    """
+    A business's own domain, for example gorkhabutchery.co.nz (task 2.8,
+    D-159 to D-163). It only opens the business (a Domain row) once the DNS
+    check found the TXT code and the domain points to the platform.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Waiting for DNS"
+        LIVE = "live", "Live"
+        FAILING = "failing", "DNS problem"
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="custom_domains")
+    name = models.CharField(max_length=253, unique=True, help_text="Without www. Both the name and www.name work.")
+    token = models.CharField(max_length=40, editable=False)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    domain = models.OneToOneField(Domain, null=True, blank=True, on_delete=models.SET_NULL, related_name="custom",
+                                  help_text="The address row that routes visitors, once the domain is live.")
+    added_by = models.CharField(max_length=254, blank=True)
+    last_result = models.CharField(max_length=500, blank=True)
+    last_checked_at = models.DateTimeField(null=True, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    failing_since = models.DateTimeField(null=True, blank=True)
+    fell_back_at = models.DateTimeField(null=True, blank=True, help_text="When the platform address became the main address again.")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def txt_name(self) -> str:
+        return f"_anish1989-verify.{self.name}"
+
+    @property
+    def txt_value(self) -> str:
+        return f"anish1989-verify={self.token}"

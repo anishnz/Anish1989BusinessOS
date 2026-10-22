@@ -168,6 +168,13 @@ class TestInstall:
             row = DailySummary.objects.get()
             assert row.text.startswith("Daily summary for Kathmandu Khasi Pasal") and "never sent" in row.whatsapp_result
 
+    def test_own_domain_is_made_up_and_never_live(self, butchery):
+        """Task 2.8: a .example domain waiting for DNS (.example names never exist on the internet)."""
+        from apps.tenants.models import CustomDomain
+
+        row = CustomDomain.objects.get(tenant__schema_name="test_butchery")
+        assert (row.name, row.status, row.domain) == ("test-butchery.example", "pending", None)
+
     def test_running_again_changes_nothing(self, butchery):
         assert services.install(only=["test_butchery"]) == ["Kathmandu Khasi Pasal: already there (not changed)"]
 

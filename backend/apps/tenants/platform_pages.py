@@ -4,7 +4,8 @@ Super Admin page (platform site only): a business's web addresses.
 /platform/businesses/<business id>/addresses/
 
 tenants.view to look; tenants.edit to add an address, choose the main one,
-or remove one.
+or remove one. The business's own domains (task 2.8) are added by the
+business; the Super Admin sees them here and can remove them.
 """
 from __future__ import annotations
 
@@ -20,8 +21,8 @@ from django_tenants.utils import get_public_schema_name
 from apps.core import deleteguard
 from apps.rbac import policy
 
-from . import domains
-from .models import Domain, Tenant
+from . import custom_domains, domains
+from .models import CustomDomain, Domain, Tenant
 
 
 class AddAddressForm(forms.Form):
@@ -54,6 +55,21 @@ def addresses(request, schema: str):
                     domain = domains.add_subdomain(tenant, form.cleaned_data["label"], make_main=form.cleaned_data["make_main"], actor=request.user, request=request)
                     messages.success(request, f"Added {domain.domain}." + (" It is now the main address." if domain.is_primary else ""))
                     return redirect(here)
+            elif action == "remove_own":
+                cd = CustomDomain.objects.filter(tenant=tenant, pk=request.POST.get("custom") or 0).first() \
+                    if str(request.POST.get("custom", "")).isdigit() else None
+                if cd is None:
+                    raise ValidationError("That domain does not belong to this business.")
+                if cd.domain_id and Domain.objects.filter(pk=cd.domain_id, is_primary=True).exists():
+                    raise ValidationError("This is the main address. Make another address the main one first.")
+                page = deleteguard.require(
+                    request, title=f"Remove {cd.name}?", back=here, fields={"action": "remove_own", "custom": cd.pk},
+                    message=f"{cd.name} is the business's own domain. It will stop opening {tenant.name}.")
+                if page is not None:
+                    return page
+                custom_domains.remove(cd, actor=request.user, request=request)
+                messages.success(request, f"Removed {cd.name}.")
+                return redirect(here)
             else:
                 domain = Domain.objects.filter(tenant=tenant, pk=request.POST.get("domain") or 0).first() \
                     if str(request.POST.get("domain", "")).isdigit() else None
@@ -92,5 +108,7 @@ def addresses(request, schema: str):
         "can_change": can_change,
         "suffix": "." + domains.platform_domain(),
         "max_addresses": domains.MAX_SUBDOMAINS,
+        "own": CustomDomain.objects.filter(tenant=tenant).order_by("name"),
+        "platform_count": Domain.objects.filter(tenant=tenant, custom__isnull=True).count(),
         "back": reverse("admin:tenants_tenant_change", args=[tenant.pk]),
     })

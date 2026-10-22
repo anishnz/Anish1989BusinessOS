@@ -28,7 +28,7 @@
 
   {% if can_change %}
     <h2 style="margin-top: 24px;">Add a web address</h2>
-    {% if rows|length >= max_addresses %}
+    {% if platform_count >= max_addresses %}
       <p>This business has {{ max_addresses }} addresses, the most allowed. Remove one to add another.</p>
     {% else %}
       <form method="post">{% csrf_token %}<input type="hidden" name="action" value="add">
@@ -42,7 +42,28 @@
         <div class="submit-row"><input type="submit" value="Add address" class="default"></div>
       </form>
     {% endif %}
-    <p class="help">Own domains (for example gorkhabutchery.co.nz) come in a later step, with a DNS check and automatic HTTPS.</p>
   {% endif %}
+
+  <h2 style="margin-top: 24px;">The business's own domains</h2>
+  <p class="help">Added by the business's System Admin or IT Admin on their Web addresses page (DNS check and automatic HTTPS).</p>
+  {% if own %}
+    <table style="width: 100%;">
+      <thead><tr><th>Domain</th><th>Status</th><th>Last check</th><th>Added by</th>{% if can_change %}<th>Change</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for cd in own %}
+        <tr>
+          <td>{{ cd.name }}</td>
+          <td>{{ cd.get_status_display }}</td>
+          <td>{% if cd.last_checked_at %}{{ cd.last_checked_at|date:"j M Y H:i" }}: {{ cd.last_result }}{% else %}–{% endif %}</td>
+          <td>{{ cd.added_by|default:"–" }}</td>
+          {% if can_change %}<td>
+            <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="remove_own"><input type="hidden" name="custom" value="{{ cd.pk }}">
+              <input type="submit" value="Remove" style="background:#ba2121"></form>
+          </td>{% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}<p>None.</p>{% endif %}
 </div>
 {% endblock %}

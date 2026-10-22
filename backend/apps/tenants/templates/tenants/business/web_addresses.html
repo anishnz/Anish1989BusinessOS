@@ -1,0 +1,78 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 900px;">
+  <p>The <strong>main address</strong> is the one people use and the one in emails and links. Visitors on another address of
+     {{ tenant.name }} are sent to the main address. Webhooks (for example WhatsApp) work on every address.</p>
+
+  <h2>Addresses that open {{ tenant.name }}</h2>
+  <table style="width: 100%;">
+    <thead><tr><th>Address</th><th>Kind</th><th>Use</th>{% if can_change %}<th>Change</th>{% endif %}</tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.domain.domain }}</a></td>
+        <td>{% if r.own %}Your own domain{% else %}Platform address{% endif %}</td>
+        <td>{% if r.domain.is_primary %}<strong>Main address</strong>{% else %}Sends visitors to the main address{% endif %}</td>
+        {% if can_change %}<td>
+          {% if not r.domain.is_primary %}
+            <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="main"><input type="hidden" name="id" value="{{ r.domain.pk }}">
+              <input type="submit" value="Make main address" onclick="return confirm('Make {{ r.domain.domain|escapejs }} the main address? People who are signed in must sign in again there.');"></form>
+          {% else %}–{% endif %}
+        </td>{% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="help">Platform addresses are added by the platform's Super Admin.</p>
+
+  <h2 style="margin-top: 24px;">Your own domains</h2>
+  {% if not own %}<p>None yet.</p>{% endif %}
+  {% for cd in own %}
+    <div class="module" style="padding: 10px 14px; margin-bottom: 14px;">
+      <h3 style="margin: 0 0 6px;">{{ cd.name }} –
+        {% if cd.status == "live" %}<span style="color: var(--message-success-bg, #2e7d32);">✔ Live</span>
+        {% elif cd.status == "failing" %}<span style="color: #ba2121;">✖ DNS problem</span>
+        {% else %}<span>⏳ Waiting for DNS</span>{% endif %}
+      </h3>
+      <p style="margin: 0 0 6px;">{% if cd.last_checked_at %}Last check {{ cd.last_checked_at|date:"j M Y H:i" }}: {{ cd.last_result }}{% else %}Not checked yet.{% endif %}
+        {% if cd.status == "failing" %}<br>Since {{ cd.failing_since|date:"j M Y H:i" }}. After 3 days, the platform address becomes the main address again.{% endif %}
+        {% if cd.status == "live" %}<br>www.{{ cd.name }} works too, when it points to the platform.{% endif %}</p>
+      {% if cd.status == "pending" %}
+        <p style="margin: 6px 0;">Add these records at your domain company (for example where you bought the domain), then click <strong>Check now</strong>.
+           DNS changes can take a few minutes to a few hours. We also check every hour.</p>
+        <table style="width: 100%;">
+          <thead><tr><th>Type</th><th>Name</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>TXT</td><td><code>{{ cd.txt_name }}</code></td><td><code>{{ cd.txt_value }}</code></td></tr>
+            {% for ip in server_ips %}<tr><td>{% if ":" in ip %}AAAA{% else %}A{% endif %}</td><td><code>{{ cd.name }}</code></td><td><code>{{ ip }}</code></td></tr>{% endfor %}
+            {% if cname_target %}<tr><td>or CNAME</td><td><code>{{ cd.name }}</code></td><td><code>{{ cname_target }}</code></td></tr>{% endif %}
+          </tbody>
+        </table>
+        <p class="help">Use the A record for a main domain such as gorkhabutchery.co.nz. A CNAME works for a name with a part in front, such as
+          shop.gorkhabutchery.co.nz. For www, add the same record for www.{{ cd.name }}. Keep the TXT record.</p>
+      {% endif %}
+      {% if can_change %}
+        <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="check"><input type="hidden" name="id" value="{{ cd.pk }}">
+          <input type="submit" value="Check now"></form>
+        <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="{{ cd.pk }}">
+          <input type="submit" value="Remove" style="background:#ba2121"></form>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  {% if can_change %}
+    {% if own|length >= max_own %}
+      <p>You have {{ max_own }} own domains, the most allowed. Remove one to add another.</p>
+    {% else %}
+      <h2 style="margin-top: 16px;">Add your own domain</h2>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="add">
+        {{ form.name.errors }}
+        <p><label for="id_name">{{ form.name.label }}:</label>
+           <input type="text" name="name" id="id_name" maxlength="253" required value="{{ form.name.value|default:'' }}" autocomplete="off" spellcheck="false" size="40"></p>
+        <p class="help">{{ form.name.help_text }} You need a domain you already own. HTTPS is set up automatically.</p>
+        <div class="submit-row"><input type="submit" value="Add domain" class="default"></div>
+      </form>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -32,6 +32,9 @@ CSRF_TRUSTED_ORIGINS = env("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 # Root domain of the platform. Tenants get <slug>.<PLATFORM_DOMAIN>.
 PLATFORM_DOMAIN = env("PLATFORM_DOMAIN")
+# Custom domains (task 2.8): the server's public IP addresses that business domains must point to.
+# Empty = the addresses PLATFORM_DOMAIN points to.
+PLATFORM_SERVER_IPS = env.list("PLATFORM_SERVER_IPS", default=[])
 
 # ---------------------------------------------------------------------------
 # Apps
@@ -243,6 +246,8 @@ CELERY_BEAT_SCHEDULE = {
     # Task 2.7: star feedback one hour after an order is completed, and the daily owner summary at each business's time.
     "order-feedback": {"task": "orders.ask_feedback", "schedule": 10 * 60},
     "daily-summaries": {"task": "reports.daily_summaries", "schedule": 5 * 60},
+    # Task 2.8: DNS checks of businesses' own domains (hourly while waiting or broken, daily when live).
+    "custom-domains": {"task": "tenants.check_custom_domains", "schedule": 15 * 60},
 }
 
 # ---------------------------------------------------------------------------

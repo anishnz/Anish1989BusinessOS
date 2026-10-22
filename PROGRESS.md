@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board) and 2.7 (daily owner summary and star feedback), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.8 (custom domains). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board), 2.7 (daily owner summary and star feedback) and 2.8 (own domains with DNS check and HTTPS), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.9 (website content editor). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -263,7 +263,16 @@ Open a new chat in the ERP CRM project and type:
   - Test data: made-up feedback (one low with a comment) and yesterday's summary; the summary email is off and no WhatsApp numbers in test businesses
   - User guide: new chapter 20 (with 2 pictures); chapters 8, 16 and 17 updated
   - 973 tests pass (32 new for feedback and the summary, 1 more in the test data tests) and 11 staff app tests; 40 of 41 deliberate breaks in task 2.7 are caught by tests (8 tests were made stronger, and a clash where "not run" and "skipped" looked the same was fixed); the 41st was a repeated permission check (removed)
-- [ ] 2.8 Custom domains with DNS check and automatic SSL
+- [x] 2.8 Custom domains with DNS check and automatic SSL (done 23 Oct 2026)
+  - Decisions D-159 to D-163 (Caddy on-demand HTTPS, TXT code plus pointing, business admins add domains, warn then fall back after 3 days)
+  - Settings → Web addresses for the business: add up to 3 own domains, the exact DNS records to add, Check now, make main, remove (with the safety check); System Admin and IT Admin change, the Business Owner sees
+  - DNS check (dnspython): hourly while waiting (daily after a week), daily when live, hourly when broken; live → Domain row; broken → email at once, after 3 days the platform address is the main address again
+  - Routing: live own domains pass the host check without a settings change; www.<name> works too; Caddy's certificate question answered only for real addresses
+  - Server: `deploy/Caddyfile` and a `caddy` service (`docker compose --profile server up -d`); `.env` gets ACME_EMAIL and PLATFORM_SERVER_IPS
+  - Super Admin sees and can remove each business's own domains; Check system item "Own domains"
+  - Test data: a made-up `.example` domain per test business (never live)
+  - User guide: new chapter 21 (with a picture); chapters 10 and 11 updated
+  - 1016 tests pass (42 new for own domains, 1 more in the test data tests) and 11 staff app tests; 43 of 45 deliberate breaks in task 2.8 are caught by tests (6 tests were made stronger); the other 2 were checks that could never fire (removed)
 - [ ] 2.9 Website content editor (title, headings, text, SEO) with "Generate with AI"
 
 ## Step 3: Enquiry, quote and booking flow

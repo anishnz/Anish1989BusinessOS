@@ -423,6 +423,28 @@ def check_ai() -> list[Result]:
     return [Result("ai", "Connections", label, WARNING if note else OK, f"Answering. This month: about NZ${spent:.2f} of NZ${limit:.2f}{note}.")]
 
 
+def check_custom_domains(tenant) -> list[Result]:
+    """The business's own domains (task 2.8): live, waiting for DNS, or a DNS problem."""
+    from apps.tenants.models import CustomDomain
+
+    label = "Own domains"
+    with schema_context(get_public_schema_name()):
+        rows = list(CustomDomain.objects.filter(tenant=tenant).order_by("name"))
+    if not rows:
+        return [Result("custom_domains", "Business", label, NOT_SET_UP, "No own domain. The platform address is used.")]
+    failing = [r.name for r in rows if r.status == CustomDomain.Status.FAILING]
+    pending = [r.name for r in rows if r.status == CustomDomain.Status.PENDING]
+    live = [r.name for r in rows if r.status == CustomDomain.Status.LIVE]
+    if failing:
+        return [Result("custom_domains", "Business", label, FAILED,
+                       f"DNS problem: {', '.join(failing)}. It no longer points to the platform. Fix the DNS records (Settings → Web addresses).")]
+    if pending:
+        return [Result("custom_domains", "Business", label, WARNING,
+                       f"Waiting for DNS: {', '.join(pending)}. Add the DNS records shown on Settings → Web addresses."
+                       + (f" Live: {', '.join(live)}." if live else ""))]
+    return [Result("custom_domains", "Business", label, OK, f"Live: {', '.join(live)}.")]
+
+
 def business_checks(tenant, *, live: bool = True) -> list[Result]:
     """Checks for one business. Must run inside that business's schema."""
     found: list[Result] = []
@@ -432,6 +454,7 @@ def business_checks(tenant, *, live: bool = True) -> list[Result]:
     found += _safe("scheduler", "System", "Scheduled jobs", check_scheduler)
     found += _safe("licence", "Business", "Licence", lambda: check_licence(tenant))
     found += _safe("web_address", "Business", "Web address", lambda: check_web_address(tenant))
+    found += _safe("custom_domains", "Business", "Own domains", lambda: check_custom_domains(tenant))
     found += _safe("fulfilment", "Business", "Pickup and delivery", check_fulfilment)
     found += _safe("connections", "Connections", "Saved connections", lambda: test_connections(live))
     found += _safe("email", "Connections", "Email sending", check_email)

@@ -6,6 +6,7 @@ from apps.accounts import login_as
 from apps.core.spa import app_page
 from apps.inbox.whatsapp import webhook as whatsapp_webhook
 from apps.reports.views import dashboard_page
+from apps.tenants.business_pages import web_addresses
 
 from .urls_shared import shared_urlpatterns
 
@@ -18,6 +19,7 @@ business_urlpatterns = [
     path("api/ai/", include("apps.ai.urls")),
     path("api/reports/", include("apps.reports.urls")),
     path("dashboard/", admin.site.admin_view(dashboard_page), name="dashboard"),
+    path("settings/web-addresses/", admin.site.admin_view(web_addresses), name="web_addresses"),  # task 2.8
     path("", include("apps.setup.urls")),
     path("webhooks/whatsapp/", whatsapp_webhook, name="whatsapp_webhook"),
     # "Log in as" from the platform's Super Admin (task 1.18)

@@ -1,6 +1,6 @@
 # 10. Web addresses
 
-*User guide, chapter 10 · Last updated 21 October 2026*
+*User guide, chapter 10 · Last updated 23 October 2026*
 
 **Who this is for:** the platform Super Admin, and business owners who want to know their address.
 
@@ -57,4 +57,4 @@ They see a page that says **No business at this address**. Nothing about other b
 - **On a laptop**, the platform address is `localhost`. Business addresses look like `http://gorkha.localhost:8000/`. Chrome, Edge and Firefox open them without any setup.
 - **On a real server**, the platform address is your domain, for example `example.co.nz`, and businesses open at `https://gorkha.example.co.nz/`. The technical steps (DNS records, HTTPS certificate and moving existing businesses) are in the developer setup guide, section "Web addresses (task 1.12)".
 
-Own domains, for example `gorkhabutchery.co.nz`, come in a later step. They need a DNS ownership check and automatic HTTPS first.
+A business can also use its own domain, for example `gorkhabutchery.co.nz`: its System Admin or IT Admin adds it on **Web addresses** (chapter 21). The Super Admin sees each business's own domains at the bottom of the business's Web addresses page and can remove them.

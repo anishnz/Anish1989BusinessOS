@@ -19,5 +19,6 @@
   {"name": "order-board-tv", "site": "business", "path": "/app/board", "width": 1600, "height": 900, "wait_for": ".board-card", "steps": [{"check": "label:has-text('Show tomorrow') input", "wait_for": ".board-card:has-text('Tomorrow')"}, {"click": "button:text-is('TV mode')", "wait_for": ".board-tv .board-card"}]},
   {"name": "daily-summary-settings", "site": "business", "path": "/admin/reports/dailysummarysettings/", "selector": "#content"},
   {"name": "customer-feedback", "site": "business", "path": "/admin/orders/orderfeedback/", "selector": "#content"},
+  {"name": "own-domain-waiting", "site": "business", "path": "/settings/web-addresses/", "selector": "#content"},
   {"name": "test-data", "site": "platform", "path": "/platform/test-data/?business=test_butchery", "selector": "#content"}
 ]

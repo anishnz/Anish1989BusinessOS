@@ -1,6 +1,6 @@
 # 11. Check system
 
-*User guide, chapter 11 · Last updated 22 October 2026 (WhatsApp messages about orders added)*
+*User guide, chapter 11 · Last updated 23 October 2026 (WhatsApp messages about orders added)*
 
 **Who this is for:** System Admins, IT Admins and Business Owners of a business, and the platform Super Admin.
 
@@ -43,6 +43,7 @@ Each check shows a short message that says what to do. Messages never show passw
 | System | Scheduled jobs | A scheduled job ran in the last 15 minutes |
 | Business | Licence | The licence is valid; amber 7 days before a trial or licence ends, and in the grace period |
 | Business | Web address | The business has a main address (chapter 10) |
+| Business | Own domains | Your own domains: live, waiting for DNS, or a DNS problem (chapter 21). Grey when you have none. |
 | Connections | Each saved connection | Each API key on the Integrations page is tested with the provider, like the **Test** button (chapter 4). All are tested at the same time, 10 seconds at most each |
 | Connections | Email sending | The business's own email connection, or the platform's |
 | Connections | WhatsApp messages | When the last call from Meta arrived, and whether it was accepted |

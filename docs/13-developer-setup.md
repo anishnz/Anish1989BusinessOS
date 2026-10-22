@@ -626,3 +626,14 @@ Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail
 - API: order detail adds `feedback`; the dashboard adds `feedback` (last 7 days, `feedback.stats`).
 - Admin: Reports and dashboard → Daily summary settings (view with orders.view, change and test with orders.configure), Daily summaries (reports.view, read-only); Orders → Customer feedback (read-only).
 - Migrations `orders.0006_feedback`, `reports.0001_daily_summary`. Tests: `tests/test_feedback_summary.py`.
+
+## Own domains and HTTPS (task 2.8)
+
+- Model `tenants.CustomDomain` (public schema): name (unique, without www, IDNA form), token, status (pending, live, failing), `domain` (the `Domain` routing row, made when it goes live), last result, verified / failing / fell-back times.
+- `apps.tenants.custom_domains`: `validate()`, `lookup()` (dnspython, 5 s; tests replace it), `server_ips()` (`PLATFORM_SERVER_IPS` or the platform domain's A/AAAA), `check_dns()`, `add()`, `check()` (pending → live; live ↔ failing; fall back after 3 days), `make_main_by_business()`, `remove()`, `due()`, `check_due()`, `tls_allowed()`, `is_live()`. Its `_record()` writes both audit logs; `audit(..., actor_elsewhere=True)` (new) keeps only the email of a business admin in the platform log.
+- Celery beat `tenants.check_custom_domains` every 15 minutes.
+- Middleware: `/internal/tls-allowed/?domain=` (Caddy's "ask") is answered first; a host that fails `ALLOWED_HOSTS` is let in when `is_live()`, by giving that request a `get_host()` that returns the checked host.
+- Pages: `/settings/web-addresses/` (`apps.tenants.business_pages`, Settings – View / Configure; link "Web addresses" in the admin header) and the Super Admin's business addresses page (own domains list, remove). `domains.check_removable()` refuses a custom domain's routing row; `add_subdomain()` counts only platform subdomains.
+- Check system: "Own domains" (not set up / waiting / live / DNS problem).
+- Server: `deploy/Caddyfile` and the `caddy` service (`caddy:2.10.2-alpine`, profile `server`, ports 80/443, volumes `caddy_data`, `caddy_config`). `.env`: `ACME_EMAIL`, `PLATFORM_SERVER_IPS`.
+- New package: dnspython (in `base.txt` and both lock files). Migration `tenants.0003_custom_domains`. Tests: `tests/test_custom_domains.py`.

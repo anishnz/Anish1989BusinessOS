@@ -181,6 +181,7 @@ def _fill_business(spec: dict, index: int, pw: str) -> None:
     _ai_chats(spec, customers)
     _board_today()
     _feedback_and_summary()
+    _own_domain(spec)
     _tickets(users)
 
 
@@ -447,6 +448,27 @@ def _feedback_and_summary() -> None:
 
     DailySummary.objects.create(day=yesterday, status=DailySummary.Status.SENT, text=summary.text(f, business_name()),
                                 whatsapp_result="Made-up test summary, never sent.", email_result="Switched off.")
+
+
+def _own_domain(spec: dict) -> None:
+    """
+    Task 2.8: a made-up own domain that waits for DNS. It ends in .example, a
+    name that can never exist on the internet, so it never goes live.
+    """
+    import secrets
+
+    from django.db import connection
+    from django_tenants.utils import get_public_schema_name, schema_context
+
+    from apps.tenants.models import CustomDomain, Tenant
+
+    schema = connection.schema_name
+    with schema_context(get_public_schema_name()):
+        tenant = Tenant.objects.get(schema_name=schema)
+        CustomDomain.objects.get_or_create(
+            name=f"{schema.replace('_', '-')}.example", defaults={
+                "tenant": tenant, "token": secrets.token_hex(16), "added_by": "made-up test data",
+                "last_result": "Made-up test domain (.example names never exist), so it always waits for DNS."})
 
 
 def _conversations(customers: list, users: dict) -> None:
