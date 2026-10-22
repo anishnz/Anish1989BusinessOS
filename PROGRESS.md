@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) and 2.4 (AI order taking on WhatsApp), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.5 (quick reorder and human handover in the inbox). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp) and 2.5 (quick reorder and hand-over), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.6 (live order board for the counter and kitchen). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -106,7 +106,7 @@ Open a new chat in the ERP CRM project and type:
   - Operations Manager default role now also sees products and customers
   - User guide chapter: docs/user-guide/07-whatsapp-and-inbox.md
   - 385 tests pass
-  - Still to do for the Step 1 "done" check: a real WhatsApp message from Meta (needs a public https address: a server, or the Cloudflare tunnel in guide 7.7)
+  - Still to do for the Step 1 "done" check: a real WhatsApp message from Meta (needs a public https address: a server, or the Cloudflare tunnel in guide 7.8)
 - [x] Extra (21 Oct 2026): MFA tools and Super Admin user control
   - 16-character backup codes with print/download; "My two-step verification" page: new backup codes and new phone (QR), both need the password
   - `reset_mfa` command for locked-out accounts
@@ -237,7 +237,13 @@ Open a new chat in the ERP CRM project and type:
   - Test data: AI settings and two made-up AI chats per business (no AI key, so the AI never answers there)
   - User guide: new chapter 18 (with 2 pictures); chapters 0, 7, 11 and 16 updated
   - 916 tests pass (44 new for the AI, 1 more in the test data tests) and 8 staff app tests; 54 of 56 deliberate breaks in task 2.4 are caught by tests (7 tests were added to catch them); of the other 2, one was a repeated check (removed) and one is an extra safety check that cannot change anything today
-- [ ] 2.5 Quick reorder ("same as last time") and human handover in the inbox
+- [x] 2.5 Quick reorder ("same as last time") and human handover in the inbox (done 22 Oct 2026)
+  - Decisions D-147 to D-150 (the AI offers the last 3 orders; inbox filter, menu badge, dashboard card and email; "Order again" for staff; "I will answer" assigns the chat)
+  - Order again: a new draft with the same products, amounts, notes and address at today's prices, without the time; products that cannot be ordered are left out and named. Staff button on the order page and next to the customer's last order; the AI tools `past_orders` and `reorder`
+  - Chats waiting for staff: "Needs staff" filter and labels in the inbox, a red count in the menu, a dashboard card, and one email per AI hand-over to staff with Customers – Assign (name, reason and link; never the messages; can be switched off)
+  - Test data: a made-up "same as last time" AI chat and a chat waiting for staff
+  - User guide: chapters 6.7, 7.4 and 18.5–18.6 (chapter 7 sections renumbered)
+  - 929 tests pass (13 new) and 8 staff app tests; 28 of 30 deliberate breaks in task 2.5 are caught by tests (1 test was made stronger); of the other 2, one was a repeated check (removed) and one cannot change anything (people who are switched off have no permissions)
 - [ ] 2.6 Live order board for the counter and kitchen
 - [ ] 2.7 Daily owner summary on WhatsApp and star feedback after the order
 - [ ] 2.8 Custom domains with DNS check and automatic SSL

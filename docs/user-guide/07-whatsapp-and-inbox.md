@@ -2,7 +2,7 @@
 
 *User guide, chapter 7 · Last updated 22 October 2026*
 
-**Who this is for:** staff who answer customers (section 7.1–7.4), the IT Admin who connects WhatsApp (section 7.5), and the person who runs the server (sections 7.6–7.7).
+**Who this is for:** staff who answer customers (sections 7.1–7.5), the IT Admin who connects WhatsApp (section 7.6), and the person who runs the server (sections 7.7–7.8).
 
 Each business connects **its own** WhatsApp Business number through Meta's official WhatsApp Business Platform (Cloud API). Messages from customers arrive in the business's **Inbox**. Staff answer from there.
 
@@ -46,14 +46,20 @@ To send one, open **Send an approved template** in the conversation:
 
 **Marketing templates are only sent to customers who agreed to marketing messages** (chapter 5). If a customer writes **STOP**, they are opted out automatically, and this is recorded in their consent history.
 
-## 7.4 Assign and close
+## 7.4 Chats that need staff
+
+When the AI assistant hands a chat to staff (chapter 18.6), the chat shows a red **Needs staff** label, and the menu shows a red number next to **Inbox**. Choose **Needs staff** in the Inbox list to see only those chats, oldest first, with the reason.
+
+![Chats waiting for staff in the staff app](images/inbox-needs-staff.png)
+
+## 7.5 Assign and close
 
 - **Assigned to**: choose a staff member and click **Assign**, so everyone knows who is answering.
 - **Close conversation** when it is finished. If the customer writes again, it opens again automatically.
 
 When a customer's personal data is removed (chapter 5), their messages are deleted too.
 
-## 7.5 Connect WhatsApp (IT Admin)
+## 7.6 Connect WhatsApp (IT Admin)
 
 You need a Meta Business account and a phone number that is not already used in the WhatsApp app.
 
@@ -78,7 +84,7 @@ You need a Meta Business account and a phone number that is not already used in 
 
 The callback URL must be a public **https** address. A laptop address such as `gorkhabutchery.localhost` cannot be reached by Meta. Use section 7.6 or 7.7 instead.
 
-## 7.6 Test on a laptop without Meta
+## 7.7 Test on a laptop without Meta
 
 This sends a pretend customer message through the real webhook, including the security checks. It needs a WhatsApp connection on the Integrations page, but test values are fine.
 
@@ -88,7 +94,7 @@ docker compose exec web python manage.py whatsapp_simulate --schema gorkhabutche
 
 Replies sent from the Inbox will show **Failed** with test values, because Meta does not accept them.
 
-## 7.7 Real WhatsApp test from a laptop (optional)
+## 7.8 Real WhatsApp test from a laptop (optional)
 
 Meta needs a public https address. A free Cloudflare quick tunnel gives your laptop one for as long as it runs.
 

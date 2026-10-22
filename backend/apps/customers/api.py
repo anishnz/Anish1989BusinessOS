@@ -37,14 +37,20 @@ class ConsentRecordSerializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
     tag_list = serializers.ListField(read_only=True)
+    last_order = serializers.SerializerMethodField()
 
     class Meta:
         model = Customer
         fields = [
             "id", "name", "phone", "email", "address", "notes", "tags", "tag_list", "preferred_language", "source",
-            "marketing_consent", "marketing_consent_at", "is_archived", "is_anonymised", "created_at", "updated_at",
+            "marketing_consent", "marketing_consent_at", "is_archived", "is_anonymised", "created_at", "updated_at", "last_order",
         ]
         read_only_fields = ["marketing_consent", "marketing_consent_at", "is_archived", "is_anonymised", "created_at", "updated_at"]
+
+    def get_last_order(self, obj):
+        """The customer's last placed order, for "Order again" in the list (task 2.5); only in the list."""
+        pk, number = getattr(obj, "last_order_id", None), getattr(obj, "last_order_number", None)
+        return {"id": pk, "number": number} if pk else None
 
     def _convert(self, func, value):
         try:
@@ -96,6 +102,13 @@ class CustomerList(generics.ListCreateAPIView):
             qs = qs.filter(marketing_consent=consent)
         if params.get("tag"):
             qs = qs.filter(tags__icontains=params["tag"].strip())
+        from django.db.models import OuterRef, Subquery
+
+        from apps.orders.models import Order
+        from apps.orders.services import REORDER_FROM
+
+        last = Order.objects.filter(customer=OuterRef("pk"), status__in=REORDER_FROM).order_by("-created_at")
+        qs = qs.annotate(last_order_id=Subquery(last.values("pk")[:1]), last_order_number=Subquery(last.values("number")[:1]))
         return services.search(qs, params.get("q"))
 
     def perform_create(self, serializer):

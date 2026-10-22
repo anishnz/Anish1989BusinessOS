@@ -97,6 +97,7 @@ tr.link:hover td { background: var(--surface-2); }
 .table-wrap { overflow-x: auto; }
 .pill { display: inline-block; padding: 2px 9px; border-radius: 99px; background: var(--surface-2); font-size: .82rem; white-space: nowrap; }
 .pill.on { background: var(--accent); color: var(--accent-ink); }
+.pill.needs { background: var(--bad); color: #fff; }
 .notice { background: var(--warn-bg); border-radius: 8px; padding: 10px 12px; }
 .center { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
 .login { width: 100%; max-width: 380px; }

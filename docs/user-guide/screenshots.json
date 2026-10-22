@@ -14,5 +14,6 @@
   {"name": "whatsapp-message-settings", "site": "business", "path": "/admin/orders/customermessagesettings/", "selector": "#content"},
   {"name": "ai-settings", "site": "business", "path": "/admin/ai/aisettings/", "selector": "#content"},
   {"name": "ai-log", "site": "business", "path": "/admin/ai/airun/", "selector": "#content"},
+  {"name": "inbox-needs-staff", "site": "business", "path": "/app/inbox?show=needs_staff", "width": 1000, "height": 700, "wait_for": "main h1", "selector": "main"},
   {"name": "test-data", "site": "platform", "path": "/platform/test-data/?business=test_butchery", "selector": "#content"}
 ]

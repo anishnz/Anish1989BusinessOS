@@ -5,6 +5,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import { visibleNav } from "../nav";
 import { useUnread } from "./useUnread";
+import { useWaiting } from "./useWaiting";
 
 const ICONS: Record<string, string> = { "/": "◧", "/orders": "≡", "/inbox": "✉", "/products": "▦", "/customers": "☺" };
 
@@ -31,6 +32,7 @@ export default function Layout() {
   const [theme, setTheme] = useState(readPref("theme") || "auto");
   const location = useLocation();
   const unread = useUnread(perms?.usable.includes("crm.view") ?? false);
+  const waiting = useWaiting(perms?.usable.includes("crm.view") ?? false).length;
 
   useEffect(() => setOpen(false), [location.pathname]);
   useEffect(() => {
@@ -63,6 +65,7 @@ export default function Layout() {
             <span className="icon" aria-hidden="true">{ICONS[item.to]}</span>
             <span className="label">{item.label}</span>
             {item.to === "/inbox" && unread > 0 && <span className="pill on badge" aria-label={`${unread} unread`}>{unread}</span>}
+            {item.to === "/inbox" && waiting > 0 && <span className="pill badge needs" title="Chats waiting for staff" aria-label={`${waiting} waiting for staff`}>{waiting}</span>}
           </NavLink>
         ))}
         <div style={{ flex: 1 }} />

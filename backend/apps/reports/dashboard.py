@@ -123,4 +123,10 @@ def summary(day: date | None = None, *, include_inbox: bool = False) -> dict:
         from apps.inbox.models import Conversation
 
         result["unread_conversations"] = Conversation.objects.filter(status=Conversation.Status.OPEN, unread_count__gt=0).count()
+        from apps.ai.agent import waiting_chats
+
+        waiting = waiting_chats()  # handed over by the AI, nobody picked up yet (task 2.5)
+        result["waiting_chats"] = {"count": waiting.count(), "oldest": [
+            {"conversation": c.conversation_id, "customer_name": c.conversation.customer.name if c.conversation.customer else "",
+             "reason": c.handover_reason, "since": c.handed_over_at.isoformat()} for c in waiting[:5]]}
     return result

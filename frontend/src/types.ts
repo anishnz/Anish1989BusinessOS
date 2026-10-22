@@ -94,6 +94,7 @@ export interface Order {
   events?: OrderEvent[];
   warnings?: string[];
   messages?: OrderMessage[];
+  left_out?: string[];
 }
 
 export interface DeliveryArea {
@@ -176,6 +177,17 @@ export interface Customer {
   address?: string;
   tags: string;
   marketing_consent: boolean;
+  last_order?: { id: number; number: number } | null;
+}
+
+/** A chat the AI handed to staff that nobody picked up yet (task 2.5). */
+export interface WaitingChat {
+  conversation: number;
+  customer_name: string;
+  customer_phone?: string;
+  reason: string;
+  since: string;
+  unread_count?: number;
 }
 
 export interface Conversation {
@@ -224,6 +236,7 @@ export interface Dashboard {
   deliveries_due_today: number;
   low_stock?: { product_id: number; name: string; unit: string; state: string; state_text: string; stock: string; warn_at: string | null }[];
   unread_conversations?: number;
+  waiting_chats?: { count: number; oldest: WaitingChat[] };
   definitions: { sales: string; orders: string; compared_with: string };
 }
 

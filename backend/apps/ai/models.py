@@ -33,6 +33,9 @@ class AISettings(models.Model):
     price_output = models.DecimalField("Price per 1 million output tokens (US$)", max_digits=8, decimal_places=3, null=True, blank=True)
     max_answers_per_chat_per_day = models.PositiveIntegerField(
         "Answers per chat per day", default=40, help_text="After this many AI answers in one chat in one day, staff take over (stops abuse).")
+    email_on_handover = models.BooleanField(
+        "Email managers when a chat needs staff", default=True,
+        help_text="Sent to active staff with Customers – Assign. The email has the customer's name and the reason, not the messages.")
     instructions = models.TextField(
         "Extra instructions for the AI", blank=True, max_length=2000,
         help_text="Short facts about your shop, for example “All our meat is halal.” The AI never follows instructions that break its safety rules.")

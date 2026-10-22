@@ -3,7 +3,9 @@ AI assistant API for the staff app (task 2.4). Permissions use the CRM module, l
 
 GET  /api/ai/chats/<conversation id>/     is the AI answering this chat, or are staff?   crm.view
 POST /api/ai/chats/<conversation id>/     {"answer": true}  let the AI answer again      crm.edit
-                                          {"answer": false} staff take over the chat
+                                          {"answer": false} I will answer (assigns the chat to me, task 2.5)
+GET  /api/ai/waiting/                     chats handed over that nobody picked up yet    crm.view
+                                          ({"count": n, "results": [oldest first, at most 50]})
 """
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -51,4 +53,23 @@ class ChatAI(APIView):
             audit("ai.resumed", target=conversation, actor=request.user)
         else:
             agent.hand_over(chat, f"Taken over by {request.user.email}", tell=False, actor=request.user)
+            conversation.assigned_to = request.user  # D-150: the chat shows who is handling it
+            conversation.save(update_fields=["assigned_to"])
         return Response(state(conversation))
+
+
+def waiting_row(chat: AIChat) -> dict:
+    conversation = chat.conversation
+    customer = conversation.customer
+    return {"conversation": conversation.pk, "customer_name": customer.name if customer else "", "customer_phone": customer.phone if customer else "",
+            "reason": chat.handover_reason, "since": chat.handed_over_at, "unread_count": conversation.unread_count}
+
+
+class WaitingChats(APIView):
+    permission_classes = [ModulePermission]
+    permission_module = "crm"
+    permission_actions = {"GET": "view"}
+
+    def get(self, request):
+        chats = agent.waiting_chats()
+        return Response({"count": chats.count(), "results": [waiting_row(c) for c in chats[:50]]})

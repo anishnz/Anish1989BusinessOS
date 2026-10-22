@@ -81,6 +81,11 @@ SPECS = [
          "notes": {"type": "string", "description": "Customer requests for the whole order"}}}},
     {"name": "send_for_confirmation", "description": "When the order is complete and has no problems: send the customer the order summary "
      "with Yes and No buttons. Only the customer's Yes confirms the order.", "parameters": {"type": "object", "properties": {}}},
+    {"name": "past_orders", "description": "The customer's last 3 orders (for \"same as last time\"). Show them briefly and let the "
+     "customer choose one; then call reorder.", "parameters": {"type": "object", "properties": {}}},
+    {"name": "reorder", "description": "Copy one of the customer's past orders into a new order at today's prices. The time is not copied: "
+     "ask for it. Only when no order is in progress in this chat.",
+     "parameters": {"type": "object", "properties": {"order_number": {"type": "integer"}}, "required": ["order_number"]}},
     {"name": "cancel_draft", "description": "Throw away the order the customer has not confirmed, when they no longer want it.",
      "parameters": {"type": "object", "properties": {}}},
     {"name": "hand_over", "description": "Pass the chat to a staff member: complaints, refunds, problems with an order, changes to a "
@@ -283,6 +288,37 @@ def send_for_confirmation(ctx: Context) -> dict:
     return {"sent": True, "note": "The customer got the summary with Yes and No buttons. Tell them to press Yes to confirm."}
 
 
+def past_orders(ctx: Context) -> dict:
+    found = Order.objects.filter(customer=ctx.customer, status__in=orders.REORDER_FROM).order_by("-created_at")[:3]
+    rows = []
+    for order in found:
+        items = ", ".join(f"{line.quantity.normalize():f}{' kg' if line.unit == 'kg' else ' x'} {line.product_name}" for line in order.lines.all())
+        rows.append({"order_number": order.number, "date": timezone.localtime(order.created_at).strftime("%d %b %Y"), "items": items,
+                     "total": f"${_money(order.total)}", "pickup_or_delivery": order.fulfilment})
+    return {"orders": rows} if rows else {"orders": [], "note": "This customer has no past orders yet."}
+
+
+def reorder(ctx: Context, order_number=None) -> dict:
+    try:
+        number = int(order_number)
+    except (TypeError, ValueError):
+        return {"error": "order_number must be a number."}
+    source = Order.objects.filter(customer=ctx.customer, number=number, status__in=orders.REORDER_FROM).first()
+    if source is None:
+        return {"error": f"#{number} is not one of this customer's past orders. Use past_orders."}
+    if ctx.order is not None:
+        return {"error": "An order is already being made in this chat. Change it with set_order, or throw it away with cancel_draft first."}
+    order, left_out = orders.reorder(source, channel=Order.Channel.WHATSAPP)
+    ctx.chat.order = order
+    ctx.chat.save(update_fields=["order", "updated_at"])
+    order.refresh_from_db()
+    result = {"order": summary(order), "problems": orders.warnings(order) or "none",
+              "note": "Prices are today's prices. Ask for the time (and check the address for delivery), then send it for confirmation."}
+    if left_out:
+        result["left_out"] = left_out
+    return result
+
+
 def cancel_draft(ctx: Context) -> dict:
     order = ctx.order
     if order is None:
@@ -302,4 +338,4 @@ def hand_over(ctx: Context, reason: str = "") -> dict:
 
 TOOLS = {"search_products": search_products, "shop_info": shop_info, "available_times": available_times,
          "check_delivery_address": check_delivery_address, "set_order": set_order, "send_for_confirmation": send_for_confirmation,
-         "cancel_draft": cancel_draft, "hand_over": hand_over}
+         "past_orders": past_orders, "reorder": reorder, "cancel_draft": cancel_draft, "hand_over": hand_over}

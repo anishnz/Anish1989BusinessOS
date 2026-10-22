@@ -322,6 +322,14 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "fulfilment": "
 - Staff app: `Thread.tsx` shows the AI bar ("I will answer" / "Let the AI answer again") and marks AI messages.
 - Tests: `tests/test_ai.py` (a scripted fake AI for the agent; faked HTTP for the three adapters). Migrations: `ai.0001_initial`, `inbox.0003_message_bot`.
 
+## Quick reorder and hand-over (task 2.5)
+
+- `orders.services.reorder(source, actor=, channel=)` → `(draft, left_out)`; `REORDER_FROM` lists the statuses that count as placed orders. API `POST /api/orders/<id>/reorder/` (`orders.create`, 201 with `left_out`). The customer list adds `last_order` (`{"id", "number"}`, a subquery).
+- AI tools `past_orders` (last 3 placed orders of the chat's customer) and `reorder` (only this customer's orders; refuses while a draft is open in the chat).
+- `ai.agent.waiting_chats()`: handed over, open, not assigned, no staff reply since `handed_over_at`. `GET /api/ai/waiting/` (`crm.view`); the dashboard adds `waiting_chats` when the user can see customers. `hand_over()` without an actor queues Celery `ai.handover_email` (recipients: active staff with `crm.assign`; `AISettings.email_on_handover`). `POST /api/ai/chats/<id>/ {"answer": false}` assigns the chat to the user.
+- Staff app: `useWaiting` (polls every 30 s) for the menu badge, the Inbox "Needs staff" view (`?show=needs_staff`), the dashboard tile, "Order again" on `OrderDetail` and `Customers`.
+- Tests: `tests/test_reorder_handover.py`. Migration `ai.0002_email_on_handover`.
+
 ## Test data, Log in as and safer deleting (task 1.18)
 
 - `apps.demo` (platform only, no tables): `data.py` (the six test businesses, Nepali names, products, conversations, tickets), `services.install(only=...)` / `remove()` (lock in the cache, progress in `demo:progress`), Celery tasks `demo.install` / `demo.remove`, commands `install_test_data [--only test_butchery]` and `remove_test_data [--yes]`, page `/platform/test-data/` (Super Admin only).

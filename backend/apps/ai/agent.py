@@ -135,13 +135,74 @@ def staff_handling(conversation: Conversation, chat: AIChat) -> str:
 
 
 def hand_over(chat: AIChat, reason: str, *, tell: bool, actor=None) -> None:
-    """Pass the chat to staff. `tell`: send the customer one short message (once per hand-over)."""
+    """
+    Pass the chat to staff. `tell`: send the customer one short message (once per hand-over).
+    When the AI (not a staff member) hands over, managers get an email (task 2.5, D-149).
+    """
     chat.handed_over_at = timezone.now()
     chat.handover_reason = reason[:200]
     chat.save(update_fields=["handed_over_at", "handover_reason", "updated_at"])
     audit("ai.handed_over", target=chat.conversation, actor=actor, metadata={"reason": chat.handover_reason})
     if tell:
         _tell_customer(chat)
+    if actor is None and current_settings().email_on_handover:
+        schema, chat_id = connection.schema_name, chat.pk
+
+        def start():
+            from .tasks import handover_email_task
+
+            handover_email_task.delay(schema, chat_id)
+
+        transaction.on_commit(start)
+
+
+def waiting_chats():
+    """Chats handed over to staff that nobody has picked up yet (task 2.5): not assigned, no staff reply since, still open."""
+    from django.db.models import Exists, OuterRef
+
+    staff_reply = Message.objects.filter(conversation=OuterRef("conversation"), direction=Message.Direction.OUT,
+                                         sent_by__isnull=False, created_at__gt=OuterRef("handed_over_at"))
+    return (AIChat.objects.filter(handed_over_at__isnull=False, conversation__status=Conversation.Status.OPEN,
+                                  conversation__assigned_to__isnull=True)
+            .exclude(Exists(staff_reply)).select_related("conversation__customer").order_by("handed_over_at"))
+
+
+def handover_recipients() -> list[str]:
+    """Active staff who may assign chats (Customers – Assign)."""
+    from apps.accounts.models import User
+    from apps.rbac import policy
+
+    return sorted({u.email for u in User.objects.filter(is_active=True, is_staff=True).exclude(email="")
+                   if policy.has_perm(u, "crm.assign")})
+
+
+def send_handover_email(chat: AIChat) -> bool:
+    """One email per hand-over: the customer's name and the reason, never the messages."""
+    from django.core.mail import send_mail
+
+    from apps.health.services import current_tenant
+    from apps.setup.services import business_name
+    from apps.tenants.domains import main_address, site_url
+
+    if not chat.handed_over_at:
+        return False
+    recipients = handover_recipients()
+    if not recipients:
+        return False
+    tenant = current_tenant()
+    link = site_url(main_address(tenant), None, f"/app/inbox/{chat.conversation_id}") if tenant else ""
+    customer = chat.conversation.customer
+    who = customer.name if customer and not customer.is_anonymised else "A customer"
+    body = (f"{who} needs a staff member on WhatsApp.\n\nReason: {chat.handover_reason}\n"
+            f"Since: {timezone.localtime(chat.handed_over_at):%H:%M on %d %b %Y}\n\nOpen the chat: {link}\n\n"
+            "The AI assistant is quiet in this chat until someone clicks “Let the AI answer again”.")
+    try:
+        send_mail(f"Chat needs staff: {who} ({business_name()})", body, None, recipients)
+    except Exception:  # noqa: BLE001 - the email must not break anything
+        log.exception("Hand-over email could not be sent")
+        return False
+    audit("ai.handover_email", target=chat.conversation, metadata={"recipients": len(recipients)})
+    return True
 
 
 def _tell_customer(chat: AIChat) -> None:
@@ -238,6 +299,7 @@ What you do: help the customer order from this shop, and answer simple questions
 Rules (always):
 - Use the tools for every product, price, stock, time, delivery area and fee. Never guess or invent them.
 - Build the order with set_order. Ask for what is missing: products and amounts, pickup or delivery, the time (offer free times from available_times), and the address for delivery.
+- When the customer wants the same as before ("same as last time", "pahile jastai"), call past_orders, show the orders briefly, let the customer choose one, then call reorder. Prices are today's prices.
 - You cannot confirm orders. When the order is complete and set_order shows no problems, call send_for_confirmation. The customer then gets the summary with Yes and No buttons, and their Yes confirms it.
 - Products sold by kg are weighed when packed, so the final price can change a little; the customer is asked to accept it.
 - Customers pay at pickup or on delivery (cash, card or bank transfer). There is no payment in the chat.

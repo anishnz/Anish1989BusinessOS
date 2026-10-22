@@ -12,4 +12,5 @@ urlpatterns = [
     path("<int:pk>/status/", api.OrderStatus.as_view(), name="api_order_status"),
     path("<int:pk>/weights/", api.OrderWeights.as_view(), name="api_order_weights"),
     path("<int:pk>/payment/", api.OrderPayment.as_view(), name="api_order_payment"),
+    path("<int:pk>/reorder/", api.OrderReorder.as_view(), name="api_order_reorder"),
 ]

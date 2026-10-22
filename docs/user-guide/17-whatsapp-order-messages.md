@@ -32,7 +32,7 @@ Each message can be switched off (section 17.5).
    - **Yes, but a rule stops it** (for example the slot is now full): the order goes back to **Draft**, the customer is told you will contact them, and the order shows *Customer said Yes on WhatsApp, but the order could not be confirmed: …*
    - **No:** the order goes back to **Draft**, the customer is told you will contact them, and the order shows *Customer said No on WhatsApp. Call the customer.*
 
-If the customer does not answer within 60 minutes, the order becomes **Expired** (chapter 6.8).
+If the customer does not answer within 60 minutes, the order becomes **Expired** (chapter 6.9).
 
 ## 17.3 The final price
 
@@ -55,7 +55,7 @@ The messages also appear in the customer's conversation in the **Inbox** (chapte
 
 | Not sent because… | What to do |
 |---|---|
-| WhatsApp is not connected | Connect it (chapter 7.5), and call the customer this time. |
+| WhatsApp is not connected | Connect it (chapter 7.6), and call the customer this time. |
 | The customer has no phone number | Add their phone number (chapter 5), or tell them yourself. |
 | More than 24 hours since the customer's last message, and no template is set | Set up the templates (section 17.6), and call the customer this time. |
 | The order moved on before the message was sent | Nothing: the message was no longer right. |

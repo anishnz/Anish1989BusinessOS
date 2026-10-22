@@ -137,6 +137,9 @@ class TestInstall:
             assert s.enabled and "halal" in s.instructions and not agent.is_on()
             assert not Connection.objects.filter(category="ai").exists()
             assert set(AIRun.objects.values_list("result", flat=True)) == {"answered", "handed_over"}
+            reorder = AIRun.objects.get(tools="past_orders, reorder")  # task 2.5
+            assert reorder.order.status == "draft" and reorder.order.channel == "whatsapp"
+            assert [c.handover_reason for c in agent.waiting_chats()] == ["Customer complaint about a late order"]
             assert AIChat.objects.filter(order__status="awaiting_confirmation").exists()
             assert AIChat.objects.get(handed_over_at__isnull=False).handover_reason == "Customer complaint about a late order"
             assert all("made-up test message, never sent" in r.reply.text for r in AIRun.objects.select_related("reply"))

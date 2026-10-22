@@ -23,7 +23,7 @@ class AISettingsAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
     readonly_fields = ["status", "this_month"]
     fieldsets = [
         ("Now", {"fields": ["status", "this_month"]}),
-        ("Answering", {"fields": ["enabled", "connection", "instructions"],
+        ("Answering", {"fields": ["enabled", "connection", "instructions", "email_on_handover"],
                        "description": "The AI answers customers who write on WhatsApp, in English or Nepali. It never confirms an order: "
                                       "the customer presses Yes on the summary. It stays quiet in chats that staff are handling."}),
         ("Limits", {"fields": ["monthly_limit", "max_answers_per_chat_per_day"]}),

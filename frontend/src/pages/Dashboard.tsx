@@ -79,6 +79,12 @@ export default function DashboardPage() {
         {data.unread_conversations !== undefined && (
           <Link className="card tile" to="/inbox" style={{ color: "inherit", textDecoration: "none" }}><div className="muted">Unread chats</div><div className="value">{data.unread_conversations}</div></Link>
         )}
+        {data.waiting_chats && data.waiting_chats.count > 0 && (
+          <Link className="card tile" to="/inbox?show=needs_staff" style={{ color: "inherit", textDecoration: "none" }}>
+            <div className="muted">Chats waiting for staff</div><div className="value error">{data.waiting_chats.count}</div>
+            <div className="muted small">Oldest: {data.waiting_chats.oldest[0]?.customer_name} · {data.waiting_chats.oldest[0]?.reason}</div>
+          </Link>
+        )}
       </div>
       <div className="two">
         <div className="card"><h2>Sales, last 7 days</h2><p className="muted small">Total {money(data.week_total)}</p><WeekChart week={data.week} /></div>

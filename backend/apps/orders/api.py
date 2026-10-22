@@ -9,6 +9,7 @@ DELETE /api/orders/<id>/               delete a draft                           
 POST   /api/orders/<id>/status/        {"to": "confirmed", "note": ""}                                   orders.edit
 POST   /api/orders/<id>/weights/       {"weights": {"<line id>": "1.08"}}                                orders.edit
 POST   /api/orders/<id>/payment/       {"paid": true, "method": "cash"}                                  orders.edit
+POST   /api/orders/<id>/reorder/       order again: a new draft at today's prices (+ "left_out")       orders.create
 GET    /api/orders/export/             CSV, one row per line (date_from, date_to)                        orders.export
 GET    /api/orders/fulfilment/         pickup and delivery settings and the active delivery areas        orders.view
 GET    /api/orders/slots/              ?kind=pickup|delivery&date=YYYY-MM-DD&order=<id>: that day's slots  orders.view
@@ -238,6 +239,21 @@ class _OrderAction(APIView):
         except DjangoValidationError as exc:
             return _error(exc)
         return Response(OrderDetailSerializer(order).data)
+
+
+class OrderReorder(APIView):
+    """Order again (task 2.5): a new draft with the same products at today's prices."""
+
+    permission_classes = [ModulePermission]
+    permission_module = "orders"
+    permission_actions = {"POST": "create"}
+
+    def post(self, request, pk):
+        try:
+            order, left_out = services.reorder(get_object_or_404(Order, pk=pk), actor=request.user)
+        except DjangoValidationError as exc:
+            return _error(exc)
+        return Response({**OrderDetailSerializer(order).data, "left_out": left_out}, status=status.HTTP_201_CREATED)
 
 
 class OrderStatus(_OrderAction):

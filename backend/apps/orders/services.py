@@ -312,6 +312,41 @@ def update_order(order: Order, *, lines: list[LineInput] | None = None, actor=No
     return order
 
 
+# Orders a customer really placed (not drafts, waiting, cancelled or expired): the ones to "order again" (task 2.5).
+REORDER_FROM = (S.CONFIRMED, S.PREPARING, S.FINAL_SENT, S.FINAL_ACCEPTED, S.READY, S.OUT_FOR_DELIVERY, S.COMPLETED)
+
+
+@transaction.atomic
+def reorder(source: Order, *, actor=None, channel: str | None = None) -> tuple[Order, list[str]]:
+    """
+    Order again (task 2.5, D-147): a new draft with the same products, amounts,
+    notes and pickup or delivery address, at today's prices. The time is not
+    copied (it is in the past). Products that cannot be ordered now are left
+    out; returns the new order and what was left out.
+    """
+    if source.status in (S.DRAFT, S.AWAITING):
+        raise ValidationError(f"Order #{source.number} is not finished yet. Change it instead.")
+    lines, left_out = [], []  # (create_order refuses customers whose personal data was removed)
+    for line in source.lines.all():
+        try:
+            product = _orderable_product(line.product_id)
+            quantity = check_quantity(product, line.quantity)
+        except ValidationError as exc:
+            left_out.append(f"{line.product_name} ({' '.join(exc.messages)})")
+            continue
+        lines.append(LineInput(product.pk, quantity, line.note))
+    if not lines:
+        raise ValidationError(f"None of the products of order #{source.number} can be ordered now.")
+    details = {"fulfilment": source.fulfilment}
+    if source.is_delivery:
+        details.update(delivery_address=source.delivery_address, delivery_suburb=source.delivery_suburb, delivery_postcode=source.delivery_postcode)
+    order = create_order(lines=lines, customer=source.customer, channel=channel or source.channel, notes=source.notes, actor=actor, **details)
+    note = f"Copied from order #{source.number}" + (f"; left out: {'; '.join(left_out)}" if left_out else "")
+    _event(order, S.DRAFT, S.DRAFT, actor, note[:300])
+    audit("orders.reorder", target=order, actor=actor, metadata={"from": source.number, "left_out": len(left_out)})
+    return order, left_out
+
+
 @transaction.atomic
 def delete_draft(order: Order, *, actor=None) -> None:
     order = _lock(order)

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { api, money, quantity, when } from "../api";
 import { useAuth } from "../auth";
@@ -15,6 +15,7 @@ export default function OrderDetail() {
   const { id } = useParams();
   const { can } = useAuth();
   const { data: order, setData, error } = useData<Order>(`/api/orders/${id}/`);
+  const note = (useLocation().state as { note?: string } | null)?.note ?? "";
   const [message, setMessage] = useState("");
   const [problem, setProblem] = useState("");
   const [busy, setBusy] = useState(false);
@@ -22,6 +23,7 @@ export default function OrderDetail() {
   const [method, setMethod] = useState("cash");
   const [weights, setWeights] = useState<Record<number, string>>({});
   const [editing, setEditing] = useState<FulfilmentValue | null>(null);
+  const navigate = useNavigate();
 
   if (error) return <p className="error">{error}</p>;
   if (!order) return <p className="muted">Loading…</p>;
@@ -44,6 +46,21 @@ export default function OrderDetail() {
     }
   }
 
+  /** Order again (task 2.5): a new draft with the same products at today's prices. */
+  async function orderAgain() {
+    setBusy(true);
+    setProblem("");
+    try {
+      const copy = await api<Order>(`/api/orders/${id}/reorder/`, { method: "POST" });
+      const left = copy.left_out?.length ? ` Left out: ${copy.left_out.join("; ")}.` : "";
+      navigate(`/orders/${copy.id}`, { state: { note: `New draft from order #${order!.number} at today's prices. Choose the time.${left}` } });
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const backFromDelivery = order.status === "out_for_delivery";
   const forward = order.next_statuses.filter((s) => !CANCEL.includes(s) && !(backFromDelivery && s === "ready"));
   const canCancel = order.next_statuses.some((s) => CANCEL.includes(s));
@@ -59,6 +76,9 @@ export default function OrderDetail() {
       <div className="row">
         <h1 style={{ marginRight: "auto" }}>Order #{order.number}</h1>
         <span className="pill on">{order.status_label}</span>
+        {can("orders.create") && !["draft", "awaiting_confirmation"].includes(order.status) && (
+          <button disabled={busy} onClick={orderAgain}>Order again</button>
+        )}
       </div>
       <p className="muted" style={{ margin: 0 }}>
         {order.customer_name ? `${order.customer_name}${order.customer_phone ? " · " + order.customer_phone : ""}` : "Walk-in customer"}
@@ -95,7 +115,7 @@ export default function OrderDetail() {
         </div>
       )}
       {order.notes && <div className="notice">Note: {order.notes}</div>}
-      {message && <p role="status" style={{ color: "var(--good)" }}>{message}</p>}
+      {(message || note) && <p role="status" style={{ color: "var(--good)" }}>{message || note}</p>}
       {problem && <p className="error" role="alert">{problem}</p>}
 
       <div className="card table-wrap">

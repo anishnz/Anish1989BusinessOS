@@ -83,13 +83,17 @@ If you give the money back, click **Mark as not paid**. A paid order cannot be c
 - **Cancel** from **Status and payment**: choose *Cancelled by customer* or *Cancelled by shop* and write the reason. If the order was confirmed, its stock is put back.
 - **Delete** is only possible for drafts. Other orders are cancelled instead, so the history stays complete.
 
-## 6.7 History and export
+## 6.7 Order again
+
+Open a placed order (confirmed or later) in the staff app and click **Order again**, or click **Order again** next to the customer's last order on **Customers**. You get a new **draft** with the same products, amounts, notes and pickup or delivery address, at **today's prices**. Choose the time and go on as usual. Products you no longer sell (or whose smallest amount changed) are left out, and the page says which. The AI does the same when a customer writes *same as last time* (chapter 18.5).
+
+## 6.8 History and export
 
 - **Status and payment** shows the history of the order: every step, when, who, and any note.
 - Every change is also recorded in the audit log.
 - **Export CSV** in the order list downloads all orders, one row per product line. Managers can use it for reports and the accountant. The file includes customer names, so keep it safe.
 
-## 6.8 Orders waiting too long (for the person who runs the server)
+## 6.9 Orders waiting too long (for the person who runs the server)
 
 Orders that wait for the customer's confirmation for more than an hour can be closed as **Expired** with:
 

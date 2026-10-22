@@ -510,6 +510,26 @@ def _ai_chats(spec: dict, customers: list) -> None:
                              tools="search_products, set_order, send_for_confirmation", steps=steps, note="Made-up test entry", duration_ms=2400)
         Conversation.objects.filter(pk=conversation.pk).update(last_message_at=answer.created_at, last_inbound_at=ask.created_at,
                                                                last_message_preview=answer.text[:120])
+    # "Same as last time" (task 2.5): the AI copied a customer's last order into a new draft at today's prices.
+    from apps.orders import services as orders
+
+    busy = AIChat.objects.values("conversation__customer")
+    source = (Order.objects.filter(status=Order.Status.COMPLETED, customer__isnull=False).exclude(customer__in=busy)
+              .exclude(customer=customers[10] if len(customers) > 10 else None).select_related("customer").order_by("-completed_at").first())
+    if source is not None:
+        conversation = inbox.conversation_for_customer(source.customer)
+        copy, left_out = orders.reorder(source, channel=Order.Channel.WHATSAPP)
+        ask = chat_message(conversation, "in", "Pahile jastai order garna milcha? Same as last time please.", 15)
+        answer = chat_message(conversation, "out", f"Of course! I copied your order #{source.number} into a new order #{copy.number} "
+                                                   f"at today's prices (about ${copy.estimated_total:.2f}). What time would you like it?{made_up}", 14)
+        AIChat.objects.update_or_create(conversation=conversation, defaults={"order": copy})
+        AIRun.objects.create(conversation=conversation, message=ask, reply=answer, order=copy, provider="anthropic", model="claude-haiku-5-5",
+                             result=AIRun.Result.ANSWERED, input_tokens=3900, output_tokens=210, cost=Decimal("0.00088"), tools="past_orders, reorder",
+                             steps=[{"tool": "past_orders", "args": {}, "result": {"orders": [{"order_number": source.number}]}},
+                                    {"tool": "reorder", "args": {"order_number": source.number}, "result": {"order": {"order_number": copy.number}}}],
+                             note="Made-up test entry", duration_ms=1900)
+        Conversation.objects.filter(pk=conversation.pk).update(last_message_at=answer.created_at, last_inbound_at=ask.created_at,
+                                                               last_message_preview=answer.text[:120])
     customer = customers[10] if len(customers) > 10 else None
     if customer is not None:
         conversation = inbox.conversation_for_customer(customer)
