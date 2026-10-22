@@ -23,9 +23,11 @@ from apps.core.business import BusinessOnlyAdminMixin
 from apps.fulfilment.models import Kind
 from apps.rbac import policy
 
-from . import services
+from apps.fulfilment.admin import ConfigureOnlyMixin
+
+from . import notify, services
 from .api import EXPORT_COLUMNS, export_rows
-from .models import EDITABLE_STATUSES, Order, OrderLine
+from .models import EDITABLE_STATUSES, CustomerMessageSettings, Order, OrderLine
 
 S = Order.Status
 
@@ -137,7 +139,18 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
     actions = ["confirm", "start_preparing", "mark_ready", "send_out", "complete"]
     fields = ["customer", "channel", "fulfilment", "due_at", "delivery_address", "delivery_suburb", "delivery_postcode", "delivery_area", "notes"]
     summary_fields = ["number_label", "status_label", "due", "delivery_fee", "estimated_total", "total", "gst_total", "paid", "payment_method",
-                      "created_by", "created_at"]
+                      "created_by", "created_at", "whatsapp_messages"]
+
+    @admin.display(description="WhatsApp messages to the customer")
+    def whatsapp_messages(self, obj):
+        """What the customer was sent about this order, and their answers (task 2.3). A shown field, so forms post nothing extra."""
+        from django.utils.html import format_html, format_html_join
+
+        rows = [(timezone.localtime(m.sent_at or m.created_at).strftime("%d %b %H:%M"), notify.label(m), notify.status_text(m))
+                for m in obj.messages.select_related("inbox_message")] if obj and obj.pk else []
+        if not rows:
+            return "None yet."
+        return format_html("<table><tbody>{}</tbody></table>", format_html_join("", "<tr><td>{}</td><td>{}</td><td>{}</td></tr>", rows))
 
     @admin.display(description="Order", ordering="number")
     def number_label(self, obj):
@@ -356,3 +369,51 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
         qs = Order.objects.order_by("number")
         audit("orders.export", actor=request.user, metadata={"orders": qs.count()})
         return csvtools.csv_response("orders.csv", EXPORT_COLUMNS, export_rows(qs))
+
+
+@admin.register(CustomerMessageSettings)
+class CustomerMessageSettingsAdmin(ConfigureOnlyMixin, admin.ModelAdmin):
+    """Which WhatsApp messages customers get about their orders (task 2.3). Changing needs Orders – Configure."""
+
+    readonly_fields = ["whatsapp", "templates_to_create"]
+    fieldsets = [
+        ("WhatsApp", {"fields": ["whatsapp"]}),
+        ("Messages customers get", {"fields": ["ask_to_confirm", "on_confirmed", "on_final_price", "on_ready", "on_out_for_delivery", "on_cancelled"],
+                                    "description": "Messages are in English. Within 24 hours of the customer's last message they are sent as normal "
+                                                   "messages (with Yes and No buttons where needed). Later, the approved templates below are used."}),
+        ("Approved templates (for messages after 24 hours)", {
+            "fields": ["template_language", "template_confirm_request", "template_confirmed", "template_final_price", "template_ready",
+                       "template_out_for_delivery", "template_cancelled"],
+            "description": "The names must match the templates approved in Meta. Leave a name empty to send that message only within 24 hours."}),
+        ("Templates to create in Meta (category: Utility, language: English)", {"fields": ["templates_to_create"]}),
+    ]
+
+    def has_add_permission(self, request, *args):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        if not self.has_view_or_change_permission(request):
+            raise PermissionDenied
+        return redirect(reverse("admin:orders_customermessagesettings_change", args=[notify.current_settings().pk]))
+
+    @admin.display(description="Connection")
+    def whatsapp(self, obj):
+        if notify.whatsapp_connected():
+            return "WhatsApp is connected."
+        return "WhatsApp is not connected, so no messages are sent. Connect it on the Integrations page."
+
+    @admin.display(description="Templates")
+    def templates_to_create(self, obj):
+        from django.utils.html import format_html, format_html_join
+
+        rows = []
+        for kind, text in notify.TEMPLATES.items():
+            name = getattr(obj, notify.TEMPLATE_FIELD[kind]) or "(not used)"
+            buttons = " and ".join(f"“{b}”" for b in notify.BUTTONS.get(kind, ())) or "none"
+            rows.append((name, text, buttons))
+        return format_html(
+            "<table><thead><tr><th>Name</th><th>Text</th><th>Quick-reply buttons</th></tr></thead><tbody>{}</tbody></table>",
+            format_html_join("", "<tr><td><code>{}</code></td><td>{}</td><td>{}</td></tr>", rows))

@@ -20,7 +20,8 @@ Anish1989 Business OS runs your business in one place: products, customers, orde
 4. **Add your products**, one by one or from a CSV file (chapter 5).
 5. Set your **pickup and delivery** hours, time slots and delivery areas with their fees (chapter 15).
 6. Connect **email sending** and **WhatsApp** on the **Integrations** page (chapters 4 and 7).
-7. Open the **Dashboard** to see today's sales and orders (chapter 8).
+7. Check the **WhatsApp messages** customers get about their orders, and ask Meta to approve the order templates (chapter 17).
+8. Open the **Dashboard** to see today's sales and orders (chapter 8).
 
 ## Your first day as staff
 

@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery) and 2.2 (stock), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.3 (WhatsApp status messages and final-price acceptance). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock) and 2.3 (WhatsApp messages about orders), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.4 (AI order taking on WhatsApp). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -219,7 +219,15 @@ Open a new chat in the ERP CRM project and type:
   - Test data: the butchery, restaurant, catering and events test businesses now have stock (one product low and one out of stock each)
   - User guide: chapter 5.5 (with a picture), chapters 6 and 8 updated
   - 826 tests pass (56 new for stock, 1 more in the test data tests) and 8 staff app tests; 59 of 60 deliberate breaks in task 2.2 are caught by tests (4 tests were added to catch them); the 60th (stock_quantity listed as read-only in the API) changes nothing, because the field cannot be edited anyway
-- [ ] 2.3 WhatsApp status messages and final-price acceptance (approved templates; the customer answers Yes or No)
+- [x] 2.3 WhatsApp status messages and final-price acceptance (approved templates; the customer answers Yes or No) (done 22 Oct 2026)
+  - Decisions D-135 to D-139 (all messages on by default, "No" goes back to staff, staff can send orders to confirm, English for now)
+  - Messages: please confirm (Yes/No), confirmed, final price (Yes/No), ready, out for delivery, cancelled by the shop; each can be switched off
+  - Sent by the worker: normal messages with reply buttons within 24 hours of the customer's last message, approved templates after that
+  - Answers by button or typed (yes, ok, ho / no, hoina); Yes to confirm follows the customer rules (slots, areas, stock); No goes back to Draft or Being prepared with a warning for staff
+  - Order pages (staff app and admin) list the messages with Sent / Delivered / Read / answered / Not sent and why; settings page with the template texts for Meta; Check system item "WhatsApp messages about orders"
+  - Test data: made-up messages on the test orders (never sent)
+  - User guide: new chapter 17 (with 2 pictures); chapters 0, 6, 7, 11 and 16 updated
+  - 871 tests pass (44 new for WhatsApp messages, 1 more in the test data tests) and 8 staff app tests; 53 of 56 deliberate breaks in task 2.3 are caught by tests (7 tests were added or made stronger to catch them); the other 3 are extra safety checks that cannot change anything today
 - [ ] 2.4 AI order taking on WhatsApp in English and Nepali: AI keys per business, product search, time slots, order summary, the customer confirms, AI log
 - [ ] 2.5 Quick reorder ("same as last time") and human handover in the inbox
 - [ ] 2.6 Live order board for the counter and kitchen

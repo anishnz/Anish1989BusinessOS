@@ -13,6 +13,8 @@ admin and (later) the WhatsApp AI all follow the same rules:
 - stock (task 2.2): confirming takes the ordered amounts off counted
   products, real weights correct it, cancelling a confirmed order puts it
   back. Customers cannot confirm more than the stock; staff get a warning;
+- WhatsApp messages (task 2.3): every status change may queue a message to
+  the customer (notify.after_move); Yes and No answers move the order on;
 - everything is recorded in the order history and the audit log.
 """
 from __future__ import annotations
@@ -33,6 +35,7 @@ from apps.customers.models import Customer
 from apps.fulfilment import services as fulfilment
 from apps.fulfilment.models import Kind
 
+from . import notify
 from .models import CLOSED_STATUSES, EDITABLE_STATUSES, Order, OrderCounter, OrderEvent, OrderLine
 
 S = Order.Status
@@ -198,7 +201,8 @@ def warnings(order: Order) -> list[str]:
     """Rules this order breaks, shown to staff until the order is ready (empty list = all fine)."""
     if order.status not in BEFORE_READY:
         return []
-    found = fulfilment.required_problems(order) + fulfilment.rule_problems(order, order.products_estimate)
+    answered = notify.answer_warning(order)  # the customer said No on WhatsApp (task 2.3)
+    found = ([answered] if answered else []) + fulfilment.required_problems(order) + fulfilment.rule_problems(order, order.products_estimate)
     if not order.stock_taken:
         found += stock.shortages(order)  # once confirmed, the stock is already taken (it may be below zero)
     return list(dict.fromkeys(found))
@@ -354,6 +358,7 @@ def _move(order: Order, to_status: str, actor=None, note: str = "") -> Order:
     order.save()
     _event(order, from_status, to_status, actor, note)
     audit("orders.status", target=order, actor=actor, metadata={"from": from_status, "to": to_status})
+    notify.after_move(order, from_status, to_status, note)  # WhatsApp message to the customer (task 2.3)
     return order
 
 

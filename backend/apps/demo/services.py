@@ -5,8 +5,9 @@ install() creates the six test businesses in apps/demo/data.py, each with:
 users for every role (roleas<role>@anish1989.com.np, password DEMO_PASSWORD,
 two-step verification switched off as test accounts), business details,
 pickup and delivery settings, products, customers, orders in every step,
-WhatsApp conversations and tickets, and stock for the products that are
-counted (task 2.2). It also adds test accounts for the
+WhatsApp conversations and tickets, stock for the products that are
+counted (task 2.2), and made-up WhatsApp messages about the orders (task
+2.3; never sent: test businesses never connect WhatsApp). It also adds test accounts for the
 platform roles except Super Admin; those keep two-step verification, because
 platform accounts can see every business.
 
@@ -18,6 +19,7 @@ sends email or WhatsApp messages.
 """
 from __future__ import annotations
 
+import secrets
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 
@@ -174,6 +176,7 @@ def _fill_business(spec: dict, index: int, pw: str) -> None:
     _orders(spec, products, customers, users)
     _stock_counted(spec, products, owner)
     _conversations(customers, users)
+    _order_messages()
     _tickets(users)
 
 
@@ -333,7 +336,7 @@ def _orders(spec: dict, products: list, customers: list, users: dict) -> None:
                 order = orders.set_weights(order, weights, actor=staff)
         if order.total != order.estimated_total:
             order = orders.change_status(order, S.FINAL_SENT, actor=staff, note="Real weight 40 g more")
-            order = orders.change_status(order, S.FINAL_ACCEPTED, actor=staff, note="Customer said OK on the phone")
+            order = orders.change_status(order, S.FINAL_ACCEPTED, actor=staff, note="Customer pressed Yes on WhatsApp (made-up)")
         return orders.change_status(order, S.READY, actor=staff)
 
     # Completed orders over the last 6 days (sales chart and top products on the dashboard)
@@ -412,6 +415,56 @@ def _conversations(customers: list, users: dict) -> None:
             last_message_at=times[-1][2], last_message_preview=times[-1][1][:120],
             last_inbound_at=max(at for direction, _, at in times if direction == "in"),
             unread_count=1 if times[-1][0] == "in" else 0)
+
+
+def _order_messages() -> None:
+    """
+    Made-up WhatsApp messages about the orders (task 2.3), as if they were sent:
+    nothing is sent, because test businesses never connect WhatsApp (their
+    customers' phone numbers could belong to real people).
+    """
+    from apps.inbox import services as inbox
+    from apps.inbox.models import Conversation, Message
+    from apps.orders import notify
+    from apps.orders.models import Order, OrderMessage
+
+    K, S = OrderMessage.Kind, Order.Status
+    kinds = {S.AWAITING: K.CONFIRM_REQUEST, S.CONFIRMED: K.CONFIRMED, S.FINAL_SENT: K.FINAL_PRICE, S.READY: K.READY,
+             S.OUT_FOR_DELIVERY: K.OUT_FOR_DELIVERY, S.CANCELLED_SHOP: K.CANCELLED}
+    answers = {K.CONFIRM_REQUEST: (S.CONFIRMED, "Yes, confirm"), K.FINAL_PRICE: (S.FINAL_ACCEPTED, "Yes, accept")}
+    OrderMessage.objects.filter(status=OrderMessage.Status.SKIPPED).delete()  # "WhatsApp is not connected" from making the orders
+    for order in Order.objects.filter(customer__isnull=False).select_related("customer").order_by("number"):
+        conversation = inbox.conversation_for_customer(order.customer)
+        events = list(order.events.order_by("at", "id"))
+        last_at = None
+        for i, event in enumerate(events):
+            kind = kinds.get(event.to_status)
+            if kind is None or (kind == K.READY and event.from_status == S.OUT_FOR_DELIVERY):
+                continue
+            message = OrderMessage(order=order, kind=kind, extra=event.note if kind == K.CANCELLED else "",
+                                   token=secrets.token_hex(8) if kind in notify.QUESTIONS else "")
+            content = notify.build(message)
+            after = events[i + 1] if i + 1 < len(events) else None
+            answered = kind in answers and after is not None and after.to_status == answers[kind][0]
+            is_open = kind in notify.QUESTIONS and after is None
+            sent = Message.objects.create(
+                conversation=conversation, direction=Message.Direction.OUT, kind="buttons" if kind in notify.BUTTONS else "text",
+                text=content.text + "\n(made-up test message, never sent)",
+                status=Message.Status.READ if (answered or not is_open) else Message.Status.DELIVERED)
+            Message.objects.filter(pk=sent.pk).update(created_at=event.at)
+            message.inbox_message, message.status, message.via = sent, OrderMessage.Status.SENT, OrderMessage.Via.MESSAGE
+            message.is_open, message.asked_total = is_open, order.total if kind in notify.QUESTIONS else None
+            if answered:
+                message.answer, message.answered_at = OrderMessage.Answer.YES, after.at
+                reply = Message.objects.create(conversation=conversation, direction=Message.Direction.IN, kind="interactive",
+                                               text=answers[kind][1], status=Message.Status.RECEIVED, provider_timestamp=after.at)
+                Message.objects.filter(pk=reply.pk).update(created_at=after.at)
+            message.save()
+            OrderMessage.objects.filter(pk=message.pk).update(created_at=event.at, sent_at=event.at)
+            last_at = event.at
+        if last_at is not None:
+            Conversation.objects.filter(pk=conversation.pk, last_message_at__isnull=True).update(
+                last_message_at=last_at, last_message_preview=f"Order #{order.number} (made-up test messages)")
 
 
 def _tickets(users: dict) -> None:

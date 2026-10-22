@@ -1,6 +1,6 @@
 # 11. Check system
 
-*User guide, chapter 11 · Last updated 21 October 2026 (backups added)*
+*User guide, chapter 11 · Last updated 22 October 2026 (WhatsApp messages about orders added)*
 
 **Who this is for:** System Admins, IT Admins and Business Owners of a business, and the platform Super Admin.
 
@@ -46,6 +46,7 @@ Each check shows a short message that says what to do. Messages never show passw
 | Connections | Each saved connection | Each API key on the Integrations page is tested with the provider, like the **Test** button (chapter 4). All are tested at the same time, 10 seconds at most each |
 | Connections | Email sending | The business's own email connection, or the platform's |
 | Connections | WhatsApp messages | When the last call from Meta arrived, and whether it was accepted |
+| Connections | WhatsApp messages about orders | Messages to customers waiting more than 10 minutes (the worker may have stopped), or not sent in the last 24 hours (chapter 17) |
 | Security | Two-step verification | Staff who have not set it up, or have it switched off |
 | Security | Audit log | The audit log is complete and unchanged |
 | Backups | Backups | The last backup worked and is not older than planned. Grey "Not set up" until backups to your Google Drive are set up (chapter 12) |

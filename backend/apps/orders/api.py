@@ -23,6 +23,10 @@ pickup time or the start of the delivery window), and for delivery
 "delivery_area" (found from the postcode or suburb when left out). The
 delivery fee always comes from the area. "warnings" lists the slot, area and
 minimum-order rules the order breaks (staff may still book it, D-121).
+
+WhatsApp messages (task 2.3): one order also has "messages" (what the
+customer was sent about it, and their Yes or No answers). Moving an order to
+"awaiting_confirmation" or "final_price_sent" sends the customer a question.
 """
 from datetime import date, datetime, time, timedelta
 
@@ -42,8 +46,8 @@ from apps.fulfilment import services as fulfilment
 from apps.fulfilment.models import ClosedDay, DeliveryArea, Kind
 from apps.rbac.permissions import ModulePermission
 
-from . import services
-from .models import Order, OrderEvent, OrderLine
+from . import notify, services
+from .models import Order, OrderEvent, OrderLine, OrderMessage
 
 
 class LineSerializer(serializers.ModelSerializer):
@@ -88,12 +92,31 @@ class OrderSerializer(serializers.ModelSerializer):
         return services.due_text(obj)
 
 
+class MessageSerializer(serializers.ModelSerializer):
+    label = serializers.SerializerMethodField()
+    result = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrderMessage
+        fields = ["id", "kind", "label", "status", "result", "via", "is_open", "answer", "created_at", "sent_at", "answered_at"]
+
+    def get_label(self, obj):
+        return notify.label(obj)
+
+    def get_result(self, obj):
+        return notify.status_text(obj)
+
+
 class OrderDetailSerializer(OrderSerializer):
     events = EventSerializer(many=True, read_only=True)
     warnings = serializers.SerializerMethodField()
+    messages = serializers.SerializerMethodField()
 
     class Meta(OrderSerializer.Meta):
-        fields = OrderSerializer.Meta.fields + ["events", "warnings"]
+        fields = OrderSerializer.Meta.fields + ["events", "warnings", "messages"]
+
+    def get_messages(self, obj):
+        return MessageSerializer(obj.messages.select_related("inbox_message"), many=True).data
 
     def get_warnings(self, obj):
         return services.warnings(obj)

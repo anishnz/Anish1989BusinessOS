@@ -44,10 +44,10 @@ Draft → (Awaiting customer confirmation) → Confirmed → Being prepared
 | Status | Meaning |
 |---|---|
 | Draft | Being written. Products can be changed. |
-| Awaiting customer confirmation | Sent to the customer to check (used by WhatsApp ordering). If they do not confirm, it becomes **Expired**. |
+| Awaiting customer confirmation | Sent to the customer on WhatsApp to check, with **Yes** and **No** buttons (chapter 17). If they do not answer, it becomes **Expired**. |
 | Confirmed | The customer agreed. Products can no longer be changed. Counted stock is taken off now (chapter 5.5). |
 | Being prepared | Staff are packing it. Enter the real weights now. |
-| Final price sent | The real weight changed the price, and the new price was sent to the customer. |
+| Final price sent | The real weight changed the price, and the new price was sent to the customer on WhatsApp with **Yes** and **No** buttons (chapter 17). |
 | Final price accepted | The customer agreed to the new price. |
 | Ready for pickup / Ready for delivery | Packed and waiting for the customer or the driver. |
 | Out for delivery | On the way (delivery orders only). Can go back to *Ready for delivery* with a reason. |
@@ -63,7 +63,7 @@ A customer orders 1.5 kg of goat, but the pack weighs 1.58 kg.
 1. Move the order to **Being prepared**.
 2. Open the order. In **Real weight**, type *1.58* next to the goat line, and click **Save**. The total changes.
 3. Open **Status and payment**:
-   - If the price **changed**, choose **Final price sent** and tell the customer the new price. When they agree, choose **Final price accepted**. If the customer is at the counter, you can do both steps at once.
+   - If the price **changed**, choose **Final price sent**. The customer gets the new price on WhatsApp, and their **Yes** moves the order to **Final price accepted** by itself (chapter 17.3). If the customer is at the counter or on the phone, choose **Final price accepted** yourself.
    - If the price is **the same**, go straight to **Ready for pickup** (or **Ready for delivery**).
 
 The order cannot be marked ready until every weight is entered, and it cannot skip the customer's agreement when the price changed.

@@ -79,7 +79,10 @@ class TestInstall:
             assert Order.objects.filter(fulfilment="delivery", delivery_area__name="Auckland City").exists()
             assert Order.objects.filter(status="completed", is_paid=True).count() == 12
             assert DeliveryArea.objects.filter(is_active=True).count() == 2
-            assert Conversation.objects.count() == 3 and Message.objects.count() == 7
+            # 3 written chats (7 messages), plus the made-up order messages of task 2.3 in each customer's chat
+            assert Message.objects.filter(conversation__last_message_preview__contains="(made-up test messages)").exists()
+            scripted = Message.objects.exclude(text__contains="made-up test message").exclude(kind="interactive")
+            assert scripted.count() == 7 and scripted.values("conversation").distinct().count() == 3
             assert Ticket.objects.count() == 3
 
     def test_platform_test_accounts_keep_two_step_verification(self, butchery):
@@ -102,6 +105,23 @@ class TestInstall:
             took = set(Order.objects.filter(stock_taken=True).values_list("status", flat=True))
             assert took == {"confirmed", "preparing", "ready", "out_for_delivery", "completed"}
             assert not Order.objects.filter(status__in=["draft", "awaiting_confirmation", "expired", "cancelled_by_customer"], stock_taken=True).exists()
+
+    def test_whatsapp_messages_are_made_up_and_never_sent(self, butchery):
+        """Task 2.3: messages about the orders look sent (some read, some answered Yes), but WhatsApp is never connected."""
+        from apps.inbox.models import Message
+        from apps.orders.models import Order, OrderMessage
+        from apps.vault.models import Connection
+
+        with schema_context("test_butchery"):
+            assert not Connection.objects.filter(provider="whatsapp_cloud").exists()
+            rows = OrderMessage.objects.all()
+            assert rows.exists() and not rows.exclude(status="sent").exists()
+            assert {"confirm_request", "confirmed", "final_price", "ready", "out_for_delivery"} <= set(rows.values_list("kind", flat=True))
+            assert rows.filter(kind="final_price", answer="yes").count() >= 1
+            waiting = Order.objects.get(status="awaiting_confirmation")
+            assert rows.get(order=waiting, kind="confirm_request").is_open
+            assert all("(made-up test message, never sent)" in m.inbox_message.text for m in rows.select_related("inbox_message"))
+            assert not Message.objects.exclude(provider_message_id=None).exists()  # nothing went to Meta
 
     def test_running_again_changes_nothing(self, butchery):
         assert services.install(only=["test_butchery"]) == ["Kathmandu Khasi Pasal: already there (not changed)"]

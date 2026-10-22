@@ -1,6 +1,6 @@
 # 7. WhatsApp and the inbox
 
-*User guide, chapter 7 · Last updated 21 October 2026*
+*User guide, chapter 7 · Last updated 22 October 2026*
 
 **Who this is for:** staff who answer customers (section 7.1–7.4), the IT Admin who connects WhatsApp (section 7.5), and the person who runs the server (sections 7.6–7.7).
 
@@ -35,6 +35,8 @@ Who can do what (default roles):
 ## 7.3 Templates
 
 Templates are messages you create and get approved in Meta first, for example *order_ready*: "Hi {{1}}, your order {{2}} is ready for pickup."
+
+The order messages (please confirm, final price, ready…) use their own templates and are sent by themselves; see chapter 17.
 
 To send one, open **Send an approved template** in the conversation:
 

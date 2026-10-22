@@ -47,6 +47,21 @@ export interface OrderEvent {
   at: string;
 }
 
+/** A WhatsApp message to the customer about an order (task 2.3). */
+export interface OrderMessage {
+  id: number;
+  kind: string;
+  label: string;
+  status: "queued" | "sent" | "failed" | "skipped";
+  result: string;
+  via: "" | "message" | "template";
+  is_open: boolean;
+  answer: "" | "yes" | "no";
+  created_at: string;
+  sent_at: string | null;
+  answered_at: string | null;
+}
+
 export interface Order {
   id: number;
   number: number;
@@ -78,6 +93,7 @@ export interface Order {
   created_at: string;
   events?: OrderEvent[];
   warnings?: string[];
+  messages?: OrderMessage[];
 }
 
 export interface DeliveryArea {

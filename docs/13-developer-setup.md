@@ -302,6 +302,16 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "fulfilment": "
 - Admin: "In stock" column and "stock" filter in the product list, page `/admin/catalog/product/<id>/stock/` (history for Products – View, form for Products – Edit). CSV columns `count_stock`, `warn_at`, `stock` (a "Counted" change).
 - Migrations: `catalog.0003_stock`, `orders.0004_stock_taken`. Tests: `tests/test_stock.py`.
 
+## WhatsApp messages about orders (task 2.3)
+
+- `apps/orders/notify.py`, models `CustomerMessageSettings` (one row: which messages, template names, template language) and `OrderMessage` (order, kind, status `queued|sent|failed|skipped`, note, `via` message/template, link to the inbox `Message`, question `token`, `is_open`, `asked_total`, `answer`, times). No message text is stored there; it is made when sent and kept only in the inbox (deleted with the customer's personal data).
+- `services._move()` calls `notify.after_move()`: it closes the order's open questions and queues the message for the new status (D-135) inside the same transaction; `transaction.on_commit` starts the Celery task `orders.send_message` (`apps/orders/tasks.py`). `deliver()` locks the row and only sends a queued message (safe to run twice); it skips a question whose order has moved on.
+- Inside the 24-hour window: `inbox.send_buttons()` (interactive reply buttons, ids `order:<id>:<16 hex token>:yes|no`) or `inbox.send_text()`. Outside: `inbox.send_template()` with the body parameters and quick-reply button payloads (D-136). Template parameters are cleaned (no new lines, tabs or long spaces; empty = "-").
+- Answers: `inbox.services.message_received` (a Django signal sent after an incoming message is stored, with `reply_id` from `interactive.button_reply.id` or `button.payload`) → `notify.on_message_received()` (never raises; own savepoint) → `apply_answer()` (D-137, D-139). "Yes" to confirm uses `change_status(..., strict=True)`; when a rule stops it the order goes back to Draft. Short replies to the customer are `OrderMessage` kind `reply`. `answer_warning()` adds "Customer said No… Call the customer." to `warnings()`.
+- API: `GET /api/orders/<id>/` returns `messages` (`label`, `result` such as "Read · answered Yes"). Admin: messages inline on the order page; settings page `/admin/orders/customermessagesettings/` (Orders – Configure) with the template texts to create in Meta. Check system: `order_messages` (queued > 10 minutes = failed; not sent in 24 hours = warning).
+- Test data: made-up `OrderMessage` rows and inbox messages, never sent (test businesses never connect WhatsApp).
+- Migration `orders.0005_customer_messages`. Tests: `tests/test_order_messages.py` (a fake Graph API; `send_now` runs the worker task at once).
+
 ## Test data, Log in as and safer deleting (task 1.18)
 
 - `apps.demo` (platform only, no tables): `data.py` (the six test businesses, Nepali names, products, conversations, tickets), `services.install(only=...)` / `remove()` (lock in the cache, progress in `demo:progress`), Celery tasks `demo.install` / `demo.remove`, commands `install_test_data [--only test_butchery]` and `remove_test_data [--yes]`, page `/platform/test-data/` (Super Admin only).

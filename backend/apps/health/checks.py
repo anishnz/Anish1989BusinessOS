@@ -365,6 +365,33 @@ def check_fulfilment() -> list[Result]:
     return [Result("fulfilment", "Business", label, OK, f"Customers can choose from {' and '.join(counts)} in the next {s.days_ahead} day(s).")]
 
 
+def check_order_messages() -> list[Result]:
+    """WhatsApp messages to customers about orders (task 2.3): stuck in the queue, or not sent in the last day."""
+    from datetime import timedelta
+
+    from apps.orders.models import OrderMessage
+    from apps.rbac.policy import module_enabled
+
+    if not module_enabled("orders"):
+        return []
+    label = "WhatsApp messages about orders"
+    now = timezone.now()
+    stuck = OrderMessage.objects.filter(status=OrderMessage.Status.QUEUED, created_at__lt=now - timedelta(minutes=10)).count()
+    if stuck:
+        return [Result("order_messages", "Connections", label, FAILED,
+                       f"{stuck} message(s) have waited more than 10 minutes to be sent. Check that the worker is running (see “Background jobs”).")]
+    day = OrderMessage.objects.filter(created_at__gte=now - timedelta(days=1))
+    failed = day.filter(status__in=[OrderMessage.Status.FAILED, OrderMessage.Status.SKIPPED]).count()
+    sent = day.filter(status=OrderMessage.Status.SENT).count()
+    if failed:
+        return [Result("order_messages", "Connections", label, WARNING,
+                       f"{failed} message(s) in the last 24 hours were not sent ({sent} sent). Open the orders to see why; "
+                       "usually the 24-hour window had closed and no approved template is set.")]
+    if not sent:
+        return [Result("order_messages", "Connections", label, OK, "No messages in the last 24 hours.")]
+    return [Result("order_messages", "Connections", label, OK, f"{sent} message(s) sent in the last 24 hours.")]
+
+
 def business_checks(tenant, *, live: bool = True) -> list[Result]:
     """Checks for one business. Must run inside that business's schema."""
     found: list[Result] = []
@@ -378,6 +405,7 @@ def business_checks(tenant, *, live: bool = True) -> list[Result]:
     found += _safe("connections", "Connections", "Saved connections", lambda: test_connections(live))
     found += _safe("email", "Connections", "Email sending", check_email)
     found += _safe("whatsapp", "Connections", "WhatsApp messages", check_whatsapp)
+    found += _safe("order_messages", "Connections", "WhatsApp messages about orders", check_order_messages)
     found += _safe("mfa", "Security", "Two-step verification", check_staff_mfa)
     found += _safe("audit", "Security", "Audit log", check_audit_chain)
     found += _safe("backups", "Backups", "Backups", check_backups)

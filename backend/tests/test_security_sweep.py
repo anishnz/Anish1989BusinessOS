@@ -304,6 +304,10 @@ def test_a_switched_off_module_is_blocked_everywhere(client_for, tenant_a, modul
     seeded = seed_business_a()["objects"]
     real_ids = {"product": seeded["product"].pk, "customer": seeded["customer"].pk, "order": seeded["order"].pk,
                 "conversation": seeded["conversation"].pk, "category": seeded["product"].category_id}
+    with schema_context("tenant_a"):
+        from apps.orders.notify import current_settings
+
+        real_ids["customermessagesettings"] = current_settings().pk  # the one settings row (task 2.3)
     client = verified_staff_client(client_for, tenant_a, "owner@a.test", "business_owner")
     set_module_enabled(tenant_a, module, False)
     try:

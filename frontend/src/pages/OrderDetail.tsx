@@ -8,6 +8,7 @@ import { useData } from "../components/useData";
 import { statusLabel, type Order } from "../types";
 
 const CANCEL = ["cancelled_by_customer", "cancelled_by_shop"];
+const ASKS = ["awaiting_confirmation", "final_price_sent"]; // these send the customer a Yes/No question (task 2.3)
 const METHODS: [string, string][] = [["cash", "Cash"], ["card", "Card (EFTPOS)"], ["bank_transfer", "Bank transfer"], ["other", "Other"]];
 
 export default function OrderDetail() {
@@ -140,6 +141,11 @@ export default function OrderDetail() {
               <button key={s} className="primary" disabled={busy} onClick={() => act("status", { to: s }, `Now: ${statusLabel(s, order.fulfilment)}.`)}>{statusLabel(s, order.fulfilment)}</button>
             ))}
           </div>
+          {order.customer && forward.some((s) => ASKS.includes(s)) && (
+            <p className="small muted" style={{ margin: "8px 0 0" }}>
+              {forward.includes("awaiting_confirmation") ? "Awaiting customer confirmation" : "Final price sent"} sends the customer a WhatsApp message with Yes and No buttons. Their answer moves the order on.
+            </p>
+          )}
           {backFromDelivery && (
             <div className="row" style={{ marginTop: 12 }}>
               <input aria-label="Why the delivery did not happen" placeholder="Why the delivery did not happen" value={reason} onChange={(e) => setReason(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
@@ -170,6 +176,23 @@ export default function OrderDetail() {
               <button className="primary" disabled={busy} onClick={() => act("payment", { paid: true, method }, "Marked as paid.")}>Mark as paid</button>
             </div>
           )}
+        </div>
+      )}
+
+      {order.messages && order.messages.length > 0 && (
+        <div className="card">
+          <h2>WhatsApp messages to the customer</h2>
+          <table className="small">
+            <tbody>
+              {order.messages.map((m) => (
+                <tr key={m.id}>
+                  <td style={{ whiteSpace: "nowrap" }}>{when(m.sent_at ?? m.created_at)}</td>
+                  <td>{m.label}{m.via === "template" && <span className="muted"> (template)</span>}</td>
+                  <td className={m.status === "failed" || m.status === "skipped" ? "error" : m.answer === "no" ? "error" : ""}>{m.result}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

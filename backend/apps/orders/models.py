@@ -178,3 +178,108 @@ class OrderCounter(models.Model):
     """One row per business: the last order number used (orders start at #1001)."""
 
     last_number = models.PositiveIntegerField(default=1000)
+
+
+# ---------------------------------------------------------------------------
+# WhatsApp messages to customers about their orders (task 2.3)
+# ---------------------------------------------------------------------------
+class CustomerMessageSettings(models.Model):
+    """One row per business: which WhatsApp messages customers get about their orders (task 2.3, D-135)."""
+
+    ask_to_confirm = models.BooleanField(
+        "Ask the customer to confirm", default=True,
+        help_text="When an order is moved to “Awaiting customer confirmation”, send the summary with Yes and No buttons.")
+    on_confirmed = models.BooleanField("Order confirmed", default=True)
+    on_final_price = models.BooleanField(
+        "Final price (Yes or No)", default=True,
+        help_text="When an order is moved to “Final price sent”, send the new price with Yes and No buttons.")
+    on_ready = models.BooleanField("Ready for pickup or delivery", default=True)
+    on_out_for_delivery = models.BooleanField("Out for delivery", default=True)
+    on_cancelled = models.BooleanField("Cancelled by the shop", default=True, help_text="Sent with the reason staff type.")
+    template_language = models.CharField(
+        "Template language", max_length=10, default="en",
+        help_text="The language code of the approved templates in Meta, for example en or en_US.")
+    template_confirm_request = models.CharField("Template: please confirm", max_length=100, blank=True, default="order_confirm_request")
+    template_confirmed = models.CharField("Template: confirmed", max_length=100, blank=True, default="order_confirmed")
+    template_final_price = models.CharField("Template: final price", max_length=100, blank=True, default="order_final_price")
+    template_ready = models.CharField("Template: ready", max_length=100, blank=True, default="order_ready")
+    template_out_for_delivery = models.CharField("Template: out for delivery", max_length=100, blank=True, default="order_out_for_delivery")
+    template_cancelled = models.CharField("Template: cancelled", max_length=100, blank=True, default="order_cancelled")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "WhatsApp messages to customers"
+        verbose_name_plural = "WhatsApp messages to customers"
+
+    def __str__(self):
+        return "WhatsApp messages to customers"
+
+    def clean(self):
+        import re
+
+        from django.core.exceptions import ValidationError
+
+        errors = {}
+        if not re.fullmatch(r"[a-z]{2,3}(_[A-Z]{2})?", self.template_language or ""):
+            errors["template_language"] = "Use a language code such as en or en_US."
+        for name in ("template_confirm_request", "template_confirmed", "template_final_price", "template_ready",
+                     "template_out_for_delivery", "template_cancelled"):
+            value = (getattr(self, name) or "").strip()
+            setattr(self, name, value)
+            if value and not re.fullmatch(r"[a-z0-9_]{1,100}", value):
+                errors[name] = "Template names use lower-case letters, numbers and _ (as approved in Meta)."
+        if errors:
+            raise ValidationError(errors)
+
+
+class OrderMessage(models.Model):
+    """
+    One WhatsApp message about an order (task 2.3). Holds no message text:
+    the text is made when it is sent and kept in the inbox (which forgets it
+    when the customer's personal data is removed).
+    """
+
+    class Kind(models.TextChoices):
+        CONFIRM_REQUEST = "confirm_request", "Please confirm"
+        CONFIRMED = "confirmed", "Order confirmed"
+        FINAL_PRICE = "final_price", "Final price"
+        READY = "ready", "Ready"
+        OUT_FOR_DELIVERY = "out_for_delivery", "Out for delivery"
+        CANCELLED = "cancelled", "Cancelled"
+        REPLY = "reply", "Answer to the customer"
+
+    class Status(models.TextChoices):
+        QUEUED = "queued", "Waiting to send"
+        SENT = "sent", "Sent"
+        FAILED = "failed", "Not sent (error)"
+        SKIPPED = "skipped", "Not sent"
+
+    class Answer(models.TextChoices):
+        YES = "yes", "Yes"
+        NO = "no", "No"
+
+    class Via(models.TextChoices):
+        MESSAGE = "message", "Normal message (24-hour window)"
+        TEMPLATE = "template", "Approved template"
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="messages")
+    kind = models.CharField(max_length=20, choices=Kind.choices)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.QUEUED)
+    note = models.CharField(max_length=300, blank=True, help_text="Why it was not sent.")
+    extra = models.CharField(max_length=300, blank=True, help_text="The cancel reason, or the text of an answer.")
+    via = models.CharField(max_length=10, choices=Via.choices, blank=True)
+    inbox_message = models.ForeignKey("inbox.Message", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    token = models.CharField(max_length=32, blank=True, editable=False)
+    is_open = models.BooleanField(default=False, help_text="A question waiting for the customer's Yes or No.")
+    asked_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    answer = models.CharField(max_length=3, choices=Answer.choices, blank=True)
+    answered_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+        indexes = [models.Index(fields=["is_open"], condition=Q(is_open=True), name="orders_msg_open_idx")]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} (order #{self.order.number})"

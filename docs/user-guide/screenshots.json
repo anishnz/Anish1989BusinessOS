@@ -10,5 +10,7 @@
   {"name": "pickup-delivery-settings", "site": "business", "path": "/admin/fulfilment/fulfilmentsettings/", "selector": "#content"},
   {"name": "new-order-delivery", "site": "business", "path": "/app/orders/new", "width": 1000, "height": 1300, "wait_for": "main h1", "steps": [{"click": "button[role=radio]:has-text('Delivery')"}, {"fill": "#delivery-address", "value": "12 Example Street"}, {"fill": "input[aria-label=Postcode]", "value": "1010", "wait_for": "p[role=status] strong"}, {"fill": "#due-day", "value": "{tomorrow}", "wait_for": ".slots .slot"}, {"click": ".slots .slot:not(.dim)"}], "selector": ".card:has(h2:text-is('Pickup or delivery'))"},
   {"name": "stock-products", "site": "business", "path": "/app/products", "width": 1100, "height": 1400, "wait_for": "main h1", "steps": [{"click": "tr:has-text('Lamb chops') button:has-text('Stock')", "wait_for": "table.small"}], "selector": "main"},
+  {"name": "order-whatsapp-messages", "site": "business", "path": "/app/orders?status=out_for_delivery", "width": 1000, "height": 1600, "wait_for": "main h1", "steps": [{"click": "main table a", "wait_for": "h2:text-is('WhatsApp messages to the customer')"}], "selector": ".card:has(h2:text-is('WhatsApp messages to the customer'))"},
+  {"name": "whatsapp-message-settings", "site": "business", "path": "/admin/orders/customermessagesettings/", "selector": "#content"},
   {"name": "test-data", "site": "platform", "path": "/platform/test-data/?business=test_butchery", "selector": "#content"}
 ]

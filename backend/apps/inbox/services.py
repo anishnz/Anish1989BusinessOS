@@ -12,9 +12,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 
+import logging
+
 import phonenumbers
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.dispatch import Signal
 from django.utils import timezone
 
 from apps.audit.services import audit
@@ -27,6 +30,13 @@ from .models import Conversation, Message
 
 REPLY_WINDOW = timedelta(hours=24)
 MAX_TEXT = 4096
+MAX_BUTTON_TEXT = 1024  # body of a message with reply buttons
+log = logging.getLogger(__name__)
+
+# Sent after an incoming message is stored (inside the same transaction), with
+# message= and reply_id= (the id of the reply button the customer pressed, or "").
+# Orders listen to it for Yes and No answers (task 2.3); the inbox knows nothing about orders.
+message_received = Signal()
 STOP_WORDS = {"STOP", "STOP ALL", "UNSUBSCRIBE", "OPT OUT", "OPTOUT"}
 STATUS_ORDER = {Message.Status.QUEUED: 0, Message.Status.SENT: 1, Message.Status.DELIVERED: 2, Message.Status.READ: 3}
 
@@ -73,6 +83,17 @@ def _content(msg: dict) -> tuple[str, str, str]:
     return "unsupported", "", ""
 
 
+def _reply_id(msg: dict) -> str:
+    """The id we gave the reply button the customer pressed (normal messages and templates), or ""."""
+    kind = msg.get("type")
+    if kind == "interactive":
+        reply = (msg.get("interactive") or {}).get("button_reply") or {}
+        return str(reply.get("id", ""))[:256]
+    if kind == "button":
+        return str((msg.get("button") or {}).get("payload", ""))[:256]
+    return ""
+
+
 def _customer_for(wa_id: str, profile_name: str) -> Customer | None:
     phone = _phone_from_wa_id(wa_id)
     if not phone:
@@ -115,6 +136,9 @@ def receive_whatsapp_message(msg: dict, profile_name: str = "") -> Message | Non
     conversation.save()
     if kind in ("text", "button") and text.strip().upper() in STOP_WORDS and conversation.customer and not conversation.customer.is_anonymised:
         set_marketing_consent(conversation.customer, False, source=ConsentRecord.Source.STOP, channel="whatsapp", note="Customer sent STOP on WhatsApp")
+    for receiver, result in message_received.send_robust(sender=Message, message=message, reply_id=_reply_id(msg)):
+        if isinstance(result, Exception):
+            log.error("A listener failed on an incoming WhatsApp message: %s", type(result).__name__)
     return message
 
 
@@ -191,9 +215,35 @@ def send_text(conversation: Conversation, text: str, *, actor=None) -> Message:
     return _send(conversation, payload, text=text, kind="text", actor=actor)
 
 
+def send_buttons(conversation: Conversation, text: str, buttons: list[tuple[str, str]], *, actor=None) -> Message:
+    """
+    A normal message with reply buttons (task 2.3). Only inside the 24-hour
+    window. `buttons`: up to 3 (id, title); the id comes back when the customer
+    presses the button; titles have at most 20 characters.
+    """
+    text = (text or "").strip()
+    if not text:
+        raise ValidationError("Write a message.")
+    if len(text) > MAX_BUTTON_TEXT:
+        raise ValidationError(f"A message with buttons can have at most {MAX_BUTTON_TEXT} characters.")
+    if not 1 <= len(buttons) <= 3 or any(not bid or len(bid) > 256 or not title or len(title) > 20 for bid, title in buttons):
+        raise ValidationError("Use 1 to 3 buttons with a title of at most 20 characters.")
+    if not can_reply_freely(conversation):
+        raise ValidationError("More than 24 hours have passed since the customer's last message. Send an approved template instead.")
+    payload = {"type": "interactive", "interactive": {
+        "type": "button", "body": {"text": text},
+        "action": {"buttons": [{"type": "reply", "reply": {"id": bid, "title": title}} for bid, title in buttons]},
+    }}
+    shown = text + "\n" + " | ".join(f"[{title}]" for _, title in buttons)
+    return _send(conversation, payload, text=shown, kind="buttons", actor=actor)
+
+
 def send_template(conversation: Conversation, *, name: str, language: str = "en", params: list[str] | None = None,
-                  category: str = "utility", actor=None) -> Message:
-    """Send an approved WhatsApp template. Marketing templates need the customer's consent."""
+                  category: str = "utility", buttons: list[str] | None = None, actor=None) -> Message:
+    """
+    Send an approved WhatsApp template. Marketing templates need the customer's consent.
+    `buttons`: the payloads of the template's quick-reply buttons, in order (they come back when pressed).
+    """
     import re
 
     if not re.fullmatch(r"[a-z0-9_]{1,100}", name or ""):
@@ -202,14 +252,21 @@ def send_template(conversation: Conversation, *, name: str, language: str = "en"
         raise ValidationError("Language looks like en or en_US.")
     if category not in ("utility", "marketing", "authentication"):
         raise ValidationError("Category must be utility, marketing or authentication.")
-    params = [str(p)[:1000] for p in (params or [])][:20]
+    # Meta refuses parameters with new lines, tabs or more than 4 spaces in a row.
+    params = [" ".join(str(p).split())[:1000] or "-" for p in (params or [])][:20]
+    buttons = [str(b)[:128] for b in (buttons or [])][:3]
     if category == "marketing":
         customer = conversation.customer
         if customer is None or not customer.marketing_consent:
             raise ValidationError("This customer has not agreed to marketing messages.")
     template = {"name": name, "language": {"code": language}}
+    components = []
     if params:
-        template["components"] = [{"type": "body", "parameters": [{"type": "text", "text": p} for p in params]}]
+        components.append({"type": "body", "parameters": [{"type": "text", "text": p} for p in params]})
+    for index, payload in enumerate(buttons):
+        components.append({"type": "button", "sub_type": "quick_reply", "index": str(index), "parameters": [{"type": "payload", "payload": payload}]})
+    if components:
+        template["components"] = components
     preview = f"[template {name}] " + " | ".join(params)
     return _send(conversation, {"type": "template", "template": template}, text=preview, kind="template", template_name=name, actor=actor)
 

@@ -25,7 +25,8 @@ Each one is at **2 White Street, Auckland City, Auckland 1010, New Zealand** and
 - stock for the butchery, restaurant, catering and events products: a delivery, the orders taking stock, some waste, one product **Low** and one **Out of stock** (services such as visa help and job adverts are not counted);
 - 16 customers (emails end with `@example.com`, which can never receive email);
 - orders in every step: completed orders of the last days (for the dashboard), and open orders from Draft to Out for delivery;
-- WhatsApp conversations and tickets.
+- WhatsApp conversations and tickets;
+- WhatsApp messages about the orders (confirmed, final price answered Yes, ready, on the way). They are **made up and were never sent**: test businesses never connect WhatsApp, because the made-up phone numbers could belong to real people.
 
 Test businesses are marked **Test business** in the business list. Real businesses are never changed.
 

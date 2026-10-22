@@ -18,6 +18,8 @@ MODEL_MODULES = {
     "customers.consentrecord": "crm",
     "orders.order": "orders",
     "orders.orderline": "orders",
+    "orders.ordermessage": "orders",
+    "orders.customermessagesettings": "orders",  # changes also need orders.configure (see the admin)
     "fulfilment.fulfilmentsettings": "orders",  # changes also need orders.configure (see the admin)
     "fulfilment.openinghours": "orders",
     "fulfilment.closedday": "orders",
