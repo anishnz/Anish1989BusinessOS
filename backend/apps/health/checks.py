@@ -23,6 +23,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from datetime import timedelta
+from decimal import Decimal
 
 from django.conf import settings
 from django.core.cache import cache
@@ -392,6 +393,36 @@ def check_order_messages() -> list[Result]:
     return [Result("order_messages", "Connections", label, OK, f"{sent} message(s) sent in the last 24 hours.")]
 
 
+def check_ai() -> list[Result]:
+    """The AI assistant on WhatsApp (task 2.4): key saved, monthly limit, recent failures."""
+    from datetime import timedelta
+
+    from apps.ai import agent
+    from apps.ai.models import AIRun
+    from apps.rbac.policy import module_enabled
+
+    if not module_enabled("ai"):
+        return []
+    label = "AI assistant"
+    settings = agent.current_settings()
+    if not settings.enabled:
+        return [Result("ai", "Connections", label, OK, "Switched off: staff answer every WhatsApp message.")]
+    if agent.ai_connection(settings) is None:
+        return [Result("ai", "Connections", label, WARNING, "Switched on, but no OpenAI, Claude or Gemini key is saved, so it does not answer. "
+                                                             "Add one on the Integrations page, or switch the AI off.")]
+    spent = agent.spent_this_month()
+    limit = settings.monthly_limit
+    if limit <= 0 or spent >= limit:
+        return [Result("ai", "Connections", label, WARNING, f"This month's limit is reached (about NZ${spent:.2f} of NZ${limit:.2f}). Staff answer until next month, "
+                                                             "or raise the limit in the AI assistant settings.")]
+    failed = AIRun.objects.filter(result=AIRun.Result.FAILED, created_at__gte=timezone.now() - timedelta(days=1))
+    if failed.exists():
+        last = failed.order_by("-created_at").first()
+        return [Result("ai", "Connections", label, WARNING, f"{failed.count()} answer(s) failed in the last 24 hours. Last problem: {last.note}")]
+    note = " (over 80% used)" if spent >= limit * Decimal("0.8") else ""
+    return [Result("ai", "Connections", label, WARNING if note else OK, f"Answering. This month: about NZ${spent:.2f} of NZ${limit:.2f}{note}.")]
+
+
 def business_checks(tenant, *, live: bool = True) -> list[Result]:
     """Checks for one business. Must run inside that business's schema."""
     found: list[Result] = []
@@ -406,6 +437,7 @@ def business_checks(tenant, *, live: bool = True) -> list[Result]:
     found += _safe("email", "Connections", "Email sending", check_email)
     found += _safe("whatsapp", "Connections", "WhatsApp messages", check_whatsapp)
     found += _safe("order_messages", "Connections", "WhatsApp messages about orders", check_order_messages)
+    found += _safe("ai", "Connections", "AI assistant", check_ai)
     found += _safe("mfa", "Security", "Two-step verification", check_staff_mfa)
     found += _safe("audit", "Security", "Audit log", check_audit_chain)
     found += _safe("backups", "Backups", "Backups", check_backups)

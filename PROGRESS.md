@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock) and 2.3 (WhatsApp messages about orders), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.4 (AI order taking on WhatsApp). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.7). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) and 2.4 (AI order taking on WhatsApp), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.5 (quick reorder and human handover in the inbox). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -228,7 +228,15 @@ Open a new chat in the ERP CRM project and type:
   - Test data: made-up messages on the test orders (never sent)
   - User guide: new chapter 17 (with 2 pictures); chapters 0, 6, 7, 11 and 16 updated
   - 871 tests pass (44 new for WhatsApp messages, 1 more in the test data tests) and 8 staff app tests; 53 of 56 deliberate breaks in task 2.3 are caught by tests (7 tests were added or made stronger to catch them); the other 3 are extra safety checks that cannot change anything today
-- [ ] 2.4 AI order taking on WhatsApp in English and Nepali: AI keys per business, product search, time slots, order summary, the customer confirms, AI log
+- [x] 2.4 AI order taking on WhatsApp in English and Nepali: AI keys per business, product search, time slots, order summary, the customer confirms, AI log (done 22 Oct 2026)
+  - Decisions D-140 to D-146 (all three AI providers, always on unless staff took over, monthly NZ$ limit, simple shop questions allowed)
+  - New app `apps.ai`: OpenAI, Claude and Gemini with tools; the AI searches products, tells shop facts and free times, checks delivery addresses, builds the order and sends the Yes/No summary; only the customer's Yes confirms (with every customer rule)
+  - Quiet in chats staff handle (assigned, staff replied in 12 hours, handed over); hands over for complaints, refunds, photos, errors and limits, and tells the customer once
+  - Monthly NZ$ limit (default NZ$20) and 40 answers per chat per day; AI log with tokens, estimated cost, tools and steps; Check system item
+  - Staff app: AI bar in each chat ("I will answer" / "Let the AI answer again"), AI messages marked; admin settings page and AI log
+  - Test data: AI settings and two made-up AI chats per business (no AI key, so the AI never answers there)
+  - User guide: new chapter 18 (with 2 pictures); chapters 0, 7, 11 and 16 updated
+  - 916 tests pass (44 new for the AI, 1 more in the test data tests) and 8 staff app tests; 54 of 56 deliberate breaks in task 2.4 are caught by tests (7 tests were added to catch them); of the other 2, one was a repeated check (removed) and one is an extra safety check that cannot change anything today
 - [ ] 2.5 Quick reorder ("same as last time") and human handover in the inbox
 - [ ] 2.6 Live order board for the counter and kitchen
 - [ ] 2.7 Daily owner summary on WhatsApp and star feedback after the order

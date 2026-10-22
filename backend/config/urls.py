@@ -15,6 +15,7 @@ business_urlpatterns = [
     path("api/customers/", include("apps.customers.urls")),
     path("api/orders/", include("apps.orders.urls")),
     path("api/inbox/", include("apps.inbox.urls")),
+    path("api/ai/", include("apps.ai.urls")),
     path("api/reports/", include("apps.reports.urls")),
     path("dashboard/", admin.site.admin_view(dashboard_page), name="dashboard"),
     path("", include("apps.setup.urls")),

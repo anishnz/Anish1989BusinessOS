@@ -81,7 +81,10 @@ class TestInstall:
             assert DeliveryArea.objects.filter(is_active=True).count() == 2
             # 3 written chats (7 messages), plus the made-up order messages of task 2.3 in each customer's chat
             assert Message.objects.filter(conversation__last_message_preview__contains="(made-up test messages)").exists()
-            scripted = Message.objects.exclude(text__contains="made-up test message").exclude(kind="interactive")
+            from apps.ai.models import AIRun
+
+            scripted = (Message.objects.exclude(text__contains="made-up test message").exclude(kind="interactive")
+                        .exclude(pk__in=AIRun.objects.values("message")))  # the AI chats of task 2.4
             assert scripted.count() == 7 and scripted.values("conversation").distinct().count() == 3
             assert Ticket.objects.count() == 3
 
@@ -122,6 +125,21 @@ class TestInstall:
             assert rows.get(order=waiting, kind="confirm_request").is_open
             assert all("(made-up test message, never sent)" in m.inbox_message.text for m in rows.select_related("inbox_message"))
             assert not Message.objects.exclude(provider_message_id=None).exists()  # nothing went to Meta
+
+    def test_ai_assistant_is_set_up_but_never_answers(self, butchery):
+        """Task 2.4: settings and two made-up AI chats; no AI key, so the AI never answers in a test business."""
+        from apps.ai import agent
+        from apps.ai.models import AIChat, AIRun
+        from apps.vault.models import Connection
+
+        with schema_context("test_butchery"):
+            s = agent.current_settings()
+            assert s.enabled and "halal" in s.instructions and not agent.is_on()
+            assert not Connection.objects.filter(category="ai").exists()
+            assert set(AIRun.objects.values_list("result", flat=True)) == {"answered", "handed_over"}
+            assert AIChat.objects.filter(order__status="awaiting_confirmation").exists()
+            assert AIChat.objects.get(handed_over_at__isnull=False).handover_reason == "Customer complaint about a late order"
+            assert all("made-up test message, never sent" in r.reply.text for r in AIRun.objects.select_related("reply"))
 
     def test_running_again_changes_nothing(self, butchery):
         assert services.install(only=["test_butchery"]) == ["Kathmandu Khasi Pasal: already there (not changed)"]

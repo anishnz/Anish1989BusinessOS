@@ -178,7 +178,7 @@ def _whatsapp_connection():
     return conn
 
 
-def _send(conversation: Conversation, payload: dict, *, text: str, kind: str, template_name: str = "", actor=None) -> Message:
+def _send(conversation: Conversation, payload: dict, *, text: str, kind: str, template_name: str = "", actor=None, bot: bool = False) -> Message:
     if conversation.channel != Conversation.Channel.WHATSAPP or not conversation.external_id:
         raise ValidationError("This conversation cannot receive messages.")
     if conversation.customer is not None and conversation.customer.is_anonymised:
@@ -186,7 +186,7 @@ def _send(conversation: Conversation, payload: dict, *, text: str, kind: str, te
     conn = _whatsapp_connection()
     message = Message.objects.create(
         conversation=conversation, direction=Message.Direction.OUT, kind=kind, text=text, template_name=template_name,
-        status=Message.Status.QUEUED, sent_by=actor,
+        status=Message.Status.QUEUED, sent_by=actor, bot=bot,
     )
     result = whatsapp.send_message(vault.read_secrets(conn), conn.config, conversation.external_id, payload)
     if result.ok:
@@ -203,7 +203,8 @@ def _send(conversation: Conversation, payload: dict, *, text: str, kind: str, te
     return message
 
 
-def send_text(conversation: Conversation, text: str, *, actor=None) -> Message:
+def send_text(conversation: Conversation, text: str, *, actor=None, bot: bool = False) -> Message:
+    """A normal message (only inside the 24-hour window). `bot`: written by the AI assistant (task 2.4)."""
     text = (text or "").strip()
     if not text:
         raise ValidationError("Write a message.")
@@ -212,7 +213,7 @@ def send_text(conversation: Conversation, text: str, *, actor=None) -> Message:
     if not can_reply_freely(conversation):
         raise ValidationError("More than 24 hours have passed since the customer's last message. Send an approved template instead.")
     payload = {"type": "text", "text": {"preview_url": False, "body": text}}
-    return _send(conversation, payload, text=text, kind="text", actor=actor)
+    return _send(conversation, payload, text=text, kind="text", actor=actor, bot=bot)
 
 
 def send_buttons(conversation: Conversation, text: str, buttons: list[tuple[str, str]], *, actor=None) -> Message:

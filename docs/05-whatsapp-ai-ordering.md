@@ -6,6 +6,12 @@ Last updated: 22 October 2026
 
 Customers order by chatting on WhatsApp. They do not need to open the website or fill in a form. The website backend is the central management system, WhatsApp is the customer-facing channel, and the AI agent connects the two.
 
+## What is built (22 October 2026)
+
+- Tasks 2.1 to 2.4: pickup and delivery slots, stock, WhatsApp status messages with Yes/No answers, and the AI assistant (OpenAI, Claude or Gemini) that takes orders. See user guide chapters 15, 5.5, 17 and 18, and decisions D-117 to D-146.
+- Step 2 below (verify identity with an OTP) is not built: on WhatsApp the customer's phone number already identifies them. OTP may come with the website (task 2.9 and later).
+- Quick reorder, the full hand-over in the inbox, the live order board, the daily summary and star feedback are tasks 2.5 to 2.7.
+
 ## Customer workflow
 
 1. **Scan QR code.** The customer scans the shop's QR code, and WhatsApp opens a chat with the business.

@@ -7,7 +7,8 @@ two-step verification switched off as test accounts), business details,
 pickup and delivery settings, products, customers, orders in every step,
 WhatsApp conversations and tickets, stock for the products that are
 counted (task 2.2), and made-up WhatsApp messages about the orders (task
-2.3; never sent: test businesses never connect WhatsApp). It also adds test accounts for the
+2.3; never sent: test businesses never connect WhatsApp), and AI assistant
+settings with two made-up AI chats (task 2.4; no AI key is saved). It also adds test accounts for the
 platform roles except Super Admin; those keep two-step verification, because
 platform accounts can see every business.
 
@@ -177,6 +178,7 @@ def _fill_business(spec: dict, index: int, pw: str) -> None:
     _stock_counted(spec, products, owner)
     _conversations(customers, users)
     _order_messages()
+    _ai_chats(spec, customers)
     _tickets(users)
 
 
@@ -465,6 +467,62 @@ def _order_messages() -> None:
         if last_at is not None:
             Conversation.objects.filter(pk=conversation.pk, last_message_at__isnull=True).update(
                 last_message_at=last_at, last_message_preview=f"Order #{order.number} (made-up test messages)")
+
+
+def _ai_chats(spec: dict, customers: list) -> None:
+    """
+    AI assistant settings and two made-up AI chats (task 2.4): one order the AI
+    made and sent to the customer to confirm, and one chat it handed to staff.
+    No AI key is saved, so the AI never really answers in a test business.
+    """
+    from apps.ai.models import AIChat, AIRun, AISettings
+    from apps.inbox import services as inbox
+    from apps.inbox.models import Conversation, Message
+    from apps.orders.models import Order
+
+    AISettings.objects.update_or_create(pk=1, defaults={"enabled": True, "monthly_limit": Decimal("20.00"), "instructions": spec.get("ai_note", "")})
+    now = timezone.now()
+    made_up = " (made-up test message, never sent)"
+
+    def chat_message(conversation, direction, text, minutes_ago):
+        at = now - timedelta(minutes=minutes_ago)
+        msg = Message.objects.create(conversation=conversation, direction=direction, text=text, bot=direction == "out",
+                                     status=Message.Status.RECEIVED if direction == "in" else Message.Status.READ, provider_timestamp=at)
+        Message.objects.filter(pk=msg.pk).update(created_at=at)
+        return msg
+
+    order = Order.objects.filter(status=Order.Status.AWAITING, customer__isnull=False).select_related("customer").first()
+    if order is not None and order.lines.exists():
+        conversation = inbox.conversation_for_customer(order.customer)
+        line = order.lines.first()
+        amount = f"{line.quantity.normalize():f}{' kg' if line.unit == 'kg' else ' x'}"
+        when = timezone.localtime(order.due_at).strftime("%A %H:%M") if order.due_at else "tomorrow"
+        ask = chat_message(conversation, "in", f"Namaste! Can I get {amount} {line.product_name} for pickup {when}?", 40)
+        answer = chat_message(conversation, "out", f"Namaste! I have made order #{order.number}: {amount} {line.product_name}, pickup {when}, "
+                                                   f"about ${order.estimated_total:.2f}. I sent you the summary: please press Yes to confirm.{made_up}", 39)
+        AIChat.objects.update_or_create(conversation=conversation, defaults={"order": order})
+        steps = [{"tool": "search_products", "args": {"query": line.product_name.split()[0].lower()}, "result": {"products": [{"name": line.product_name}]}},
+                 {"tool": "set_order", "args": {"lines": [{"product_id": line.product_id, "quantity": str(line.quantity)}], "fulfilment": "pickup"},
+                  "result": {"order": {"order_number": order.number}, "problems": "none"}},
+                 {"tool": "send_for_confirmation", "args": {}, "result": {"sent": True}}]
+        AIRun.objects.create(conversation=conversation, message=ask, reply=answer, order=order, provider="anthropic", model="claude-haiku-5-5",
+                             result=AIRun.Result.ANSWERED, input_tokens=4600, output_tokens=290, cost=Decimal("0.00107"),
+                             tools="search_products, set_order, send_for_confirmation", steps=steps, note="Made-up test entry", duration_ms=2400)
+        Conversation.objects.filter(pk=conversation.pk).update(last_message_at=answer.created_at, last_inbound_at=ask.created_at,
+                                                               last_message_preview=answer.text[:120])
+    customer = customers[10] if len(customers) > 10 else None
+    if customer is not None:
+        conversation = inbox.conversation_for_customer(customer)
+        ask = chat_message(conversation, "in", "My order yesterday came late and the food was cold. I want to talk to someone.", 25)
+        answer = chat_message(conversation, "out", f"I am very sorry. A staff member will call you soon.{made_up}", 24)
+        AIChat.objects.update_or_create(conversation=conversation, defaults={
+            "handed_over_at": now - timedelta(minutes=24), "handover_reason": "Customer complaint about a late order", "told_customer_at": now - timedelta(minutes=24)})
+        AIRun.objects.create(conversation=conversation, message=ask, reply=answer, provider="anthropic", model="claude-haiku-5-5",
+                             result=AIRun.Result.HANDED_OVER, input_tokens=1500, output_tokens=60, cost=Decimal("0.00032"), tools="hand_over",
+                             steps=[{"tool": "hand_over", "args": {"reason": "Customer complaint about a late order"}, "result": {"done": True}}],
+                             note="Customer complaint about a late order", duration_ms=1300)
+        Conversation.objects.filter(pk=conversation.pk).update(last_message_at=answer.created_at, last_inbound_at=ask.created_at,
+                                                               last_message_preview=answer.text[:120], unread_count=1, status=Conversation.Status.OPEN)
 
 
 def _tickets(users: dict) -> None:

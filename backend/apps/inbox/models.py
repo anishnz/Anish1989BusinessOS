@@ -71,6 +71,7 @@ class Message(models.Model):
     status = models.CharField(max_length=10, choices=Status.choices)
     error = models.CharField(max_length=300, blank=True)
     sent_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL_IN_BUSINESS, related_name="+")
+    bot = models.BooleanField("Sent by the AI assistant", default=False)
     provider_timestamp = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

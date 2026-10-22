@@ -92,6 +92,7 @@ TENANT_APPS = [
     "apps.fulfilment",  # pickup and delivery settings (task 2.1)
     "apps.orders",
     "apps.inbox",
+    "apps.ai",  # AI assistant on WhatsApp (task 2.4); after apps.orders, see apps/ai/apps.py
     "apps.reports",
 ]
 

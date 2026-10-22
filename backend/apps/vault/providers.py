@@ -245,9 +245,9 @@ def test_bank_transfer(s, c):
 PROVIDERS = {
     p.code: p
     for p in [
-        Provider("openai", "OpenAI", "ai", (Field("api_key", "API key"),), (Field("model", "Default model", False, default="gpt-4o-mini"),), test_openai, docs_url="https://platform.openai.com/api-keys"),
-        Provider("anthropic", "Anthropic Claude", "ai", (Field("api_key", "API key"),), (Field("model", "Default model", False),), test_anthropic, docs_url="https://console.anthropic.com/settings/keys"),
-        Provider("gemini", "Google Gemini", "ai", (Field("api_key", "API key"),), (Field("model", "Default model", False),), test_gemini, docs_url="https://aistudio.google.com/apikey"),
+        Provider("openai", "OpenAI", "ai", (Field("api_key", "API key"),), (Field("model", "Default model", False, default="gpt-5.4-mini", help="A small, cheap model with tools. Used by the AI assistant (task 2.4)."),), test_openai, docs_url="https://platform.openai.com/api-keys"),
+        Provider("anthropic", "Anthropic Claude", "ai", (Field("api_key", "API key"),), (Field("model", "Default model", False, default="claude-haiku-5-5", help="A small, cheap model with tools. Used by the AI assistant (task 2.4)."),), test_anthropic, docs_url="https://console.anthropic.com/settings/keys"),
+        Provider("gemini", "Google Gemini", "ai", (Field("api_key", "API key"),), (Field("model", "Default model", False, default="gemini-3.5-flash-lite", help="A small, cheap model with tools. Used by the AI assistant (task 2.4)."),), test_gemini, docs_url="https://aistudio.google.com/apikey"),
         Provider("ollama", "Local / open model (Ollama)", "ai", (), (Field("base_url", "Server address", help="For example https://ollama.example.com"), Field("model", "Model", False)), test_ollama, help="A model you run yourself. Must be reachable from the platform."),
         Provider(
             "whatsapp_cloud", "WhatsApp Business (Cloud API)", "messaging",

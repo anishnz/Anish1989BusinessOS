@@ -36,7 +36,7 @@ Who can do what (default roles):
 
 Templates are messages you create and get approved in Meta first, for example *order_ready*: "Hi {{1}}, your order {{2}} is ready for pickup."
 
-The order messages (please confirm, final price, ready…) use their own templates and are sent by themselves; see chapter 17.
+The order messages (please confirm, final price, ready…) use their own templates and are sent by themselves; see chapter 17. The AI assistant can answer customers too; see chapter 18.
 
 To send one, open **Send an approved template** in the conversation:
 

@@ -25,6 +25,8 @@ MODEL_MODULES = {
     "fulfilment.closedday": "orders",
     "fulfilment.deliveryarea": "orders",
     "inbox.conversation": "crm",
+    "ai.aisettings": "ai",  # changes also need ai.configure (see the admin)
+    "ai.airun": "ai",
 }
 
 DJANGO_ACTIONS = {"view": "view", "add": "create", "change": "edit", "delete": "delete"}

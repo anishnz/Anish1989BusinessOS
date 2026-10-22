@@ -43,6 +43,7 @@ CUSTOMER_NOTES = [
 BUSINESSES = [
     {
         "slug": "test_butchery", "name": "Kathmandu Khasi Pasal", "industry": "butchery", "type": "Butchery",
+        "ai_note": "All our goat and chicken is halal. Khasi is cut fresh every morning.",
         "categories": ["Khasi (goat)", "Kukhura (chicken)", "Lamb", "Pork and buff", "Ready to cook"],
         "products": [
             # name, category, unit, price, cost, min, step, search terms, description
@@ -65,6 +66,7 @@ BUSINESSES = [
     },
     {
         "slug": "test_restaurant", "name": "Thamel Momo Ghar", "industry": "restaurant", "type": "Restaurant",
+        "ai_note": "Momo are made fresh every morning. Spice level can be mild, medium or hot.",
         "categories": ["Momo", "Noodles and soup", "Thali", "Snacks", "Drinks"],
         "products": [
             ("Chicken momo (10 pieces)", 0, "each", D("15.00"), D("5.50"), D("1"), D("1"), "kukhura momo, chicken dumpling", "Steamed, with tomato achar."),
@@ -83,6 +85,7 @@ BUSINESSES = [
     },
     {
         "slug": "test_catering", "name": "Himalayan Bhoj Catering", "industry": "catering", "type": "Catering",
+        "ai_note": "We cater for 20 to 300 people. Big events: please give 3 days notice.",
         "categories": ["Buffet (per person)", "Platters", "Desserts", "Staff and hire"],
         "products": [
             ("Dal bhat buffet (per person)", 0, "each", D("28.00"), D("11.00"), D("20"), D("1"), "bhoj, buffet, khana", "Minimum 20 people."),
@@ -98,6 +101,7 @@ BUSINESSES = [
     },
     {
         "slug": "test_events", "name": "Basantapur Utsav Events", "industry": "events", "type": "Events",
+        "ai_note": "The hall has parking for 40 cars. Decoration set-up takes 2 hours.",
         "categories": ["Venue", "Decoration", "Music and photos"],
         "products": [
             ("Hall hire (per hour)", 0, "each", D("150.00"), D("60.00"), D("3"), D("1"), "hall, venue, bhawan", "Up to 150 guests."),
@@ -112,6 +116,7 @@ BUSINESSES = [
     },
     {
         "slug": "test_education", "name": "Sagarmatha Education Consultancy", "industry": "education_consultancy", "type": "Education consultancy",
+        "ai_note": "We help with applications; Immigration New Zealand makes every visa decision. Never promise a visa.",
         "categories": ["Visa help", "Classes", "Advice"],
         "products": [
             ("Student visa application help", 0, "each", D("450.00"), D("120.00"), D("1"), D("1"), "visa, student visa", "We check your documents; Immigration NZ decides."),
@@ -124,6 +129,7 @@ BUSINESSES = [
     },
     {
         "slug": "test_jobs", "name": "Kaam Khoj Nepal Jobs", "industry": "jobs", "type": "Jobs",
+        "ai_note": "Job adverts go live within one working day after we check them.",
         "categories": ["Job adverts", "Job seeker help"],
         "products": [
             ("Job advert (30 days)", 0, "each", D("99.00"), D("10.00"), D("1"), D("1"), "job ad, jagir", ""),

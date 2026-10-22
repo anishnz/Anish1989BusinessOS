@@ -4,7 +4,35 @@ import { Link, useParams } from "react-router-dom";
 import { api, when } from "../api";
 import { useAuth } from "../auth";
 import { useData } from "../components/useData";
-import type { Conversation } from "../types";
+import type { ChatAI, Conversation } from "../types";
+
+/** The AI assistant's state in this chat, with the button to hand it over or give it back (task 2.4). */
+function AIBar({ id, canEdit }: { id: string; canEdit: boolean }) {
+  const { data, setData } = useData<ChatAI>(`/api/ai/chats/${id}/`);
+  const [busy, setBusy] = useState(false);
+  if (!data || !data.ai_on) return null;
+
+  async function set(answer: boolean) {
+    setBusy(true);
+    try {
+      setData(await api<ChatAI>(`/api/ai/chats/${id}/`, { method: "POST", body: { answer } }));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="notice row" role="status" style={{ margin: 0 }}>
+      <span style={{ marginRight: "auto" }}>
+        {data.state === "answering" ? <><strong>The AI assistant answers this chat.</strong>{data.order_number ? ` It is making order #${data.order_number}.` : ""}</>
+          : <><strong>Staff answer this chat</strong> ({data.reason}). The AI is quiet.</>}
+      </span>
+      {canEdit && (data.state === "answering"
+        ? <button disabled={busy} onClick={() => set(false)}>I will answer</button>
+        : <button disabled={busy} onClick={() => set(true)}>Let the AI answer again</button>)}
+    </div>
+  );
+}
 
 export default function Thread() {
   const { id } = useParams();
@@ -42,11 +70,12 @@ export default function Thread() {
       <p className="small"><Link to="/inbox">← Inbox</Link></p>
       <h1>{data.customer_name || data.customer_phone}</h1>
       <p className="muted" style={{ margin: 0 }}>{data.customer_phone} · {data.status === "open" ? "Open" : "Closed"}{data.assigned_to_email ? ` · assigned to ${data.assigned_to_email}` : ""}</p>
+      {id && <AIBar id={id} canEdit={can("crm.edit")} />}
       <div className="card bubbles">
         {data.messages?.map((m) => (
           <div key={m.id} className={`bubble ${m.direction}`}>
             {m.kind !== "text" && <em>[{m.kind}] </em>}{m.text}
-            <small>{when(m.created_at)}{m.direction === "out" ? ` · ${m.status}${m.sent_by_email ? " · " + m.sent_by_email : ""}${m.error ? " · " + m.error : ""}` : ""}</small>
+            <small>{when(m.created_at)}{m.direction === "out" ? ` · ${m.status}${m.sent_by_email ? " · " + m.sent_by_email : m.bot ? " · AI assistant" : ""}${m.error ? " · " + m.error : ""}` : ""}</small>
           </div>
         ))}
         {data.messages?.length === 0 && <p className="muted">No messages yet.</p>}

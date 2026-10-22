@@ -199,7 +199,17 @@ export interface Message {
   status: string;
   error: string;
   sent_by_email: string;
+  bot?: boolean;
   created_at: string;
+}
+
+/** Is the AI assistant answering a chat, or are staff? (task 2.4) */
+export interface ChatAI {
+  ai_on: boolean;
+  state: "off" | "answering" | "staff";
+  reason: string;
+  since: string | null;
+  order_number: number | null;
 }
 
 export interface Dashboard {

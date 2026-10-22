@@ -316,6 +316,7 @@ def _answer(message, reply_id: str) -> None:
         if question is None or question.inbox_message is None or question.inbox_message.conversation_id != conversation.pk:
             return  # not a button we sent to this chat
         apply_answer(question, answer, pressed=True)
+        message.answered_question = True  # the AI assistant (task 2.4) leaves this message alone
         return
     word = _word(message.text)
     answer = "yes" if word in YES_WORDS else "no" if word in NO_WORDS else ""
@@ -324,6 +325,7 @@ def _answer(message, reply_id: str) -> None:
     open_questions = list(OrderMessage.objects.filter(is_open=True, inbox_message__conversation=conversation)[:2])
     if len(open_questions) == 1:  # with two open questions a typed "yes" is not clear: staff answer in the inbox
         apply_answer(open_questions[0], answer, pressed=False)
+        message.answered_question = True
 
 
 def apply_answer(question: OrderMessage, answer: str, *, pressed: bool) -> str:

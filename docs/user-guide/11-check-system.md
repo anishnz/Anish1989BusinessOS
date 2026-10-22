@@ -47,6 +47,7 @@ Each check shows a short message that says what to do. Messages never show passw
 | Connections | Email sending | The business's own email connection, or the platform's |
 | Connections | WhatsApp messages | When the last call from Meta arrived, and whether it was accepted |
 | Connections | WhatsApp messages about orders | Messages to customers waiting more than 10 minutes (the worker may have stopped), or not sent in the last 24 hours (chapter 17) |
+| Connections | AI assistant | Switched off, waiting for an AI key, answers that failed in the last 24 hours, and the monthly limit (chapter 18) |
 | Security | Two-step verification | Staff who have not set it up, or have it switched off |
 | Security | Audit log | The audit log is complete and unchanged |
 | Backups | Backups | The last backup worked and is not older than planned. Grey "Not set up" until backups to your Google Drive are set up (chapter 12) |
