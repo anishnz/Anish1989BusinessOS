@@ -54,6 +54,12 @@ def _change(now: Decimal | int, before: Decimal | int) -> dict:
     return {"before": before, "difference": diff, "percent": percent}
 
 
+def _feedback(start, end) -> dict:
+    from apps.orders.feedback import stats
+
+    return stats(start, end)
+
+
 def summary(day: date | None = None, *, include_inbox: bool = False) -> dict:
     day = day or timezone.localdate()
     start, end = _day_range(day)
@@ -113,9 +119,11 @@ def summary(day: date | None = None, *, include_inbox: bool = False) -> dict:
         "pickups_due_today": due_today.get("pickup", 0),
         "deliveries_due_today": due_today.get("delivery", 0),
         "low_stock": low_stock(),
+        "feedback": _feedback(first_start, end),  # star feedback over the same 7 days (task 2.7)
         "definitions": {
             "sales": "Totals of orders completed (picked up or delivered) that day, NZ$ incl. GST and delivery fees.",
             "orders": "Orders confirmed that day that were not cancelled or expired.",
+            "feedback": "Star ratings customers gave in the last 7 days (1 to 5); 1 or 2 stars is a low rating.",
             "compared_with": (day - timedelta(days=7)).isoformat(),
         },
     }

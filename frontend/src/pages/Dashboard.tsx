@@ -79,6 +79,18 @@ export default function DashboardPage() {
         {data.unread_conversations !== undefined && (
           <Link className="card tile" to="/inbox" style={{ color: "inherit", textDecoration: "none" }}><div className="muted">Unread chats</div><div className="value">{data.unread_conversations}</div></Link>
         )}
+        {data.feedback && data.feedback.count > 0 && (
+          <div className="card tile" title={data.definitions.feedback}>
+            <div className="muted">Feedback, last 7 days</div>
+            <div className="value">{data.feedback.average} ★</div>
+            <div className={data.feedback.low ? "error small" : "muted small"}>
+              {data.feedback.count} answer{data.feedback.count === 1 ? "" : "s"}{data.feedback.low ? ` · ${data.feedback.low} low` : ""}
+            </div>
+            {data.feedback.low_orders.map((r) => (
+              <div key={r.order_id} className="small"><Link to={`/orders/${r.order_id}`}>#{r.order}</Link> {r.stars} ★{r.comment ? ` – ${r.comment}` : ""}</div>
+            ))}
+          </div>
+        )}
         {data.waiting_chats && data.waiting_chats.count > 0 && (
           <Link className="card tile" to="/inbox?show=needs_staff" style={{ color: "inherit", textDecoration: "none" }}>
             <div className="muted">Chats waiting for staff</div><div className="value error">{data.waiting_chats.count}</div>

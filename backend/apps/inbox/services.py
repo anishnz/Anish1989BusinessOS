@@ -87,7 +87,8 @@ def _reply_id(msg: dict) -> str:
     """The id we gave the reply button the customer pressed (normal messages and templates), or ""."""
     kind = msg.get("type")
     if kind == "interactive":
-        reply = (msg.get("interactive") or {}).get("button_reply") or {}
+        inter = msg.get("interactive") or {}
+        reply = inter.get("button_reply") or inter.get("list_reply") or {}  # list replies: star feedback (task 2.7)
         return str(reply.get("id", ""))[:256]
     if kind == "button":
         return str((msg.get("button") or {}).get("payload", ""))[:256]
@@ -239,6 +240,29 @@ def send_buttons(conversation: Conversation, text: str, buttons: list[tuple[str,
     return _send(conversation, payload, text=shown, kind="buttons", actor=actor)
 
 
+def send_list(conversation: Conversation, text: str, button: str, rows: list[tuple[str, str]], *, actor=None) -> Message:
+    """
+    A normal message with a list to choose from (task 2.7: 1 to 5 stars). Only
+    inside the 24-hour window. `button` opens the list (at most 20 characters);
+    `rows`: up to 10 (id, title), titles of at most 24 characters.
+    """
+    text = (text or "").strip()
+    if not text or len(text) > MAX_BUTTON_TEXT:
+        raise ValidationError(f"Write a message of at most {MAX_BUTTON_TEXT} characters.")
+    if not button or len(button) > 20:
+        raise ValidationError("The list button needs a title of at most 20 characters.")
+    if not 1 <= len(rows) <= 10 or any(not rid or len(rid) > 200 or not title or len(title) > 24 for rid, title in rows):
+        raise ValidationError("Use 1 to 10 rows with a title of at most 24 characters.")
+    if not can_reply_freely(conversation):
+        raise ValidationError("More than 24 hours have passed since the customer's last message. Send an approved template instead.")
+    payload = {"type": "interactive", "interactive": {
+        "type": "list", "body": {"text": text},
+        "action": {"button": button, "sections": [{"title": button, "rows": [{"id": rid, "title": title} for rid, title in rows]}]},
+    }}
+    shown = text + "\n" + " | ".join(f"[{title}]" for _, title in rows)
+    return _send(conversation, payload, text=shown, kind="list", actor=actor)
+
+
 def send_template(conversation: Conversation, *, name: str, language: str = "en", params: list[str] | None = None,
                   category: str = "utility", buttons: list[str] | None = None, actor=None) -> Message:
     """
@@ -255,7 +279,7 @@ def send_template(conversation: Conversation, *, name: str, language: str = "en"
         raise ValidationError("Category must be utility, marketing or authentication.")
     # Meta refuses parameters with new lines, tabs or more than 4 spaces in a row.
     params = [" ".join(str(p).split())[:1000] or "-" for p in (params or [])][:20]
-    buttons = [str(b)[:128] for b in (buttons or [])][:3]
+    buttons = [str(b)[:128] for b in (buttons or [])][:10]  # Meta allows up to 10 quick-reply buttons
     if category == "marketing":
         customer = conversation.customer
         if customer is None or not customer.marketing_consent:

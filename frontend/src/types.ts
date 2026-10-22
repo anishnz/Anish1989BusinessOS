@@ -94,6 +94,7 @@ export interface Order {
   events?: OrderEvent[];
   warnings?: string[];
   messages?: OrderMessage[];
+  feedback?: { status: string; status_label: string; stars: number | null; comment: string; note: string; asked_at: string | null; answered_at: string | null } | null;
   left_out?: string[];
 }
 
@@ -237,7 +238,8 @@ export interface Dashboard {
   low_stock?: { product_id: number; name: string; unit: string; state: string; state_text: string; stock: string; warn_at: string | null }[];
   unread_conversations?: number;
   waiting_chats?: { count: number; oldest: WaitingChat[] };
-  definitions: { sales: string; orders: string; compared_with: string };
+  feedback?: { count: number; average: number | null; low: number; low_orders: { order: number; order_id: number; stars: number; comment: string }[] };
+  definitions: { sales: string; orders: string; compared_with: string; feedback?: string };
 }
 
 /** One order on the live order board (task 2.6). The board shows a short name and only the suburb (D-153). */

@@ -1,6 +1,6 @@
 # 17. WhatsApp messages about orders
 
-*User guide, chapter 17 · Last updated 22 October 2026*
+*User guide, chapter 17 · Last updated 23 October 2026*
 
 **Who this is for:** staff who take orders (sections 17.1–17.4) and the business owner or manager who sets up the messages and the Meta templates (sections 17.5–17.7).
 
@@ -21,7 +21,7 @@ The messages are in **English** for now. Nepali messages will come later.
 
 Nothing is sent for *Being prepared*, *Completed*, orders the **customer** cancelled, or expired orders. *Ready* is not sent again when a delivery did not happen and the order goes back to *Ready for delivery*.
 
-Each message can be switched off (section 17.5).
+Each message can be switched off (section 17.5). One hour after an order is completed, customers are also asked for **1 to 5 stars** (chapter 20).
 
 ## 17.2 Ask the customer to confirm a phone or counter order
 

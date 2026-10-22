@@ -153,6 +153,21 @@ class TestInstall:
             assert {c["key"]: len(c["orders"]) for c in both["columns"]} == {"to_prepare": 2, "preparing": 1, "ready": 1, "out": 1}
             assert both["late"] == 2 and board.board()["count"] >= 2  # late orders are always on the board
 
+    def test_feedback_and_summary_are_made_up_and_never_sent(self, butchery):
+        """Task 2.7: star feedback (one low, with a comment), yesterday's summary; the summary email is off and no WhatsApp numbers."""
+        from apps.orders.models import OrderFeedback
+        from apps.reports import summary
+        from apps.reports.models import DailySummary
+
+        with schema_context("test_butchery"):
+            stars = sorted(OrderFeedback.objects.exclude(stars=None).values_list("stars", flat=True))
+            assert stars == [2, 4, 5, 5, 5] and OrderFeedback.objects.filter(status="skipped").count() == 1
+            assert "made-up" in OrderFeedback.objects.get(stars=2).comment
+            s = summary.current_settings()
+            assert s.enabled and not s.by_email and s.whatsapp_numbers == ""
+            row = DailySummary.objects.get()
+            assert row.text.startswith("Daily summary for Kathmandu Khasi Pasal") and "never sent" in row.whatsapp_result
+
     def test_running_again_changes_nothing(self, butchery):
         assert services.install(only=["test_butchery"]) == ["Kathmandu Khasi Pasal: already there (not changed)"]
 

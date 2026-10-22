@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="max-width: 760px;">
+  <p>This sends today's summary so far to the numbers and email addresses in the settings. It is marked as a test and does not count as
+     today's summary: the normal summary is still sent at {{ settings.send_at|time:"H:i" }}.</p>
+  <pre style="white-space: pre-wrap; background: var(--darkened-bg); padding: 12px; border-radius: 6px;">{{ preview }}</pre>
+  <form method="post">{% csrf_token %}
+    <div class="submit-row">
+      <input type="submit" value="Send the test" class="default">
+      <a href="{% url 'admin:reports_dailysummarysettings_change' settings.pk %}">Go back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

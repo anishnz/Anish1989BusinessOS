@@ -216,6 +216,23 @@ export default function OrderDetail() {
         </div>
       )}
 
+      {order.feedback && (
+        <div className="card">
+          <h2>Star feedback</h2>
+          {order.feedback.stars ? (
+            <p style={{ margin: 0 }}>
+              <span className={order.feedback.stars <= 2 ? "error" : ""} aria-label={`${order.feedback.stars} of 5 stars`}>
+                {"★".repeat(order.feedback.stars)}{"☆".repeat(5 - order.feedback.stars)}
+              </span>{" "}
+              <span className="muted small">{when(order.feedback.answered_at)}</span>
+              {order.feedback.comment && <><br />“{order.feedback.comment}”</>}
+            </p>
+          ) : (
+            <p className="muted small" style={{ margin: 0 }}>{order.feedback.status_label}{order.feedback.note ? `: ${order.feedback.note}` : ""}</p>
+          )}
+        </div>
+      )}
+
       <div className="card">
         <h2>History</h2>
         <ol className="history">

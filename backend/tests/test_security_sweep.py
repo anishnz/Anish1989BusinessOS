@@ -22,6 +22,7 @@ from django.contrib import admin
 from django.test import Client
 from django.urls import URLPattern, URLResolver, get_resolver, reverse
 from django_tenants.utils import schema_context
+from django.utils import timezone
 
 from tests.conftest import PASSWORD, add_totp_device, host_of, https_client, make_user
 
@@ -291,7 +292,7 @@ MODULE_ROUTES = {
     "products": ("api/products/", "admin/catalog/"),
     "crm": ("api/customers/", "api/inbox/", "admin/customers/", "admin/inbox/"),
     "orders": ("api/orders/", "admin/orders/"),
-    "reports": ("api/reports/", "dashboard/"),
+    "reports": ("api/reports/", "dashboard/", "admin/reports/"),
 }
 
 
@@ -308,6 +309,13 @@ def test_a_switched_off_module_is_blocked_everywhere(client_for, tenant_a, modul
         from apps.orders.notify import current_settings
 
         real_ids["customermessagesettings"] = current_settings().pk  # the one settings row (task 2.3)
+        from apps.orders.models import OrderFeedback
+        from apps.reports import summary
+        from apps.reports.models import DailySummary
+
+        real_ids["orderfeedback"] = OrderFeedback.objects.create(order=seeded["order"], status="skipped", note="test").pk  # task 2.7
+        real_ids["dailysummarysettings"] = summary.current_settings().pk
+        real_ids["dailysummary"] = DailySummary.objects.create(day=timezone.localdate(), status="sent", text="test").pk
     client = verified_staff_client(client_for, tenant_a, "owner@a.test", "business_owner")
     set_module_enabled(tenant_a, module, False)
     try:

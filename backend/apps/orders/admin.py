@@ -27,7 +27,7 @@ from apps.fulfilment.admin import ConfigureOnlyMixin
 
 from . import notify, services
 from .api import EXPORT_COLUMNS, export_rows
-from .models import EDITABLE_STATUSES, CustomerMessageSettings, Order, OrderLine
+from .models import EDITABLE_STATUSES, CustomerMessageSettings, Order, OrderFeedback, OrderLine
 
 S = Order.Status
 
@@ -139,7 +139,7 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
     actions = ["confirm", "start_preparing", "mark_ready", "send_out", "complete"]
     fields = ["customer", "channel", "fulfilment", "due_at", "delivery_address", "delivery_suburb", "delivery_postcode", "delivery_area", "notes"]
     summary_fields = ["number_label", "status_label", "due", "delivery_fee", "estimated_total", "total", "gst_total", "paid", "payment_method",
-                      "created_by", "created_at", "whatsapp_messages"]
+                      "created_by", "created_at", "whatsapp_messages", "star_feedback"]
 
     @admin.display(description="WhatsApp messages to the customer")
     def whatsapp_messages(self, obj):
@@ -151,6 +151,16 @@ class OrderAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
         if not rows:
             return "None yet."
         return format_html("<table><tbody>{}</tbody></table>", format_html_join("", "<tr><td>{}</td><td>{}</td><td>{}</td></tr>", rows))
+
+    @admin.display(description="Star feedback")
+    def star_feedback(self, obj):
+        """Task 2.7."""
+        row = OrderFeedback.objects.filter(order=obj).first() if obj and obj.pk else None
+        if row is None:
+            return "Not asked yet."
+        if row.stars:
+            return f"{row.stars_text} ({row.stars} of 5)" + (f" – “{row.comment}”" if row.comment else "")
+        return row.get_status_display() + (f": {row.note}" if row.note else "")
 
     @admin.display(description="Order", ordering="number")
     def number_label(self, obj):
@@ -381,9 +391,13 @@ class CustomerMessageSettingsAdmin(ConfigureOnlyMixin, admin.ModelAdmin):
         ("Messages customers get", {"fields": ["ask_to_confirm", "on_confirmed", "on_final_price", "on_ready", "on_out_for_delivery", "on_cancelled"],
                                     "description": "Messages are in English. Within 24 hours of the customer's last message they are sent as normal "
                                                    "messages (with Yes and No buttons where needed). Later, the approved templates below are used."}),
+        ("Star feedback", {"fields": ["ask_feedback"],
+                           "description": "One hour after an order is completed, the customer is asked for 1 to 5 stars (once per order, "
+                                          "at most once a week per customer, only customers who wrote to you on WhatsApp). "
+                                          "1 or 2 stars: the customer is asked what went wrong and the chat goes to “Needs staff”."}),
         ("Approved templates (for messages after 24 hours)", {
             "fields": ["template_language", "template_confirm_request", "template_confirmed", "template_final_price", "template_ready",
-                       "template_out_for_delivery", "template_cancelled"],
+                       "template_out_for_delivery", "template_cancelled", "template_feedback"],
             "description": "The names must match the templates approved in Meta. Leave a name empty to send that message only within 24 hours."}),
         ("Templates to create in Meta (category: Utility, language: English)", {"fields": ["templates_to_create"]}),
     ]
@@ -414,6 +428,46 @@ class CustomerMessageSettingsAdmin(ConfigureOnlyMixin, admin.ModelAdmin):
             name = getattr(obj, notify.TEMPLATE_FIELD[kind]) or "(not used)"
             buttons = " and ".join(f"“{b}”" for b in notify.BUTTONS.get(kind, ())) or "none"
             rows.append((name, text, buttons))
+        from . import feedback
+
+        rows.append((obj.template_feedback or "(not used)", feedback.TEMPLATE, ", ".join(f"“{b}”" for b in feedback.TEMPLATE_BUTTONS)))
         return format_html(
             "<table><thead><tr><th>Name</th><th>Text</th><th>Quick-reply buttons</th></tr></thead><tbody>{}</tbody></table>",
             format_html_join("", "<tr><td><code>{}</code></td><td>{}</td><td>{}</td></tr>", rows))
+
+
+@admin.register(OrderFeedback)
+class OrderFeedbackAdmin(BusinessOnlyAdminMixin, admin.ModelAdmin):
+    """Star feedback after orders (task 2.7). Read-only: it comes from customers."""
+
+    list_display = ["order_link", "customer_name", "stars_shown", "comment", "status", "answered_at", "note"]
+    list_filter = ["status", "stars"]
+    search_fields = ["order__number", "comment"]
+    readonly_fields = ["order_link", "customer_name", "stars_shown", "comment", "status", "note", "via", "asked_at", "answered_at"]
+    fields = readonly_fields
+
+    @admin.display(description="Order", ordering="order__number")
+    def order_link(self, obj):
+        from django.utils.html import format_html
+
+        return format_html('<a href="{}">#{}</a>', reverse("admin:orders_order_change", args=[obj.order_id]), obj.order.number)
+
+    @admin.display(description="Customer")
+    def customer_name(self, obj):
+        return obj.customer.name if obj.customer else "–"
+
+    @admin.display(description="Stars", ordering="stars")
+    def stars_shown(self, obj):
+        return obj.stars_text or "–"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("order", "customer")
+
+    def has_add_permission(self, request, *args):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

@@ -180,6 +180,7 @@ def _fill_business(spec: dict, index: int, pw: str) -> None:
     _order_messages()
     _ai_chats(spec, customers)
     _board_today()
+    _feedback_and_summary()
     _tickets(users)
 
 
@@ -414,6 +415,38 @@ def _board_today() -> None:
     for order, minutes in moves:
         if order is not None:
             Order.objects.filter(pk=order.pk).update(due_at=now + timedelta(minutes=minutes), due_until=None)
+
+
+def _feedback_and_summary() -> None:
+    """
+    Task 2.7: made-up star feedback for some completed orders (one low, with a
+    comment) and a made-up daily summary for yesterday. Test businesses never
+    connect WhatsApp, and the summary email is switched off, because the test
+    accounts' addresses and the made-up numbers could reach real people.
+    """
+    from apps.orders.models import Order, OrderFeedback
+    from apps.reports import summary
+    from apps.reports.models import DailySummary
+
+    F = OrderFeedback.Status
+    plan = [(5, ""), (4, ""), (5, ""), (2, "The meat was cut too big (made-up test comment)"), (5, ""), (None, "")]
+    done = list(Order.objects.filter(status=Order.Status.COMPLETED).select_related("customer").order_by("completed_at")[:len(plan)])
+    for order, (stars, comment) in zip(done, plan):
+        when = order.completed_at + timedelta(hours=1)
+        if stars is None:
+            OrderFeedback.objects.create(order=order, customer=order.customer, status=F.SKIPPED, note="WhatsApp is not connected.")
+            continue
+        OrderFeedback.objects.create(order=order, customer=order.customer, status=F.ANSWERED, stars=stars, comment=comment,
+                                     via="message", asked_at=when, answered_at=when + timedelta(minutes=7))
+    s = summary.current_settings()
+    s.by_email, s.whatsapp_numbers = False, ""
+    s.save()
+    yesterday = timezone.localdate() - timedelta(days=1)
+    f = summary.figures(yesterday)
+    from apps.setup.services import business_name
+
+    DailySummary.objects.create(day=yesterday, status=DailySummary.Status.SENT, text=summary.text(f, business_name()),
+                                whatsapp_result="Made-up test summary, never sent.", email_result="Switched off.")
 
 
 def _conversations(customers: list, users: dict) -> None:

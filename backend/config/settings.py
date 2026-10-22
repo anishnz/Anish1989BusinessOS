@@ -240,6 +240,9 @@ CELERY_BEAT_SCHEDULE = {
     "system-checks": {"task": "health.scheduled_checks", "schedule": env.int("SYSTEM_CHECK_EVERY_MINUTES", default=60) * 60},
     # Looks every 15 minutes for sites whose next backup (every 6 hours by default) or restore test is due.
     "backups": {"task": "backups.scheduled", "schedule": 15 * 60},
+    # Task 2.7: star feedback one hour after an order is completed, and the daily owner summary at each business's time.
+    "order-feedback": {"task": "orders.ask_feedback", "schedule": 10 * 60},
+    "daily-summaries": {"task": "reports.daily_summaries", "schedule": 5 * 60},
 }
 
 # ---------------------------------------------------------------------------

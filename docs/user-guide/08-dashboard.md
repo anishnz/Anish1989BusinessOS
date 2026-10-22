@@ -1,6 +1,6 @@
 # 8. Dashboard
 
-*User guide, chapter 8 · Last updated 22 October 2026*
+*User guide, chapter 8 · Last updated 23 October 2026*
 
 **Who this is for:** business owners and managers.
 
@@ -17,6 +17,7 @@ You need the **Reports – View** permission. The owner and manager roles have i
 | **Average sale** | Sales today divided by the number of completed orders. |
 | **Completed, not paid yet** | Completed orders today still marked as not paid. Mark payments on each order (chapter 6.5). |
 | **Unread WhatsApp chats** | Open conversations with new messages (only shown if you can see customers). |
+| **Feedback, last 7 days** | The average star rating customers gave in the last 7 days, how many answered, and the low ratings (1 or 2 stars) with links to their orders. Only shown when there is feedback (chapter 20). |
 
 A green ▲ means higher than the same day last week, and a red ▼ means lower.
 
@@ -41,5 +42,7 @@ Products whose stock is counted and that are **Low** (at or below their *Warn at
 ## 8.6 Another day
 
 Choose a date in **Day** and click **Show**. **Back to today** returns to today.
+
+The owner can also get a short **daily summary** of these numbers by WhatsApp and email each evening (chapter 20).
 
 More reports and charts (customer analysis, trends, exports) come with the business intelligence module.

@@ -205,6 +205,10 @@ class CustomerMessageSettings(models.Model):
     template_ready = models.CharField("Template: ready", max_length=100, blank=True, default="order_ready")
     template_out_for_delivery = models.CharField("Template: out for delivery", max_length=100, blank=True, default="order_out_for_delivery")
     template_cancelled = models.CharField("Template: cancelled", max_length=100, blank=True, default="order_cancelled")
+    ask_feedback = models.BooleanField(
+        "Ask for star feedback", default=True,
+        help_text="One hour after an order is completed, ask the customer for 1 to 5 stars (at most once a week per customer).")
+    template_feedback = models.CharField("Template: star feedback", max_length=100, blank=True, default="order_feedback")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -223,7 +227,7 @@ class CustomerMessageSettings(models.Model):
         if not re.fullmatch(r"[a-z]{2,3}(_[A-Z]{2})?", self.template_language or ""):
             errors["template_language"] = "Use a language code such as en or en_US."
         for name in ("template_confirm_request", "template_confirmed", "template_final_price", "template_ready",
-                     "template_out_for_delivery", "template_cancelled"):
+                     "template_out_for_delivery", "template_cancelled", "template_feedback"):
             value = (getattr(self, name) or "").strip()
             setattr(self, name, value)
             if value and not re.fullmatch(r"[a-z0-9_]{1,100}", value):
@@ -283,3 +287,44 @@ class OrderMessage(models.Model):
 
     def __str__(self):
         return f"{self.get_kind_display()} (order #{self.order.number})"
+
+
+class OrderFeedback(models.Model):
+    """
+    Star feedback for one completed order (task 2.7, D-157 and D-158). The
+    customer is asked once, one hour after the order is completed; 1 or 2 stars
+    asks what went wrong and puts the chat in "Needs staff".
+    """
+
+    class Status(models.TextChoices):
+        ASKED = "asked", "Asked, no answer yet"
+        ANSWERED = "answered", "Answered"
+        SKIPPED = "skipped", "Not asked"
+        FAILED = "failed", "Not sent (error)"
+
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="feedback")
+    customer = models.ForeignKey(Customer, null=True, blank=True, on_delete=models.SET_NULL, related_name="feedback")
+    status = models.CharField(max_length=10, choices=Status.choices)
+    note = models.CharField(max_length=300, blank=True, help_text="Why the customer was not asked.")
+    stars = models.PositiveSmallIntegerField(null=True, blank=True)
+    comment = models.TextField(blank=True, help_text="What the customer wrote after a low rating.")
+    token = models.CharField(max_length=32, blank=True, editable=False)
+    via = models.CharField(max_length=10, choices=OrderMessage.Via.choices, blank=True)
+    inbox_message = models.ForeignKey("inbox.Message", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    asked_at = models.DateTimeField(null=True, blank=True)
+    answered_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "customer feedback"
+        verbose_name_plural = "customer feedback"
+        indexes = [models.Index(fields=["answered_at"], name="orders_feedback_answered_idx")]
+        constraints = [models.CheckConstraint(condition=Q(stars__isnull=True) | Q(stars__gte=1, stars__lte=5), name="orders_feedback_stars_1_to_5")]
+
+    def __str__(self):
+        return f"Feedback for order #{self.order.number}"
+
+    @property
+    def stars_text(self) -> str:
+        return "★" * self.stars + "☆" * (5 - self.stars) if self.stars else ""

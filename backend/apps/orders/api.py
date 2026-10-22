@@ -29,6 +29,9 @@ minimum-order rules the order breaks (staff may still book it, D-121).
 WhatsApp messages (task 2.3): one order also has "messages" (what the
 customer was sent about it, and their Yes or No answers). Moving an order to
 "awaiting_confirmation" or "final_price_sent" sends the customer a question.
+
+Star feedback (task 2.7): one order also has "feedback" (null, or the status,
+stars, comment and when the customer was asked and answered).
 """
 from datetime import date, datetime, time, timedelta
 
@@ -49,7 +52,7 @@ from apps.fulfilment.models import ClosedDay, DeliveryArea, Kind
 from apps.rbac.permissions import ModulePermission
 
 from . import board, notify, services
-from .models import Order, OrderEvent, OrderLine, OrderMessage
+from .models import Order, OrderEvent, OrderFeedback, OrderLine, OrderMessage
 
 
 class LineSerializer(serializers.ModelSerializer):
@@ -113,9 +116,18 @@ class OrderDetailSerializer(OrderSerializer):
     events = EventSerializer(many=True, read_only=True)
     warnings = serializers.SerializerMethodField()
     messages = serializers.SerializerMethodField()
+    feedback = serializers.SerializerMethodField()
 
     class Meta(OrderSerializer.Meta):
-        fields = OrderSerializer.Meta.fields + ["events", "warnings", "messages"]
+        fields = OrderSerializer.Meta.fields + ["events", "warnings", "messages", "feedback"]
+
+    def get_feedback(self, obj):
+        """Star feedback (task 2.7), or null when the customer was not asked yet."""
+        row = OrderFeedback.objects.filter(order=obj).first()
+        if row is None:
+            return None
+        return {"status": row.status, "status_label": row.get_status_display(), "stars": row.stars, "comment": row.comment,
+                "note": row.note, "asked_at": row.asked_at, "answered_at": row.answered_at}
 
     def get_messages(self, obj):
         return MessageSerializer(obj.messages.select_related("inbox_message"), many=True).data

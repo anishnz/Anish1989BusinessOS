@@ -20,6 +20,9 @@ MODEL_MODULES = {
     "orders.orderline": "orders",
     "orders.ordermessage": "orders",
     "orders.customermessagesettings": "orders",  # changes also need orders.configure (see the admin)
+    "orders.orderfeedback": "orders",
+    "reports.dailysummarysettings": "orders",  # changes also need orders.configure (see the admin)
+    "reports.dailysummary": "reports",
     "fulfilment.fulfilmentsettings": "orders",  # changes also need orders.configure (see the admin)
     "fulfilment.openinghours": "orders",
     "fulfilment.closedday": "orders",

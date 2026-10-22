@@ -21,7 +21,7 @@ from . import markdown
 # Chapters in reading order, by group. Files not listed here appear under "More".
 GROUPS = [
     ("Getting started", ["00-getting-started", "01-logging-in-and-two-step-verification", "14-first-login-setup", "09-staff-app", "13-tickets"]),
-    ("Daily work", ["05-products-and-customers", "06-orders", "19-order-board", "15-pickup-and-delivery", "07-whatsapp-and-inbox", "17-whatsapp-order-messages", "18-ai-assistant", "08-dashboard"]),
+    ("Daily work", ["05-products-and-customers", "06-orders", "19-order-board", "15-pickup-and-delivery", "07-whatsapp-and-inbox", "17-whatsapp-order-messages", "18-ai-assistant", "20-daily-summary-and-feedback", "08-dashboard"]),
     ("Admin and settings", ["02-roles-permissions-and-audit-log", "04-integrations-and-api-keys", "11-check-system", "12-backups"]),
     ("Platform (Super Admin)", ["03-businesses-licences-and-modules", "10-web-addresses", "16-test-data-and-log-in-as"]),
 ]
@@ -30,6 +30,7 @@ GROUPS = [
 PAGE_HELP = {
     "/backups/": "12-backups", "/system-check/": "11-check-system", "/tickets/": "13-tickets", "/setup/": "14-first-login-setup",
     "/settings/integrations/": "04-integrations-and-api-keys", "/dashboard/": "08-dashboard", "/admin/orders/": "06-orders", "/admin/orders/customermessagesettings/": "17-whatsapp-order-messages", "/admin/ai/": "18-ai-assistant",
+    "/admin/reports/": "20-daily-summary-and-feedback", "/admin/orders/orderfeedback/": "20-daily-summary-and-feedback",
     "/admin/fulfilment/": "15-pickup-and-delivery", "/admin/catalog/": "05-products-and-customers", "/admin/customers/": "05-products-and-customers", "/admin/inbox/": "07-whatsapp-and-inbox",
     "/admin/rbac/": "02-roles-permissions-and-audit-log", "/admin/audit/": "02-roles-permissions-and-audit-log",
     "/admin/accounts/": "02-roles-permissions-and-audit-log", "/account/mfa/": "01-logging-in-and-two-step-verification",

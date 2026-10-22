@@ -1,6 +1,6 @@
 # 16. Test data, Log in as, and deleting safely
 
-*User guide, chapter 16 · Last updated 22 October 2026*
+*User guide, chapter 16 · Last updated 23 October 2026*
 
 **Who this is for:** the platform Super Admin (test data and Log in as). Section 16.5 (deleting) is for everyone.
 
@@ -28,6 +28,7 @@ Each one is at **2 White Street, Auckland City, Auckland 1010, New Zealand** and
 - WhatsApp conversations and tickets;
 - WhatsApp messages about the orders (confirmed, final price answered Yes, ready, on the way). They are **made up and were never sent**: test businesses never connect WhatsApp, because the made-up phone numbers could belong to real people;
 - AI assistant settings and two made-up AI chats (one order the AI sent to confirm, one chat handed to staff). No AI key is saved, so the AI never answers there.
+- star feedback for six completed orders (one low rating with a comment) and yesterday's daily summary, all **made up**. The summary email is switched off and no WhatsApp numbers are set, so a test business never sends the summary (chapter 20).
 
 Test businesses are marked **Test business** in the business list. Real businesses are never changed.
 

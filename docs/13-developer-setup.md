@@ -616,3 +616,13 @@ Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail
 - Never commit `.env` or any real keys.
 - Every new app must be added to `SHARED_APPS` (platform data) or `TENANT_APPS` (business data) in `config/settings.py`. Business data always goes in `TENANT_APPS`.
 - Every feature needs tests, including a tenant isolation test where data is involved.
+
+## Daily summary and star feedback (task 2.7)
+
+- `apps.core.scheduled.for_each_business(job, module=)`: runs `job()` in every business that may use the system (licence allowed, module active); one failing business never stops the others.
+- Feedback: `orders.feedback` and model `OrderFeedback` (one per order; status asked, answered, skipped, failed; stars 1–5; comment; token). Celery beat `orders.ask_feedback` every 10 minutes → `ask_due()`: orders completed 1–24 hours ago without a row; `why_not()` gives the skip reason. Inside the window `inbox.send_list()` (new: interactive list, up to 10 rows); outside, the template `order_feedback` with 5 quick-reply payloads `feedback:<pk>:<token>:<stars>` (`send_template` now allows up to 10 buttons). `_reply_id()` also reads `list_reply`.
+- Answers: `feedback.on_message_received` is connected after the order Yes/No receiver and before the AI (it sets `message.answered_question`). 1–2 stars → `agent.hand_over(..., tell=False)` and the next text is the comment. `customer_anonymised` clears comments.
+- Summary: `apps.reports` models `DailySummarySettings` (pk=1) and `DailySummary` (unique `day`). Celery beat `reports.daily_summaries` every 5 minutes → `summary.send_if_due()` → `make(day)`. WhatsApp goes straight to `inbox.whatsapp.send_message` (not an inbox chat) as the `daily_summary` template with 11 parameters; email with `send_mail`. `send_test()` for the admin button.
+- API: order detail adds `feedback`; the dashboard adds `feedback` (last 7 days, `feedback.stats`).
+- Admin: Reports and dashboard → Daily summary settings (view with orders.view, change and test with orders.configure), Daily summaries (reports.view, read-only); Orders → Customer feedback (read-only).
+- Migrations `orders.0006_feedback`, `reports.0001_daily_summary`. Tests: `tests/test_feedback_summary.py`.

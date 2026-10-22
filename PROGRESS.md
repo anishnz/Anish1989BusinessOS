@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over) and 2.6 (live order board), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.7 (daily owner summary and star feedback). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board) and 2.7 (daily owner summary and star feedback), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.8 (custom domains). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -254,7 +254,15 @@ Open a new chat in the ERP CRM project and type:
   - Test data: four open orders due today, two of them late
   - User guide: new chapter 19 (with 2 pictures); chapters 0, 6, 9 and 16 updated
   - 940 tests pass (10 new for the board, 1 more in the test data tests) and 11 staff app tests (3 new); all 24 deliberate breaks of the board code and all 6 of the board helpers in the staff app are caught by tests (2 tests were made stronger)
-- [ ] 2.7 Daily owner summary on WhatsApp and star feedback after the order
+- [x] 2.7 Daily owner summary on WhatsApp and star feedback after the order (done 23 Oct 2026)
+  - Decisions D-155 to D-158 (WhatsApp and email, owner chooses the time with 20:00 by default, ask 1 hour after completed, low ratings ask why and go to staff)
+  - Daily summary: today's sales and completed orders (with last week), orders confirmed, top 3 products, open orders, low stock, feedback and chats waiting for staff; WhatsApp template to the owner's numbers and email (default: owners); once a day, not on a closed day without orders; "Send a test now"; list of sent summaries
+  - Star feedback: 1 hour after an order is completed, a 5-choice list (or a template with 5 buttons after 24 hours); skipped for walk-ins, customers who never wrote on WhatsApp, STOP, and more than once a week; 1-2 stars ask what went wrong, go to Needs staff and keep the comment
+  - Shown on the order (staff app and admin), a Customer feedback list, a dashboard card (last 7 days) and the summary
+  - New scheduled jobs (every 5 and 10 minutes) for every business, skipping suspended businesses and switched-off modules
+  - Test data: made-up feedback (one low with a comment) and yesterday's summary; the summary email is off and no WhatsApp numbers in test businesses
+  - User guide: new chapter 20 (with 2 pictures); chapters 8, 16 and 17 updated
+  - 973 tests pass (32 new for feedback and the summary, 1 more in the test data tests) and 11 staff app tests; 40 of 41 deliberate breaks in task 2.7 are caught by tests (8 tests were made stronger, and a clash where "not run" and "skipped" looked the same was fixed); the 41st was a repeated permission check (removed)
 - [ ] 2.8 Custom domains with DNS check and automatic SSL
 - [ ] 2.9 Website content editor (title, headings, text, SEO) with "Generate with AI"
 
