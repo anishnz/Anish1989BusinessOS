@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 22 October 2026
+Last updated: 23 October 2026
 
 This file shows where the project is, so any new session can continue from the right place.
 
@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp) and 2.5 (quick reorder and hand-over), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.6 (live order board for the counter and kitchen). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over) and 2.6 (live order board), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.7 (daily owner summary and star feedback). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -244,7 +244,16 @@ Open a new chat in the ERP CRM project and type:
   - Test data: a made-up "same as last time" AI chat and a chat waiting for staff
   - User guide: chapters 6.7, 7.4 and 18.5–18.6 (chapter 7 sections renumbered)
   - 929 tests pass (13 new) and 8 staff app tests; 28 of 30 deliberate breaks in task 2.5 are caught by tests (1 test was made stronger); of the other 2, one was a repeated check (removed) and one cannot change anything (people who are switched off have no permissions)
-- [ ] 2.6 Live order board for the counter and kitchen
+- [x] 2.6 Live order board for the counter and kitchen (done 23 Oct 2026)
+  - Decisions D-151 to D-154 (staff app page with TV mode, one tap to the next step, a chime for new orders, today and late orders)
+  - New **Board** page in the staff app: To prepare, Being prepared, Ready, Out for delivery; today's, late and no-time orders ("Show tomorrow" adds tomorrow's); updates every 10 seconds; late orders first with a red edge
+  - One button per card for the next step (the normal status rules and WhatsApp messages); a note when weights must be entered or the customer must answer; a second tap to complete an order that is not paid
+  - TV mode (full screen, bigger text, clock), a browser-made chime with Sound on/off, a clear "login has ended" note
+  - Privacy: short names and suburbs only, never street addresses or phone numbers
+  - API `GET /api/orders/board/` (Orders – View)
+  - Test data: four open orders due today, two of them late
+  - User guide: new chapter 19 (with 2 pictures); chapters 0, 6, 9 and 16 updated
+  - 940 tests pass (10 new for the board, 1 more in the test data tests) and 11 staff app tests (3 new); all 24 deliberate breaks of the board code and all 6 of the board helpers in the staff app are caught by tests (2 tests were made stronger)
 - [ ] 2.7 Daily owner summary on WhatsApp and star feedback after the order
 - [ ] 2.8 Custom domains with DNS check and automatic SSL
 - [ ] 2.9 Website content editor (title, headings, text, SEO) with "Generate with AI"

@@ -8,6 +8,7 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", needs: "reports.view" },
   { to: "/orders", label: "Orders", needs: "orders.view" },
+  { to: "/board", label: "Board", needs: "orders.view" },
   { to: "/inbox", label: "Inbox", needs: "crm.view" },
   { to: "/products", label: "Products", needs: "products.view" },
   { to: "/customers", label: "Customers", needs: "crm.view" },

@@ -179,6 +179,7 @@ def _fill_business(spec: dict, index: int, pw: str) -> None:
     _conversations(customers, users)
     _order_messages()
     _ai_chats(spec, customers)
+    _board_today()
     _tickets(users)
 
 
@@ -395,6 +396,24 @@ def _orders(spec: dict, products: list, customers: list, users: dict) -> None:
         order = weigh_and_ready(order)
         if target == "out_for_delivery":
             orders.change_status(order, S.OUT_FOR_DELIVERY, actor=staff)
+
+
+def _board_today() -> None:
+    """Task 2.6: move some open orders to today, so the order board has work on it. One order is late (not picked up)."""
+    from apps.orders.models import Order
+
+    S = Order.Status
+    now = timezone.now().replace(second=0, microsecond=0)
+    now -= timedelta(minutes=now.minute % 5)
+    moves = [
+        (Order.objects.filter(status=S.READY).first(), -45),            # late: due 45 minutes ago, not picked up yet
+        (Order.objects.filter(status=S.OUT_FOR_DELIVERY).first(), -15),
+        (Order.objects.filter(status=S.PREPARING).first(), 40),
+        (Order.objects.filter(status=S.CONFIRMED, fulfilment="pickup").first(), 90),
+    ]  # the confirmed delivery order stays tomorrow ("Show tomorrow" on the board)
+    for order, minutes in moves:
+        if order is not None:
+            Order.objects.filter(pk=order.pk).update(due_at=now + timedelta(minutes=minutes), due_until=None)
 
 
 def _conversations(customers: list, users: dict) -> None:

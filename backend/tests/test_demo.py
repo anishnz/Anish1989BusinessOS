@@ -144,6 +144,15 @@ class TestInstall:
             assert AIChat.objects.get(handed_over_at__isnull=False).handover_reason == "Customer complaint about a late order"
             assert all("made-up test message, never sent" in r.reply.text for r in AIRun.objects.select_related("reply"))
 
+    def test_order_board_has_work_today(self, butchery):
+        """Task 2.6: four open orders are moved to today, two of them late; the confirmed delivery stays tomorrow."""
+        from apps.orders import board
+
+        with schema_context("test_butchery"):
+            both = board.board(tomorrow=True)
+            assert {c["key"]: len(c["orders"]) for c in both["columns"]} == {"to_prepare": 2, "preparing": 1, "ready": 1, "out": 1}
+            assert both["late"] == 2 and board.board()["count"] >= 2  # late orders are always on the board
+
     def test_running_again_changes_nothing(self, butchery):
         assert services.install(only=["test_butchery"]) == ["Kathmandu Khasi Pasal: already there (not changed)"]
 

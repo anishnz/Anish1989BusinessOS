@@ -240,6 +240,35 @@ export interface Dashboard {
   definitions: { sales: string; orders: string; compared_with: string };
 }
 
+/** One order on the live order board (task 2.6). The board shows a short name and only the suburb (D-153). */
+export interface BoardCard {
+  id: number;
+  number: number;
+  status: string;
+  status_label: string;
+  customer: string;
+  fulfilment: "pickup" | "delivery";
+  suburb: string;
+  due_at: string | null;
+  time_text: string;
+  late: boolean;
+  lines: { name: string; amount: string; unit: string; note: string; weighed: boolean }[];
+  notes: string;
+  is_paid: boolean;
+  total: string;
+  next: { to?: string; label?: string; note?: string };
+  confirmed_at: string | null;
+}
+
+export interface Board {
+  now: string;
+  today: string;
+  tomorrow: boolean;
+  count: number;
+  late: number;
+  columns: { key: string; label: string; orders: BoardCard[] }[];
+}
+
 export const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
   awaiting_confirmation: "Awaiting customer confirmation",

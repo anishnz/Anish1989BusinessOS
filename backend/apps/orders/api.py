@@ -11,6 +11,7 @@ POST   /api/orders/<id>/weights/       {"weights": {"<line id>": "1.08"}}       
 POST   /api/orders/<id>/payment/       {"paid": true, "method": "cash"}                                  orders.edit
 POST   /api/orders/<id>/reorder/       order again: a new draft at today's prices (+ "left_out")       orders.create
 GET    /api/orders/export/             CSV, one row per line (date_from, date_to)                        orders.export
+GET    /api/orders/board/              the live order board: today's and late orders (?tomorrow=1 adds tomorrow)  orders.view
 GET    /api/orders/fulfilment/         pickup and delivery settings and the active delivery areas        orders.view
 GET    /api/orders/slots/              ?kind=pickup|delivery&date=YYYY-MM-DD&order=<id>: that day's slots  orders.view
 GET    /api/orders/delivery-areas/find/ ?postcode=&suburb=&address=: the matching area (or null)        orders.view
@@ -47,7 +48,7 @@ from apps.fulfilment import services as fulfilment
 from apps.fulfilment.models import ClosedDay, DeliveryArea, Kind
 from apps.rbac.permissions import ModulePermission
 
-from . import notify, services
+from . import board, notify, services
 from .models import Order, OrderEvent, OrderLine, OrderMessage
 
 
@@ -254,6 +255,16 @@ class OrderReorder(APIView):
         except DjangoValidationError as exc:
             return _error(exc)
         return Response({**OrderDetailSerializer(order).data, "left_out": left_out}, status=status.HTTP_201_CREATED)
+
+
+class OrderBoard(APIView):
+    """The live order board for the counter and the kitchen (task 2.6). Staff move orders on with /status/."""
+
+    permission_classes = [ModulePermission]
+    permission_module = "orders"
+
+    def get(self, request):
+        return Response(board.board(tomorrow=bool(as_bool(request.query_params.get("tomorrow")))))
 
 
 class OrderStatus(_OrderAction):

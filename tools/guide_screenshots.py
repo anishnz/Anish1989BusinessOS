@@ -76,12 +76,15 @@ def sign_in(page, s: dict) -> None:
 
 
 def run_step(page, step: dict) -> None:
-    """{"click": selector}, {"fill": selector, "value": text} or {"wait_for": selector}.
+    """{"click": selector}, {"check": selector} (tick a box, even when it is ticked already),
+    {"fill": selector, "value": text} or {"wait_for": selector}.
     "{tomorrow}" in a value becomes tomorrow's date (YYYY-MM-DD), so time slots are not in the past."""
     import datetime
 
     if "click" in step:
         page.locator(step["click"]).first.click()
+    elif "check" in step:
+        page.locator(step["check"]).first.check()
     elif "fill" in step:
         value = str(step.get("value", "")).replace("{tomorrow}", (datetime.date.today() + datetime.timedelta(days=1)).isoformat())
         page.locator(step["fill"]).first.fill(value)

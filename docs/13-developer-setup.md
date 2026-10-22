@@ -330,6 +330,16 @@ Create body: `{"customer": 3, "channel": "counter", "notes": "", "fulfilment": "
 - Staff app: `useWaiting` (polls every 30 s) for the menu badge, the Inbox "Needs staff" view (`?show=needs_staff`), the dashboard tile, "Order again" on `OrderDetail` and `Customers`.
 - Tests: `tests/test_reorder_handover.py`. Migration `ai.0002_email_on_handover`.
 
+## Live order board (task 2.6)
+
+- `orders.board.board(tomorrow=False, now=None)`: confirmed, not finished orders (`ON_BOARD`) due before the end of today (or tomorrow), plus orders without a time, in the four `COLUMNS`. Late first, then by time, no time last. `late` = `due_until or due_at` is before `now`.
+- `orders.board.next_step(order)`: `{"to", "label"}` for the one forward move the board offers, or `{"note"}` (weights to enter, waiting for the customer). A test follows the button from Confirmed to Completed to prove the normal rules accept every step.
+- A card has `customer` as a short name (`short_name()`), and `suburb` only for delivery; never the street address or phone (D-153).
+- API `GET /api/orders/board/` (`orders.view`, `?tomorrow=1`). Moving uses the normal `POST /api/orders/<id>/status/` (`orders.edit`).
+- Staff app: `pages/Board.tsx` (route `/board`, menu item **Board**), polls every 10 s; `board.ts` has the pure helpers (`newOrders` for the chime, `needsSecondTap` for unpaid orders, remembered choices) and the WebAudio chime. TV mode is a fixed full-screen layer (`.board-tv`) and asks the browser for full screen.
+- Test data: `demo.services._board_today()` moves four open orders to today (two late).
+- Tests: `tests/test_board.py`, `frontend/src/test/board.test.ts`. The screenshot tool has a new step `{"check": selector}`.
+
 ## Test data, Log in as and safer deleting (task 1.18)
 
 - `apps.demo` (platform only, no tables): `data.py` (the six test businesses, Nepali names, products, conversations, tickets), `services.install(only=...)` / `remove()` (lock in the cache, progress in `demo:progress`), Celery tasks `demo.install` / `demo.remove`, commands `install_test_data [--only test_butchery]` and `remove_test_data [--yes]`, page `/platform/test-data/` (Super Admin only).

@@ -29,6 +29,7 @@ Anish1989 Business OS runs your business in one place: products, customers, orde
 1. Open the link your manager gives you and **log in**. Staff who use the admin pages also set up two-step verification (chapter 1).
 2. Open the **staff app** at `/app/`. You can add it to your phone's home screen.
 3. Take **orders**, look up **customers**, and answer **WhatsApp** messages if your role allows it (chapters 6, 7, 9 and 15).
+4. In the kitchen or at the counter, keep the **Board** open (or on a TV) to see and move today's orders (chapter 19).
 
 ## When something goes wrong
 

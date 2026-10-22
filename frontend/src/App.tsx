@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { isReady, useAuth } from "./auth";
 import Layout from "./components/Layout";
 import { homePath } from "./nav";
+import Board from "./pages/Board";
 import Customers from "./pages/Customers";
 import DashboardPage from "./pages/Dashboard";
 import Inbox from "./pages/Inbox";
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="orders" element={<Guard needs="orders.view"><Orders /></Guard>} />
         <Route path="orders/new" element={<Guard needs="orders.create"><NewOrder /></Guard>} />
         <Route path="orders/:id" element={<Guard needs="orders.view"><OrderDetail /></Guard>} />
+        <Route path="board" element={<Guard needs="orders.view"><Board /></Guard>} />
         <Route path="inbox" element={<Guard needs="crm.view"><Inbox /></Guard>} />
         <Route path="inbox/:id" element={<Guard needs="crm.view"><Thread /></Guard>} />
         <Route path="products" element={<Guard needs="products.view"><Products /></Guard>} />

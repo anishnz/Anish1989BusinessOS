@@ -29,6 +29,7 @@ You only see the pages your role allows:
 |---|---|
 | **Dashboard** | Reports – View (chapter 8) |
 | **Orders** | Orders – View |
+| **Board** | Orders – View. The live order board for the counter, the kitchen or a TV (chapter 19). |
 | **Inbox** | Customers – View. A blue number shows unread chats. |
 | **Products** | Products – View |
 | **Customers** | Customers – View |

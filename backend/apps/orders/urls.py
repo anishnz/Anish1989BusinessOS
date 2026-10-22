@@ -5,6 +5,7 @@ from . import api
 urlpatterns = [
     path("", api.OrderList.as_view(), name="api_orders"),
     path("export/", api.OrderExport.as_view(), name="api_orders_export"),
+    path("board/", api.OrderBoard.as_view(), name="api_orders_board"),
     path("fulfilment/", api.FulfilmentInfo.as_view(), name="api_orders_fulfilment"),
     path("slots/", api.FulfilmentSlots.as_view(), name="api_orders_slots"),
     path("delivery-areas/find/", api.FindDeliveryArea.as_view(), name="api_orders_find_area"),

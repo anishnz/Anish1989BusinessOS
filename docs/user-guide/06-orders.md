@@ -56,6 +56,8 @@ Draft → (Awaiting customer confirmation) → Confirmed → Being prepared
 
 To move an order on, open it and click **Status and payment**, choose the next step and click **Change status**. To move several orders at once, select them in the list and choose an action, for example **Confirm selected orders**. If an order cannot move, a message tells you why.
 
+In the staff app, the **Board** shows today's confirmed orders in columns, and you move each order on with one tap (chapter 19).
+
 ## 6.4 Products sold by weight
 
 A customer orders 1.5 kg of goat, but the pack weighs 1.58 kg.
