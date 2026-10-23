@@ -1,6 +1,6 @@
 # 10. Delivery plan
 
-Last updated: 22 October 2026
+Last updated: 23 October 2026
 
 Agreed on 21 October 2026. Work is full-time. All pilot businesses have said they will pay after the pilot.
 
@@ -69,6 +69,15 @@ Tasks (agreed 22 October 2026; payment at pickup or on delivery, pickup and deli
 - Event calendar, supplier and task checklist, reminders
 
 **Done when:** the catering and events businesses send real quotes and record a paid deposit through the system.
+
+Tasks (agreed 23 October 2026; one shared Events module, bank transfer with payments recorded by staff, quote web page with PDF, per-guest packages plus extras — D-168 to D-171):
+
+- 3.1 Enquiries: a form on the business website and enquiries from WhatsApp chats, with event details (type, date, time, venue, guests, dietary needs, budget), status and an enquiry list
+- 3.2 Packages and the quote builder: per-guest packages and extras, quote lines with GST, quote versions
+- 3.3 The customer's quote page and PDF: a private link sent on WhatsApp or by email, Accept button, expiry date
+- 3.4 AI quote drafts from the enquiry (a person checks and approves before anything is sent)
+- 3.5 Invoices and deposits: a deposit invoice when the quote is accepted, a final invoice, bank details and a reference code, payments recorded by staff, what is still owed, payment reminders
+- 3.6 Event calendar, supplier and task checklist, reminders before the event, and feedback after it
 
 ## Step 4: Learning and jobs flow
 

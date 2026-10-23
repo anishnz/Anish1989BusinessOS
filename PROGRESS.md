@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board), 2.7 (daily owner summary and star feedback), 2.8 (own domains with DNS check and HTTPS) and 2.9 (website and editor), and the extra task 1.18 (test data, Log in as, safer deleting) are done. Still open for the Step 2 "done" check: real pilot orders through WhatsApp for one week. Next: Step 3 (enquiry, quote and booking flow). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board), 2.7 (daily owner summary and star feedback), 2.8 (own domains with DNS check and HTTPS) and 2.9 (website and editor), and the extra task 1.18 (test data, Log in as, safer deleting) are done. Still open for the Step 2 "done" check: real pilot orders through WhatsApp for one week. Now: **Step 3, enquiry, quote and booking flow** (tasks 3.1 to 3.6 agreed 23 October 2026). Next task: 3.1 (enquiries). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -284,7 +284,14 @@ Open a new chat in the ERP CRM project and type:
 
 ## Step 3: Enquiry, quote and booking flow
 
-Not started.
+Tasks agreed 23 October 2026 (decisions D-168 to D-171: one shared Events module, bank transfer with payments recorded by staff, quote web page with PDF, per-guest packages plus extras). **Done when:** the catering and events businesses send real quotes and record a paid deposit through the system.
+
+- [ ] 3.1 Enquiries: a form on the business website and enquiries from WhatsApp chats, with event details (type, date, time, venue, guests, dietary needs, budget), status and an enquiry list
+- [ ] 3.2 Packages and the quote builder: per-guest packages and extras, quote lines with GST, quote versions
+- [ ] 3.3 The customer's quote page and PDF: a private link sent on WhatsApp or by email, Accept button, expiry date
+- [ ] 3.4 AI quote drafts from the enquiry (a person checks and approves before anything is sent)
+- [ ] 3.5 Invoices and deposits: a deposit invoice when the quote is accepted, a final invoice, bank details and a reference code, payments recorded by staff, what is still owed, payment reminders
+- [ ] 3.6 Event calendar, supplier and task checklist, reminders before the event, and feedback after it
 
 ## Step 4: Learning and jobs flow
 
