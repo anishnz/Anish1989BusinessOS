@@ -98,6 +98,7 @@ TENANT_APPS = [
     "apps.ai",  # AI assistant on WhatsApp (task 2.4); after apps.orders, see apps/ai/apps.py
     "apps.reports",
     "apps.website",  # the business's public one-page website and its editor (task 2.9)
+    "apps.events",  # catering and events: enquiries (task 3.1), quotes, deposits and the event calendar (step 3)
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]

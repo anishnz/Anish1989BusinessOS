@@ -106,6 +106,7 @@ def build(texts: dict, *, url: str = "") -> dict:
         "url": url,
         "year": timezone.localdate().year,
         "business": business_name(),
+        "enquiry": enquiry_form_on(),
     }
     data["json_ld"] = json_ld(data, texts, url)
     return data
@@ -127,6 +128,13 @@ def json_ld(data: dict, texts: dict, url: str) -> str:
         info["openingHours"] = [f"{SCHEMA_DAYS[r.weekday]} {r.opens:%H:%M}-{r.closes:%H:%M}" for r in pickup["rows"]]
     # Safe inside <script>: "<" is escaped, so no text can close the tag.
     return json.dumps(info, ensure_ascii=False).replace("<", "\\u003c")
+
+
+def enquiry_form_on() -> bool:
+    """The "Ask for a quote" button links to the enquiry form (task 3.1) when it is open."""
+    from apps.events.services import form_available
+
+    return form_available()
 
 
 def live_page(url: str = "") -> dict:

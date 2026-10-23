@@ -16,6 +16,7 @@ From top to bottom:
 |---|---|
 | Website name and short line | Your texts |
 | Welcome heading and text, with a **WhatsApp** button | Your texts; the button opens a WhatsApp chat with the number you set |
+| **Ask for a quote** button | Shown when Catering and events is on and the enquiry form is switched on (chapter 23) |
 | About | Your texts |
 | Products and prices | Products that are available and not archived (chapter 5), by category. Counted products that run out show **Sold out**. |
 | Pickup hours, delivery hours, delivery areas, closed days | Pickup and delivery settings (chapter 15) |

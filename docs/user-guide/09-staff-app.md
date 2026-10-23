@@ -32,6 +32,7 @@ You only see the pages your role allows:
 | **Board** | Orders – View. The live order board for the counter, the kitchen or a TV (chapter 19). |
 | **Inbox** | Customers – View. A blue number shows unread chats. |
 | **Products** | Products – View |
+| **Enquiries** | Catering and events – View. Event and catering enquiries (chapter 23). |
 | **Customers** | Customers – View |
 | **Website** | Websites – View. Write and publish the business's website (chapter 22). |
 | **Classic admin** | Always shown. It opens the full admin for settings, roles and users. |
@@ -80,6 +81,7 @@ The **Inbox** lists WhatsApp conversations. Tap one to read it and reply.
 
 - Type your reply and tap **Send**.
 - WhatsApp allows free replies only within **24 hours** of the customer's last message. After that, the app shows a note with a link to the classic inbox page, where you can send an approved template (chapter 7).
+- **Make enquiry** turns the chat into an event or catering enquiry (Catering and events – Create, chapter 23.6).
 
 ## 9.5 Products and customers
 

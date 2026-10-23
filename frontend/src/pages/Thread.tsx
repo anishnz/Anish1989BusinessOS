@@ -1,10 +1,36 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api, when } from "../api";
 import { useAuth } from "../auth";
 import { useData } from "../components/useData";
-import type { ChatAI, Conversation } from "../types";
+import type { ChatAI, Conversation, Enquiry } from "../types";
+
+/** "Make enquiry": turn this chat into an event or catering enquiry (task 3.1). */
+function MakeEnquiry({ id }: { id: string }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState("");
+
+  async function make() {
+    setBusy(true);
+    setProblem("");
+    try {
+      const made = await api<Enquiry>("/api/events/enquiries/from-chat/", { method: "POST", body: { conversation: Number(id) } });
+      navigate(`/enquiries/${made.id}`);
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : "Something went wrong.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <button disabled={busy} onClick={make}>Make enquiry</button>
+      {problem && <span className="error small">{problem}</span>}
+    </>
+  );
+}
 
 /** The AI assistant's state in this chat, with the button to hand it over or give it back (task 2.4). */
 function AIBar({ id, canEdit }: { id: string; canEdit: boolean }) {
@@ -68,7 +94,10 @@ export default function Thread() {
   return (
     <div className="grid" style={{ maxWidth: 820 }}>
       <p className="small"><Link to="/inbox">← Inbox</Link></p>
-      <h1>{data.customer_name || data.customer_phone}</h1>
+      <div className="row">
+        <h1 style={{ marginRight: "auto" }}>{data.customer_name || data.customer_phone}</h1>
+        {id && can("events.create") && <MakeEnquiry id={id} />}
+      </div>
       <p className="muted" style={{ margin: 0 }}>{data.customer_phone} · {data.status === "open" ? "Open" : "Closed"}{data.assigned_to_email ? ` · assigned to ${data.assigned_to_email}` : ""}</p>
       {id && <AIBar id={id} canEdit={can("crm.edit")} />}
       <div className="card bubbles">

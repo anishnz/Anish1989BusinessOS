@@ -1,6 +1,6 @@
 # 18. The AI assistant on WhatsApp
 
-*User guide, chapter 18 · Last updated 22 October 2026*
+*User guide, chapter 18 · Last updated 23 October 2026*
 
 **Who this is for:** the business owner or AI manager who sets up the AI (sections 18.1–18.3 and 18.7–18.8), and staff who answer chats (sections 18.4–18.6).
 
@@ -20,6 +20,7 @@ It **never confirms an order itself.** When the order is complete, it sends the 
 | Copy a past order ("same as last time") at today's prices | |
 | Throw away an order the customer no longer wants | See other customers' orders |
 | Pass the chat to staff | |
+| Take event and catering enquiries (when Catering and events is on, chapter 23.5) | Give prices or availability for events |
 
 Every fact the AI gives comes from your products, settings and orders, not from the AI's memory.
 

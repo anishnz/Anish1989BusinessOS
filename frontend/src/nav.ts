@@ -11,6 +11,7 @@ export const NAV: NavItem[] = [
   { to: "/board", label: "Board", needs: "orders.view" },
   { to: "/inbox", label: "Inbox", needs: "crm.view" },
   { to: "/products", label: "Products", needs: "products.view" },
+  { to: "/enquiries", label: "Enquiries", needs: "events.view" },
   { to: "/customers", label: "Customers", needs: "crm.view" },
   { to: "/website", label: "Website", needs: "websites.view" },
 ];

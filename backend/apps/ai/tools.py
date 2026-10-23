@@ -94,6 +94,32 @@ SPECS = [
 ]
 
 
+# Event and catering enquiries (task 3.1, D-174): only when the business has Catering and events on.
+ENQUIRY_SPEC = {
+    "name": "save_enquiry",
+    "description": "Save or change this customer's event or catering enquiry. Give only the details the customer told you. "
+    "Returns what is still missing for a quote. Staff send the quote; never give prices for events.",
+    "parameters": {"type": "object", "properties": {
+        "event_type": {"type": "string", "enum": ["wedding", "birthday", "corporate", "cultural", "religious", "memorial", "party", "other"]},
+        "event_date": {"type": "string", "description": "YYYY-MM-DD"},
+        "start_time": {"type": "string", "description": "HH:MM, New Zealand time"},
+        "end_time": {"type": "string", "description": "HH:MM"},
+        "venue": {"type": "string", "description": "Name and address, or 'not booked yet'"},
+        "guests": {"type": "integer"},
+        "menu": {"type": "string", "description": "Food and drinks they would like, in their words"},
+        "dietary_needs": {"type": "string", "description": "For example '20 vegetarian, 2 nut allergy'"},
+        "budget": {"type": "number", "description": "NZ$, only when the customer said it"},
+        "message": {"type": "string", "description": "Anything else they asked for"}}},
+}
+
+
+def specs() -> list[dict]:
+    """The tools the AI may use now."""
+    from apps.events.services import module_on
+
+    return [*SPECS, ENQUIRY_SPEC] if module_on() else list(SPECS)
+
+
 def run(ctx: Context, name: str, args: dict) -> dict:
     func = TOOLS.get(name)
     if func is None:
@@ -336,6 +362,31 @@ def hand_over(ctx: Context, reason: str = "") -> dict:
     return {"done": True, "note": "A staff member will answer. Tell the customer this in one short sentence."}
 
 
-TOOLS = {"search_products": search_products, "shop_info": shop_info, "available_times": available_times,
+def save_enquiry(ctx: Context, **details) -> dict:
+    """Work on the chat's own New enquiry; make one the first time. The details are checked like the website form's."""
+    from apps.events import services as events
+    from apps.events.models import Enquiry
+
+    if not events.module_on():
+        return {"error": "This business does not take event enquiries."}
+    conversation = ctx.chat.conversation
+    allowed = {k: v for k, v in details.items() if k in events.DETAIL_FIELDS and k not in ("contact_name", "contact_phone", "contact_email")}
+    enquiry = events.open_for_chat(conversation)
+    if enquiry is None:
+        if ctx.customer is None or ctx.customer.is_anonymised:
+            return {"error": "This chat has no customer."}
+        enquiry = events.create(allowed, source=Enquiry.Source.WHATSAPP, customer=ctx.customer, conversation=conversation)
+        made = True
+    else:
+        events.update(enquiry, allowed)
+        enquiry.refresh_from_db()
+        made = False
+    still = events.missing(enquiry)
+    return {"enquiry_number": enquiry.pk, "created": made, "still_missing": still,
+            "note": "Ask for what is missing, one or two things at a time." if still else
+            "Everything for a quote is there. Tell the customer that a staff member will send a quote."}
+
+
+TOOLS = {"save_enquiry": save_enquiry, "search_products": search_products, "shop_info": shop_info, "available_times": available_times,
          "check_delivery_address": check_delivery_address, "set_order": set_order, "send_for_confirmation": send_for_confirmation,
          "past_orders": past_orders, "reorder": reorder, "cancel_draft": cancel_draft, "hand_over": hand_over}

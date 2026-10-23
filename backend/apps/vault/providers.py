@@ -22,6 +22,7 @@ import requests
 from .netguard import UnsafeURL, check_url
 
 TIMEOUT = 10
+TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 GRAPH_API_VERSION = "v25.0"  # Meta Graph API; supported until July 2028
 GMAIL_HOST = "smtp.gmail.com"
 GMAIL_PORT = 587
@@ -59,6 +60,7 @@ CATEGORIES = {
     "payments": "Payments",
     "search": "Search and maps",
     "backup": "Backups",
+    "website": "Website protection",
 }
 
 
@@ -235,6 +237,21 @@ def test_google_drive(s, c):
     return TestResult(True, f"Connected to Google Drive ({email}).")
 
 
+def test_turnstile(s, c):
+    """Ask Cloudflare to check a made-up token: a working secret key gets "invalid-input-response"."""
+    try:
+        response = requests.post(TURNSTILE_VERIFY_URL, data={"secret": s.get("secret_key", ""), "response": "connection-test"},
+                                 timeout=TIMEOUT, allow_redirects=False)
+        codes = response.json().get("error-codes", []) if response.ok else []
+    except (requests.RequestException, ValueError) as exc:
+        return _network_error(exc)
+    if "invalid-input-secret" in codes or "missing-input-secret" in codes:
+        return TestResult(False, "Cloudflare does not know this secret key. Copy it again from Turnstile in the Cloudflare dashboard.")
+    if not response.ok:
+        return TestResult(False, f"Cloudflare answered with an error ({response.status_code}). Try again later.")
+    return TestResult(True, "The secret key works. The enquiry form now shows the Cloudflare check.")
+
+
 def test_bank_transfer(s, c):
     return TestResult(True, "Bank details saved. They are shown on invoices for manual bank transfer.")
 
@@ -286,6 +303,13 @@ PROVIDERS = {
         Provider("stripe", "Stripe", "payments", available=False, help="Coming in a later phase."),
         Provider("windcave", "Windcave", "payments", available=False, help="Coming in a later phase."),
         Provider("paypal", "PayPal", "payments", available=False, help="Coming in a later phase."),
+        Provider(
+            "turnstile", "Cloudflare Turnstile (spam check on the enquiry form)", "website",
+            (Field("secret_key", "Secret key"),), (Field("site_key", "Site key", help="Starts with 0x. From Turnstile in the Cloudflare dashboard."),),
+            test_turnstile, docs_url="https://dash.cloudflare.com/?to=/:account/turnstile",
+            help="Free. In Cloudflare, add a Turnstile widget with every web address of your website (for example "
+                 "yourbusiness.anish1989.com.np and your own domain). Without it, the form uses a hidden field and limits instead.",
+        ),
         Provider("google_places", "Google Places (competitor search)", "search", (Field("api_key", "API key"),), (), test_google_places),
         Provider(
             "google_oauth_app", "Google sign-in app (for Google Drive backups)", "backup",

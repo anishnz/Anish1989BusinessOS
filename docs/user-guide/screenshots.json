@@ -22,5 +22,8 @@
   {"name": "own-domain-waiting", "site": "business", "path": "/settings/web-addresses/", "selector": "#content"},
   {"name": "website-editor", "site": "business", "path": "/app/website", "width": 1400, "height": 1000, "wait_for": "iframe", "steps": [{"wait_for": "text=Preview of the draft"}]},
   {"name": "website-public", "site": "business", "path": "/", "width": 1100, "height": 1500},
+  {"name": "enquiry-form", "site": "business", "path": "/enquiry/", "width": 900, "height": 1500},
+  {"name": "enquiries-list", "site": "business", "path": "/app/enquiries?status=", "width": 1300, "height": 700, "wait_for": "main table td a", "selector": "main"},
+  {"name": "enquiry-detail", "site": "business", "path": "/app/enquiries?status=quoted", "width": 1300, "height": 1300, "wait_for": "main table td a", "steps": [{"click": "main table td a", "wait_for": "h2:text-is('Details')"}], "selector": "main"},
   {"name": "test-data", "site": "platform", "path": "/platform/test-data/?business=test_butchery", "selector": "#content"}
 ]

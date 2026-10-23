@@ -1,0 +1,9 @@
+{% include "events/_head.html" %}
+<main class="wrap block narrow">
+  <h1>{{ s.form_heading }}</h1>
+  <p class="lead" role="status">{{ s.thanks_text|default:"Thank you. We have your enquiry and will be in touch soon."|linebreaksbr }}</p>
+  <p><a href="/">Back to {{ business }}</a></p>
+</main>
+<footer class="wrap foot muted small">© {{ year }} {{ business }}.</footer>
+</body>
+</html>

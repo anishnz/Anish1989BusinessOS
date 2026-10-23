@@ -6,6 +6,7 @@ Super Admin can open the page.
 """
 import pytest
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django_tenants.utils import schema_context
 
 from apps.demo import data, services
@@ -182,6 +183,20 @@ class TestInstall:
         with schema_context("test_butchery"):
             assert content.live().number == 1 and "Kathmandu Khasi Pasal" in content.live_content()["hero_heading"]
             assert content.unpublished_changes() and "not published" in content.draft_content()["tagline"]
+
+    def test_enquiries_in_every_status_and_no_email(self, butchery):
+        """Task 3.1: six made-up enquiries (website, WhatsApp, staff), one per status, Lost with a reason; staff are not emailed."""
+        from apps.audit.models import AuditEvent
+        from apps.events.models import Enquiry
+
+        with schema_context("test_butchery"):
+            rows = list(Enquiry.objects.order_by("created_at"))
+            assert [e.status for e in rows] == ["new", "new", "contacted", "quoted", "won", "lost"]
+            assert {e.source for e in rows} == {"website", "whatsapp", "staff"}
+            assert rows[1].conversation is not None and rows[1].conversation.customer_id == rows[1].customer_id
+            assert all(e.event_date > timezone.localdate() for e in rows) and "Made-up" in rows[5].lost_reason
+            assert rows[3].activities.filter(kind="note").exists()
+            assert not AuditEvent.objects.filter(action="events.enquiry_email").exists()
 
     def test_running_again_changes_nothing(self, butchery):
         assert services.install(only=["test_butchery"]) == ["Kathmandu Khasi Pasal: already there (not changed)"]

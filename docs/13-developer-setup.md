@@ -647,3 +647,15 @@ Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail
 - API `/api/website/` (state), `draft/` (PUT), `publish/`, `versions/`, `versions/<n>/restore/`, `generate/` — module `websites`, actions view, edit, publish.
 - Staff app: `pages/Website.tsx` (menu item **Website**, websites.view), `website.ts` (sections, counter, debounce). The draft saves 0.8 s after typing stops; the preview frame reloads after each save.
 - Static file `website/site.css` (run `collectstatic` before tests in CI settings). Migration `website.0001_initial`. Tests: `tests/test_website.py`, `frontend/src/test/website.test.ts`.
+
+## Enquiries (task 3.1)
+
+- New tenant app `apps.events` (module `events`, "Catering and events"): `EnquirySettings` (pk=1: form on/off, texts, staff email), `Enquiry` (source, status, contact details as given, customer, conversation, event details) and `EnquiryActivity` (created, status, changed, note). Migration `events.0001_initial`.
+- `services.py`: `clean_details()` (the same rules for the form, staff and the AI), `create()`, `update()` (only changed fields; audit has field names), `set_status()` (Lost needs a reason), `add_note()`, `from_conversation()`, `open_for_chat()` (the AI's New enquiry for a chat, 14 days), `missing()`, `send_staff_email()` (Celery job `events.enquiry_email`), `forget_customer()` (connected to `customer_anonymised`).
+- Public form `views.py`: `/enquiry/` and `/enquiry/thanks/` (no cookies, `csrf_exempt`, CSP `script-src 'none'`, or Cloudflare's address when Turnstile is connected). The routes come before the website routes in `config/urls.py`; the security sweep lists them as public. The website shows **Ask for a quote** and lists `/enquiry/` in the sitemap when `form_available()`.
+- `spam.py`: hidden field `company_website`, signed time stamp (3 s to 2 h, per schema), cache counters (5 per hour per address, 100 per day per business), `turnstile()` (only a Connected `turnstile` connection) and `check_turnstile()` (token, single use, hostname). The vault has a new provider `turnstile` (category `website`) with a connection test that sends a made-up token.
+- AI: `tools.specs()` adds `save_enquiry` when the module is on; `agent.enquiry_rules()` adds the event rules to the system prompt.
+- API `/api/events/enquiries/` (list with `counts`, create), `from-chat/`, `<id>/` (GET, PATCH), `<id>/status/`, `<id>/notes/`. `from-chat/` also needs `crm.view`.
+- Staff app: `pages/Enquiries.tsx`, `pages/EnquiryDetail.tsx`, `enquiries.ts` (form text, changed fields only, tabs, event date text), menu item **Enquiries** (events.view), **Make enquiry** in a chat.
+- Admin: Enquiry settings (Catering and events – View / Edit) and a read-only enquiry list. Test data: `_enquiries()` makes six enquiries per test business (one per status) and emails nobody.
+- Tests: `tests/test_enquiries.py`, `frontend/src/test/enquiries.test.ts`.

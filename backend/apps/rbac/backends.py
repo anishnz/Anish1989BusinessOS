@@ -30,6 +30,8 @@ MODEL_MODULES = {
     "inbox.conversation": "crm",
     "ai.aisettings": "ai",  # changes also need ai.configure (see the admin)
     "ai.airun": "ai",
+    "events.enquirysettings": "events",  # task 3.1: see with Catering and events – View, change with – Edit
+    "events.enquiry": "events",
 }
 
 DJANGO_ACTIONS = {"view": "view", "add": "create", "change": "edit", "delete": "delete"}

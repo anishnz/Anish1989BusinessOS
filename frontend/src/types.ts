@@ -306,3 +306,58 @@ export function statusLabel(status: string, fulfilment: string): string {
   if (status === "ready") return fulfilment === "delivery" ? "Ready for delivery" : "Ready for pickup";
   return STATUS_LABELS[status] ?? status;
 }
+
+/** An event or catering enquiry (task 3.1). */
+export interface EnquiryRow {
+  id: number;
+  name: string;
+  status: "new" | "contacted" | "quoted" | "won" | "lost";
+  status_label: string;
+  source: "website" | "whatsapp" | "staff";
+  source_label: string;
+  event_type: string;
+  event_type_label: string;
+  event_date: string | null;
+  start_time: string | null;
+  guests: number | null;
+  budget: string | null;
+  customer: number | null;
+  conversation: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EnquiryActivity {
+  id: number;
+  kind: "created" | "status" | "changed" | "note";
+  kind_label: string;
+  text: string;
+  by_email: string;
+  created_at: string;
+}
+
+export interface Enquiry extends EnquiryRow {
+  contact_name: string;
+  contact_phone: string;
+  contact_email: string;
+  end_time: string | null;
+  venue: string;
+  menu: string;
+  dietary_needs: string;
+  message: string;
+  lost_reason: string;
+  status_changed_at: string;
+  activities: EnquiryActivity[];
+  missing: string[];
+}
+
+export interface Choice {
+  value: string;
+  label: string;
+}
+
+export interface EnquiryPage extends Page<EnquiryRow> {
+  counts: Record<string, number>;
+  statuses: Choice[];
+  event_types: Choice[];
+}

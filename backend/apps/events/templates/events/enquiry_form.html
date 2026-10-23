@@ -1,0 +1,88 @@
+{% include "events/_head.html" %}
+<main class="wrap block narrow">
+  <h1>{{ s.form_heading }}</h1>
+  {% if s.form_intro %}<p class="lead">{{ s.form_intro|linebreaksbr }}</p>{% endif %}
+  {% if errors.form %}<p class="alert" role="alert">{{ errors.form }}</p>{% elif errors %}<p class="alert" role="alert">Please check the fields marked below.</p>{% endif %}
+
+  <form method="post" action="/enquiry/" class="enquiry" novalidate>
+    <input type="hidden" name="started" value="{{ stamp }}">
+    <div class="hp" aria-hidden="true">
+      <label for="{{ honeypot }}">Leave this empty</label>
+      <input id="{{ honeypot }}" name="{{ honeypot }}" type="text" tabindex="-1" autocomplete="off">
+    </div>
+
+    <fieldset>
+      <legend>About you</legend>
+      <label for="contact_name">Your name *</label>
+      <input id="contact_name" name="contact_name" value="{{ v.contact_name }}" maxlength="150" autocomplete="name" required{% if errors.contact_name %} aria-invalid="true" aria-describedby="e-contact_name"{% endif %}>
+      {% if errors.contact_name %}<p class="field-error" id="e-contact_name">{{ errors.contact_name }}</p>{% endif %}
+      <div class="two">
+        <div>
+          <label for="contact_phone">Phone</label>
+          <input id="contact_phone" name="contact_phone" value="{{ v.contact_phone }}" type="tel" maxlength="30" autocomplete="tel" placeholder="021 123 4567"{% if errors.contact_phone %} aria-invalid="true" aria-describedby="e-contact_phone"{% endif %}>
+          {% if errors.contact_phone %}<p class="field-error" id="e-contact_phone">{{ errors.contact_phone }}</p>{% endif %}
+        </div>
+        <div>
+          <label for="contact_email">Email</label>
+          <input id="contact_email" name="contact_email" value="{{ v.contact_email }}" type="email" maxlength="254" autocomplete="email"{% if errors.contact_email %} aria-invalid="true" aria-describedby="e-contact_email"{% endif %}>
+          {% if errors.contact_email %}<p class="field-error" id="e-contact_email">{{ errors.contact_email }}</p>{% endif %}
+        </div>
+      </div>
+      <p class="muted small">Give a phone number or an email address (or both).</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Your event</legend>
+      <label for="event_type">Type of event</label>
+      <select id="event_type" name="event_type">
+        <option value="">Choose…</option>
+        {% for value, label in types %}<option value="{{ value }}"{% if v.event_type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      {% if errors.event_type %}<p class="field-error">{{ errors.event_type }}</p>{% endif %}
+      <div class="two">
+        <div>
+          <label for="event_date">Date *</label>
+          <input id="event_date" name="event_date" type="date" min="{{ today }}" value="{{ v.event_date }}" required{% if errors.event_date %} aria-invalid="true" aria-describedby="e-event_date"{% endif %}>
+          {% if errors.event_date %}<p class="field-error" id="e-event_date">{{ errors.event_date }}</p>{% endif %}
+        </div>
+        <div>
+          <label for="start_time">Start time</label>
+          <input id="start_time" name="start_time" type="time" value="{{ v.start_time }}"{% if errors.start_time %} aria-invalid="true"{% endif %}>
+          {% if errors.start_time %}<p class="field-error">{{ errors.start_time }}</p>{% endif %}
+        </div>
+      </div>
+      <div class="two">
+        <div>
+          <label for="guests">Number of guests *</label>
+          <input id="guests" name="guests" type="number" min="1" max="10000" inputmode="numeric" value="{{ v.guests }}" required{% if errors.guests %} aria-invalid="true" aria-describedby="e-guests"{% endif %}>
+          {% if errors.guests %}<p class="field-error" id="e-guests">{{ errors.guests }}</p>{% endif %}
+        </div>
+        <div>
+          <label for="budget">Budget (NZ$, optional)</label>
+          <input id="budget" name="budget" inputmode="decimal" maxlength="15" value="{{ v.budget }}" placeholder="2500"{% if errors.budget %} aria-invalid="true"{% endif %}>
+          {% if errors.budget %}<p class="field-error">{{ errors.budget }}</p>{% endif %}
+        </div>
+      </div>
+      <label for="venue">Venue</label>
+      <input id="venue" name="venue" value="{{ v.venue }}" maxlength="300" placeholder="Name and suburb, or “not booked yet”">
+      {% if errors.venue %}<p class="field-error">{{ errors.venue }}</p>{% endif %}
+      <label for="menu">Food and drinks you would like</label>
+      <textarea id="menu" name="menu" rows="3" maxlength="2000">{{ v.menu }}</textarea>
+      {% if errors.menu %}<p class="field-error">{{ errors.menu }}</p>{% endif %}
+      <label for="dietary_needs">Dietary needs</label>
+      <textarea id="dietary_needs" name="dietary_needs" rows="2" maxlength="1000" placeholder="For example 20 vegetarian, 2 nut allergy, no beef">{{ v.dietary_needs }}</textarea>
+      {% if errors.dietary_needs %}<p class="field-error">{{ errors.dietary_needs }}</p>{% endif %}
+      <label for="message">Anything else</label>
+      <textarea id="message" name="message" rows="3" maxlength="3000">{{ v.message }}</textarea>
+      {% if errors.message %}<p class="field-error">{{ errors.message }}</p>{% endif %}
+    </fieldset>
+
+    <label class="check"><input type="checkbox" name="marketing" value="yes"{% if v.marketing %} checked{% endif %}> Send me news and special offers (you can stop them at any time)</label>
+    {% if turnstile %}<div class="cf-turnstile" data-sitekey="{{ turnstile.site_key }}" data-action="enquiry"></div>{% endif %}
+    <p><button class="button big" type="submit">Send enquiry</button></p>
+    <p class="muted small">We use your details only to reply to this enquiry{% if v.marketing %} and to send the news you asked for{% endif %}.</p>
+  </form>
+</main>
+<footer class="wrap foot muted small">© {{ year }} {{ business }}. Prices in NZ$ including GST.</footer>
+</body>
+</html>

@@ -31,7 +31,7 @@
     <div class="wrap">
       {% if t.hero_heading %}<h1>{{ t.hero_heading }}</h1>{% endif %}
       {% for p in hero %}<p class="lead">{{ p|linebreaksbr }}</p>{% endfor %}
-      {% if whatsapp %}<p><a class="button big" href="{{ whatsapp }}" rel="noopener">Message us on WhatsApp</a></p>{% endif %}
+      {% if whatsapp or enquiry %}<p class="actions">{% if enquiry %}<a class="button big" href="/enquiry/">Ask for a quote</a>{% endif %}{% if whatsapp %}<a class="button big{% if enquiry %} ghost{% endif %}" href="{{ whatsapp }}" rel="noopener">Message us on WhatsApp</a>{% endif %}</p>{% endif %}
     </div>
   </section>
 

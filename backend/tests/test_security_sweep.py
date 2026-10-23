@@ -48,6 +48,8 @@ PUBLIC_ROUTES = {
     "login-as/stop/",  # only signs out and goes back to the platform
     # The business's public website (task 2.9): published texts and public facts only (test_website.py)
     "", "robots.txt", "sitemap.xml",
+    # The public enquiry form (task 3.1): it only adds a new enquiry and shows nothing stored (test_enquiries.py)
+    "enquiry/", "enquiry/thanks/",
 }
 # Pages about the logged-in person themselves.
 SELF_ROUTES = {r for r in [

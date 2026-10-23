@@ -71,6 +71,9 @@ def sitemap(request):
     _require_site()
     version = content.live()
     lastmod = f"<lastmod>{version.published_at:%Y-%m-%d}</lastmod>" if version else ""
+    from apps.events.services import form_available
+
+    extra = f"<url><loc>{_main_url(request, '/enquiry/')}</loc></url>" if form_available() else ""
     body = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-            f"<url><loc>{_main_url(request)}</loc>{lastmod}</url></urlset>\n")
+            f"<url><loc>{_main_url(request)}</loc>{lastmod}</url>{extra}</urlset>\n")
     return HttpResponse(body, content_type="application/xml")

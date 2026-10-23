@@ -1,0 +1,16 @@
+{% load static %}<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ s.form_heading }} – {{ business }}</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="{% static 'website/site.css' %}">
+{% if turnstile %}<script src="{{ turnstile_script }}" async defer></script>{% endif %}
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="name plain" href="/">{{ business }}</a>
+  </div>
+</header>

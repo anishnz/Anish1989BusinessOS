@@ -183,6 +183,7 @@ def _fill_business(spec: dict, index: int, pw: str) -> None:
     _feedback_and_summary()
     _own_domain(spec)
     _website(spec)
+    _enquiries(spec, customers, users)
     _tickets(users)
 
 
@@ -487,6 +488,50 @@ def _website(spec: dict) -> None:
     content.save_draft(texts)
     content.publish(note="Made-up test website")
     content.save_draft({**texts, "tagline": "Draft change, not published yet (made-up test data)"})
+
+
+def _enquiries(spec: dict, customers: list, users: dict) -> None:
+    """
+    Task 3.1: event enquiries in every status, from the website form, WhatsApp
+    and staff. No email goes to staff (notify=False): the people are made up.
+    """
+    from apps.events import services as events
+    from apps.events.models import Enquiry
+    from apps.inbox.models import Conversation
+
+    staff = users.get("operations_manager") or users.get("business_owner")
+    today = timezone.localdate()
+    kind = "catering" if spec["industry"] == "catering" else "the event"
+    rows = [
+        # (customer, source, status, details, lost reason)
+        (0, "website", "new", {"event_type": "wedding", "event_date": today + timedelta(days=75), "start_time": "17:00", "guests": 180,
+                               "venue": "Mt Roskill War Memorial Hall", "menu": "Dal bhat buffet, sekuwa, kheer",
+                               "dietary_needs": "40 vegetarian, no beef", "budget": "9000",
+                               "message": f"Made-up test enquiry: we would like a quote for {kind}."}, ""),
+        (1, "whatsapp", "new", {"event_type": "religious", "event_date": today + timedelta(days=20), "guests": 60,
+                                "message": "Made-up test enquiry from WhatsApp: a puja at home, still choosing the food."}, ""),
+        (2, "staff", "contacted", {"event_type": "birthday", "event_date": today + timedelta(days=30), "start_time": "12:00", "guests": 45,
+                                   "venue": "At home in Papatoetoe", "menu": "Momo platters and jeri", "budget": "1500"}, ""),
+        (3, "website", "quoted", {"event_type": "cultural", "event_date": today + timedelta(days=40), "start_time": "18:00", "guests": 250,
+                                  "venue": "Dashain party, community hall", "menu": "Newari khaja set", "dietary_needs": "Halal goat only"}, ""),
+        (4, "staff", "won", {"event_type": "corporate", "event_date": today + timedelta(days=14), "start_time": "12:30", "guests": 35,
+                             "venue": "Office in Penrose", "menu": "Lunch buffet"}, ""),
+        (5, "website", "lost", {"event_type": "party", "event_date": today + timedelta(days=10), "guests": 25, "budget": "400"},
+         "Made-up reason: the budget was too small for 25 guests"),
+    ]
+    for n, source, status, details, reason in rows:
+        customer = customers[n % len(customers)]
+        conversation = Conversation.objects.filter(customer=customer).first() if source == "whatsapp" else None
+        enquiry = events.create({k: str(v) for k, v in details.items()}, source=source, customer=customer, conversation=conversation,
+                                actor=staff if source == "staff" else None, notify=False)
+        if status != "new":
+            events.set_status(enquiry, "contacted", actor=staff)
+            events.add_note(enquiry, "Made-up note: rang the customer and talked about the menu.", actor=staff)
+        if status in ("quoted", "won", "lost"):
+            events.set_status(enquiry, status, reason=reason, actor=staff)
+        received = timezone.now() - timedelta(days=6 - n, hours=n)
+        Enquiry.objects.filter(pk=enquiry.pk).update(created_at=received)
+        enquiry.activities.filter(kind="created").update(created_at=received)
 
 
 def _conversations(customers: list, users: dict) -> None:

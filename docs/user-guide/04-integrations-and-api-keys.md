@@ -1,6 +1,6 @@
 # 4. Integrations and API keys
 
-*User guide, chapter 4 · Last updated 21 October 2026*
+*User guide, chapter 4 · Last updated 23 October 2026*
 
 **Who this is for:** each business's IT Admin and System Admin (sections 4.1–4.7), the platform Super Admin (section 4.7), and the person who runs the server (section 4.8).
 
@@ -41,6 +41,7 @@ After saving, you only see the **last 4 characters** of each key, for example `�
 | SMS | Twilio |
 | Search | Google Places (for competitor reports) |
 | Payments | Bank transfer details |
+| Website protection | Cloudflare Turnstile (spam check on the enquiry form, chapter 23.4) |
 
 Card payments (Stripe, Windcave, PayPal) are shown as **(coming later)**.
 

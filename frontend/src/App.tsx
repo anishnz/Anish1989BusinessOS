@@ -6,6 +6,8 @@ import { homePath } from "./nav";
 import Board from "./pages/Board";
 import Customers from "./pages/Customers";
 import DashboardPage from "./pages/Dashboard";
+import Enquiries from "./pages/Enquiries";
+import EnquiryDetail from "./pages/EnquiryDetail";
 import Inbox from "./pages/Inbox";
 import Login from "./pages/Login";
 import MfaVerify from "./pages/MfaVerify";
@@ -47,6 +49,8 @@ export default function App() {
         <Route path="inbox" element={<Guard needs="crm.view"><Inbox /></Guard>} />
         <Route path="inbox/:id" element={<Guard needs="crm.view"><Thread /></Guard>} />
         <Route path="products" element={<Guard needs="products.view"><Products /></Guard>} />
+        <Route path="enquiries" element={<Guard needs="events.view"><Enquiries /></Guard>} />
+        <Route path="enquiries/:id" element={<Guard needs="events.view"><EnquiryDetail /></Guard>} />
         <Route path="customers" element={<Guard needs="crm.view"><Customers /></Guard>} />
         <Route path="website" element={<Guard needs="websites.view"><Website /></Guard>} />
         <Route path="nothing" element={<Nothing />} />
