@@ -637,3 +637,13 @@ Industries: `butchery`, `restaurant`, `fast_food`, `catering`, `events`, `retail
 - Check system: "Own domains" (not set up / waiting / live / DNS problem).
 - Server: `deploy/Caddyfile` and the `caddy` service (`caddy:2.10.2-alpine`, profile `server`, ports 80/443, volumes `caddy_data`, `caddy_config`). `.env`: `ACME_EMAIL`, `PLATFORM_SERVER_IPS`.
 - New package: dnspython (in `base.txt` and both lock files). Migration `tenants.0003_custom_domains`. Tests: `tests/test_custom_domains.py`.
+
+## The business website (task 2.9)
+
+- New tenant app `apps.website`: `WebsiteDraft` (pk=1, `content` JSON) and `WebsiteVersion` (number, content, published by, note; last 20 kept).
+- `content.py`: `TEXTS` (12 plain-text fields with limits), `SWITCHES`, `defaults()` (from the business profile), `clean()`, `draft_content()`, `live_content()`, `save_draft()`, `publish()`, `restore()`, `unpublished_changes()`.
+- `page.py`: the live facts (products, hours, closed days, delivery areas, contact) and JSON-LD; `views.py`: `/` (no request in the template: no cookies; CSP `script-src 'none'`; cached 5 minutes), `/robots.txt`, `/sitemap.xml`, `/website/preview/` (draft, staff with websites.view, frame same-origin). These routes are last in `config/urls.py`; the security sweep lists them as public.
+- `ai.py`: `generate(field, hint=)` with the business's AI connection; logged as an `AIRun` (tools "website"); 30 per hour per business (cache counter). `providers.chat()` leaves out the tools part when the list is empty (OpenAI and Gemini refuse an empty list).
+- API `/api/website/` (state), `draft/` (PUT), `publish/`, `versions/`, `versions/<n>/restore/`, `generate/` — module `websites`, actions view, edit, publish.
+- Staff app: `pages/Website.tsx` (menu item **Website**, websites.view), `website.ts` (sections, counter, debounce). The draft saves 0.8 s after typing stops; the preview frame reloads after each save.
+- Static file `website/site.css` (run `collectstatic` before tests in CI settings). Migration `website.0001_initial`. Tests: `tests/test_website.py`, `frontend/src/test/website.test.ts`.

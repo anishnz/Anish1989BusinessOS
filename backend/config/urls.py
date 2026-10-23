@@ -7,6 +7,7 @@ from apps.core.spa import app_page
 from apps.inbox.whatsapp import webhook as whatsapp_webhook
 from apps.reports.views import dashboard_page
 from apps.tenants.business_pages import web_addresses
+from apps.website.urls import api_urlpatterns as website_api, page_urlpatterns as website_pages
 
 from .urls_shared import shared_urlpatterns
 
@@ -18,6 +19,7 @@ business_urlpatterns = [
     path("api/inbox/", include("apps.inbox.urls")),
     path("api/ai/", include("apps.ai.urls")),
     path("api/reports/", include("apps.reports.urls")),
+    path("api/website/", include(website_api)),
     path("dashboard/", admin.site.admin_view(dashboard_page), name="dashboard"),
     path("settings/web-addresses/", admin.site.admin_view(web_addresses), name="web_addresses"),  # task 2.8
     path("", include("apps.setup.urls")),
@@ -33,4 +35,5 @@ business_urlpatterns = [
 urlpatterns = [
     *business_urlpatterns,
     *shared_urlpatterns,
+    *website_pages,  # "/" is the business's public website (task 2.9); last, so it never hides another page
 ]

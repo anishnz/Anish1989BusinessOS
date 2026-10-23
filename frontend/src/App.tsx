@@ -15,6 +15,7 @@ import OrderDetail from "./pages/OrderDetail";
 import Orders from "./pages/Orders";
 import Products from "./pages/Products";
 import Thread from "./pages/Thread";
+import Website from "./pages/Website";
 
 function Guard({ needs, children }: { needs?: string; children: React.ReactElement }) {
   const { loading, state, perms, can } = useAuth();
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="inbox/:id" element={<Guard needs="crm.view"><Thread /></Guard>} />
         <Route path="products" element={<Guard needs="products.view"><Products /></Guard>} />
         <Route path="customers" element={<Guard needs="crm.view"><Customers /></Guard>} />
+        <Route path="website" element={<Guard needs="websites.view"><Website /></Guard>} />
         <Route path="nothing" element={<Nothing />} />
         <Route path="*" element={<Nothing notFound />} />
       </Route>

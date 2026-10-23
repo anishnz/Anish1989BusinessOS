@@ -1,6 +1,6 @@
 # 9. The staff app
 
-*User guide, chapter 9 · Last updated 22 October 2026*
+*User guide, chapter 9 · Last updated 23 October 2026*
 
 **Who this is for:** counter staff, kitchen staff, managers and owners.
 
@@ -33,6 +33,7 @@ You only see the pages your role allows:
 | **Inbox** | Customers – View. A blue number shows unread chats. |
 | **Products** | Products – View |
 | **Customers** | Customers – View |
+| **Website** | Websites – View. Write and publish the business's website (chapter 22). |
 | **Classic admin** | Always shown. It opens the full admin for settings, roles and users. |
 
 If a module is switched off for your business, its page disappears from the menu.

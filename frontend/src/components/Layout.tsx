@@ -7,7 +7,7 @@ import { visibleNav } from "../nav";
 import { useUnread } from "./useUnread";
 import { useWaiting } from "./useWaiting";
 
-const ICONS: Record<string, string> = { "/": "◧", "/orders": "≡", "/board": "▤", "/inbox": "✉", "/products": "▦", "/customers": "☺" };
+const ICONS: Record<string, string> = { "/": "◧", "/orders": "≡", "/board": "▤", "/inbox": "✉", "/products": "▦", "/customers": "☺", "/website": "◎" };
 
 function readPref(key: string): string | null {
   try {

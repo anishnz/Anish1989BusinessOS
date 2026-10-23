@@ -182,6 +182,7 @@ def _fill_business(spec: dict, index: int, pw: str) -> None:
     _board_today()
     _feedback_and_summary()
     _own_domain(spec)
+    _website(spec)
     _tickets(users)
 
 
@@ -469,6 +470,23 @@ def _own_domain(spec: dict) -> None:
             name=f"{schema.replace('_', '-')}.example", defaults={
                 "tenant": tenant, "token": secrets.token_hex(16), "added_by": "made-up test data",
                 "last_result": "Made-up test domain (.example names never exist), so it always waits for DNS."})
+
+
+def _website(spec: dict) -> None:
+    """Task 2.9: a published website (made-up texts), and a draft with one change that is not published yet."""
+    from apps.website import content
+
+    kind = spec["type"].lower()
+    texts = {
+        **content.draft_content(),
+        "hero_heading": f"{spec['name']}: Nepali {kind} in Auckland",
+        "hero_text": "Send us your order on WhatsApp in English or Nepali. We confirm it, prepare it, and tell you when it is ready.",
+        "about_text": (f"{spec['name']} is a made-up test business for trying the system.\n\n"
+                       "This text is test data: change it on the Website page in the staff app."),
+    }
+    content.save_draft(texts)
+    content.publish(note="Made-up test website")
+    content.save_draft({**texts, "tagline": "Draft change, not published yet (made-up test data)"})
 
 
 def _conversations(customers: list, users: dict) -> None:

@@ -1,0 +1,101 @@
+{% load static %}<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ t.seo_title }}</title>
+<meta name="description" content="{{ t.seo_description }}">
+{% if preview %}<meta name="robots" content="noindex, nofollow">{% endif %}
+{% if url %}<link rel="canonical" href="{{ url }}">
+<meta property="og:url" content="{{ url }}">{% endif %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ t.seo_title }}">
+<meta property="og:description" content="{{ t.seo_description }}">
+<link rel="stylesheet" href="{% static 'website/site.css' %}">
+<script type="application/ld+json">{{ json_ld|safe }}</script>
+</head>
+<body>
+{% if preview %}<div class="preview-bar">Preview of the draft – not published yet</div>{% endif %}
+<header class="top">
+  <div class="wrap top-inner">
+    <div>
+      <div class="name">{{ t.site_title }}</div>
+      {% if t.tagline %}<div class="tagline">{{ t.tagline }}</div>{% endif %}
+    </div>
+    {% if whatsapp %}<a class="button" href="{{ whatsapp }}" rel="noopener">Order on WhatsApp</a>{% endif %}
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      {% if t.hero_heading %}<h1>{{ t.hero_heading }}</h1>{% endif %}
+      {% for p in hero %}<p class="lead">{{ p|linebreaksbr }}</p>{% endfor %}
+      {% if whatsapp %}<p><a class="button big" href="{{ whatsapp }}" rel="noopener">Message us on WhatsApp</a></p>{% endif %}
+    </div>
+  </section>
+
+  {% if about %}
+  <section class="wrap block" id="about">
+    {% if t.about_heading %}<h2>{{ t.about_heading }}</h2>{% endif %}
+    {% for p in about %}<p>{{ p|linebreaksbr }}</p>{% endfor %}
+  </section>
+  {% endif %}
+
+  {% if groups %}
+  <section class="wrap block" id="products">
+    {% if t.products_heading %}<h2>{{ t.products_heading }}</h2>{% endif %}
+    {% for p in products_intro %}<p class="muted">{{ p|linebreaksbr }}</p>{% endfor %}
+    {% for g in groups %}
+      <h3>{{ g.name }}</h3>
+      <ul class="products">
+        {% for p in g.products %}
+          <li>
+            <div><strong>{{ p.name }}</strong>{% if p.sold_out %} <span class="tag">Sold out</span>{% endif %}
+              {% if p.description %}<div class="muted small">{{ p.description }}</div>{% endif %}</div>
+            <div class="price">${{ p.price }} <span class="muted small">{{ p.unit }}</span></div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if hours.kinds or areas %}
+  <section class="wrap block columns" id="hours">
+    {% for k in hours.kinds %}
+      <div>
+        <h2>{{ k.label }} hours</h2>
+        <table class="hours">{% for d in k.days %}<tr><th>{{ d.day }}</th><td>{{ d.times }}</td></tr>{% endfor %}</table>
+      </div>
+    {% endfor %}
+    {% if areas %}
+      <div>
+        <h2>Delivery areas</h2>
+        <ul class="areas">{% for a in areas %}<li><strong>{{ a.name }}</strong>: ${{ a.fee }} delivery{% if a.minimum %}, minimum order ${{ a.minimum }}{% endif %}{% if a.free_over %}, free over ${{ a.free_over }}{% endif %}</li>{% endfor %}</ul>
+      </div>
+    {% endif %}
+    {% if hours.closed %}
+      <div>
+        <h2>Closed days</h2>
+        <ul class="areas">{% for c in hours.closed %}<li>{{ c.date|date:"l j F" }}{% if c.reason %} – {{ c.reason }}{% endif %}</li>{% endfor %}</ul>
+      </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <section class="wrap block" id="contact">
+    {% if t.contact_heading %}<h2>{{ t.contact_heading }}</h2>{% endif %}
+    {% for p in contact_intro %}<p>{{ p|linebreaksbr }}</p>{% endfor %}
+    <ul class="contact">
+      {% if contact.address %}<li>📍 <a href="{{ contact.map }}" rel="noopener">{{ contact.address }}</a></li>{% endif %}
+      {% if contact.phone %}<li>📞 <a href="tel:{{ contact.phone }}">{{ contact.phone }}</a></li>{% endif %}
+      {% if contact.email %}<li>✉️ <a href="mailto:{{ contact.email }}">{{ contact.email }}</a></li>{% endif %}
+      {% if whatsapp %}<li>💬 <a href="{{ whatsapp }}" rel="noopener">WhatsApp</a></li>{% endif %}
+    </ul>
+  </section>
+</main>
+
+<footer class="wrap foot muted small">© {{ year }} {{ business }}. Prices in NZ$ including GST.</footer>
+</body>
+</html>

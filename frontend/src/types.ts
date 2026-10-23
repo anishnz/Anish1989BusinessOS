@@ -271,6 +271,21 @@ export interface Board {
   columns: { key: string; label: string; orders: BoardCard[] }[];
 }
 
+/** The website editor (task 2.9). */
+export interface WebsiteVersion { number: number; published_at: string; published_by: string; note: string }
+
+export interface WebsiteState {
+  content: Record<string, string | boolean>;
+  saved_at: string;
+  saved_by: string;
+  live: WebsiteVersion | null;
+  unpublished_changes: boolean;
+  fields: { key: string; label: string; limit: number; long: boolean; help: string }[];
+  switches: { key: string; label: string }[];
+  can_edit: boolean;
+  can_publish: boolean;
+}
+
 export const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
   awaiting_confirmation: "Awaiting customer confirmation",

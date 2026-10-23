@@ -46,6 +46,8 @@ PUBLIC_ROUTES = {
     "oauth/google/callback/",  # Google's return address: protected by the signed state and the session check (test_backups.py)
     "login-as/",  # "Log in as": needs the Super Admin's signed one-time link, 60 seconds (test_login_as.py)
     "login-as/stop/",  # only signs out and goes back to the platform
+    # The business's public website (task 2.9): published texts and public facts only (test_website.py)
+    "", "robots.txt", "sitemap.xml",
 }
 # Pages about the logged-in person themselves.
 SELF_ROUTES = {r for r in [

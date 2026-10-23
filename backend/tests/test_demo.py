@@ -175,6 +175,14 @@ class TestInstall:
         row = CustomDomain.objects.get(tenant__schema_name="test_butchery")
         assert (row.name, row.status, row.domain) == ("test-butchery.example", "pending", None)
 
+    def test_website_is_published_with_a_draft_change(self, butchery):
+        """Task 2.9: version 1 is live; the draft has one change that is not published."""
+        from apps.website import content
+
+        with schema_context("test_butchery"):
+            assert content.live().number == 1 and "Kathmandu Khasi Pasal" in content.live_content()["hero_heading"]
+            assert content.unpublished_changes() and "not published" in content.draft_content()["tagline"]
+
     def test_running_again_changes_nothing(self, butchery):
         assert services.install(only=["test_butchery"]) == ["Kathmandu Khasi Pasal: already there (not changed)"]
 

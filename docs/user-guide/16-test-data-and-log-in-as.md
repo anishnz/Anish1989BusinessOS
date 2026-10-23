@@ -28,6 +28,7 @@ Each one is at **2 White Street, Auckland City, Auckland 1010, New Zealand** and
 - WhatsApp conversations and tickets;
 - WhatsApp messages about the orders (confirmed, final price answered Yes, ready, on the way). They are **made up and were never sent**: test businesses never connect WhatsApp, because the made-up phone numbers could belong to real people;
 - AI assistant settings and two made-up AI chats (one order the AI sent to confirm, one chat handed to staff). No AI key is saved, so the AI never answers there.
+- a published website with made-up texts, and a draft with one change that is not published yet (chapter 22);
 - star feedback for six completed orders (one low rating with a comment) and yesterday's daily summary, all **made up**. The summary email is switched off and no WhatsApp numbers are set, so a test business never sends the summary (chapter 20).
 
 Test businesses are marked **Test business** in the business list. Real businesses are never changed.

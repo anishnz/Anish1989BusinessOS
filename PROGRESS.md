@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board), 2.7 (daily owner summary and star feedback) and 2.8 (own domains with DNS check and HTTPS), and the extra task 1.18 (test data, Log in as, safer deleting) are done; next is 2.9 (website content editor). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board), 2.7 (daily owner summary and star feedback), 2.8 (own domains with DNS check and HTTPS) and 2.9 (website and editor), and the extra task 1.18 (test data, Log in as, safer deleting) are done. Still open for the Step 2 "done" check: real pilot orders through WhatsApp for one week. Next: Step 3 (enquiry, quote and booking flow). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -273,7 +273,14 @@ Open a new chat in the ERP CRM project and type:
   - Test data: a made-up `.example` domain per test business (never live)
   - User guide: new chapter 21 (with a picture); chapters 10 and 11 updated
   - 1016 tests pass (42 new for own domains, 1 more in the test data tests) and 11 staff app tests; 43 of 45 deliberate breaks in task 2.8 are caught by tests (6 tests were made stronger); the other 2 were checks that could never fire (removed)
-- [ ] 2.9 Website content editor (title, headings, text, SEO) with "Generate with AI"
+- [x] 2.9 Website content editor (title, headings, text, SEO) with "Generate with AI" (done 23 Oct 2026)
+  - Decisions D-164 to D-167 (one-page site, staff app editor with preview, draft / publish / history, AI per field into the draft)
+  - Public page at the business's main address: texts, WhatsApp button, products and prices (Sold out), pickup and delivery hours, delivery areas, closed days, contact; robots.txt, sitemap.xml, search-engine facts; no cookies or scripts
+  - Staff app **Website** page: 12 texts with limits, 4 switches, WhatsApp number; saves the draft by itself; live preview; Publish; history of 20 versions with restore
+  - "Generate with AI" per text with the business's AI key (public facts only, monthly limit, AI log, 30 an hour); the person uses or discards it
+  - Test data: a published website and a draft change per test business
+  - User guide: new chapter 22 (with 2 pictures); chapters 9 and 16 updated
+  - 1038 tests pass (21 new for the website, 1 more in the test data tests) and 14 staff app tests (3 new); 38 of 39 deliberate breaks in task 2.9 are caught by tests (3 tests were made stronger), the 39th was a check that could never fire (removed); all 4 breaks of the editor helpers are caught
 
 ## Step 3: Enquiry, quote and booking flow
 

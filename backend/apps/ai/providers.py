@@ -121,6 +121,8 @@ def _openai(key, model, system, turns, tools) -> Reply:
     body = {"model": model, "messages": messages, "max_completion_tokens": MAX_OUTPUT_TOKENS,
             "tools": [{"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": t["parameters"]}}
                       for t in tools]}
+    if not tools:  # plain text (the website editor, task 2.9): OpenAI refuses an empty tool list
+        body.pop("tools")
     data = _post("https://api.openai.com/v1/chat/completions", body, {"Authorization": f"Bearer {key}"}, "OpenAI")
     try:
         message = data["choices"][0]["message"]
@@ -165,6 +167,8 @@ def _anthropic(key, model, system, turns, tools) -> Reply:
             add("user", [{"type": "tool_result", "tool_use_id": c.id, "content": json.dumps(r, ensure_ascii=False)} for c, r in turn["results"]])
     body = {"model": model, "max_tokens": MAX_OUTPUT_TOKENS, "system": system, "messages": messages,
             "tools": [{"name": t["name"], "description": t["description"], "input_schema": t["parameters"]} for t in tools]}
+    if not tools:
+        body.pop("tools")
     data = _post("https://api.anthropic.com/v1/messages", body, {"x-api-key": key, "anthropic-version": "2023-06-01"}, "Anthropic Claude")
     content = data.get("content")
     if not isinstance(content, list):
@@ -217,6 +221,8 @@ def _gemini(key, model, system, turns, tools) -> Reply:
             "tools": [{"functionDeclarations": [{"name": t["name"], "description": t["description"], "parameters": _gemini_schema(t["parameters"])}
                                                 for t in tools]}],
             "generationConfig": {"maxOutputTokens": MAX_OUTPUT_TOKENS}}
+    if not tools:  # Gemini refuses an empty list of function declarations
+        body.pop("tools")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{requests.utils.quote(model, safe='')}:generateContent"
     data = _post(url, body, {"x-goog-api-key": key}, "Google Gemini")
     try:

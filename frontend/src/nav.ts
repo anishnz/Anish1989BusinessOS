@@ -12,6 +12,7 @@ export const NAV: NavItem[] = [
   { to: "/inbox", label: "Inbox", needs: "crm.view" },
   { to: "/products", label: "Products", needs: "products.view" },
   { to: "/customers", label: "Customers", needs: "crm.view" },
+  { to: "/website", label: "Website", needs: "websites.view" },
 ];
 
 export function visibleNav(usable: string[]): NavItem[] {
