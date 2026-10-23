@@ -253,7 +253,7 @@ def create(data: dict, *, source: str, actor=None, customer: Customer | None = N
 def update(enquiry: Enquiry, data: dict, *, actor=None) -> list[str]:
     """Change the details given in `data`. Returns the labels of the fields that changed."""
     enquiry = Enquiry.objects.select_for_update(of=("self",)).get(pk=enquiry.pk)
-    values = clean_details({k: v for k, v in (data or {}).items() if k in DETAIL_FIELDS}, partial=True, existing=enquiry)
+    values = clean_details(data or {}, partial=True, existing=enquiry)  # only the detail fields are read
     changed = [k for k, v in values.items() if getattr(enquiry, k) != v]
     if not changed:
         return []

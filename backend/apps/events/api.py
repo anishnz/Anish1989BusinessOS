@@ -109,7 +109,7 @@ class EnquiryList(_Base):
     def post(self, request):
         customer = None
         if request.data.get("customer"):
-            customer = Customer.objects.filter(pk=request.data.get("customer"), is_anonymised=False).first()
+            customer = Customer.objects.filter(pk=request.data.get("customer")).first()  # create() refuses removed customers
             if customer is None:
                 return Response({"detail": "Customer not found."}, status=status.HTTP_400_BAD_REQUEST)
         try:

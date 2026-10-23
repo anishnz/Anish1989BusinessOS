@@ -139,7 +139,7 @@ class TestForm:
 
     @pytest.mark.parametrize("changes, field, message", [
         ({"contact_name": ""}, "contact_name", "Please give your name."),
-        ({"contact_phone": "", "contact_email": ""}, "contact_phone", "phone number or an email address"),
+        ({"contact_phone": "", "contact_email": ""}, "contact_phone", "so we can reply"),
         ({"event_date": ""}, "event_date", "Please give the date"),
         ({"guests": ""}, "guests", "number of guests"),
         ({"guests": "0"}, "guests", "whole number from 1"),
@@ -161,6 +161,16 @@ class TestForm:
         assert response.status_code == 400 and message in html and "Please check the fields" in html
         assert 'value="Sita Gurung"' in html or field == "contact_name"  # what was typed stays
         assert enquiries() == []
+
+    def test_several_mistakes_are_shown_together(self, site_b):
+        html = post(site_b, form(contact_name="", contact_phone="", contact_email="")).content.decode()
+        assert "Please give your name." in html and "so we can reply" in html
+
+    def test_a_website_enquiry_always_needs_a_way_to_reply(self, tenant_b):
+        with schema_context("tenant_b"):
+            with pytest.raises(Exception, match="phone number or an email address"):
+                services.create({"contact_name": "No contact"}, source="website")
+            assert not Enquiry.objects.exists()
 
     def test_end_time_must_differ_from_start_time(self, site_b):
         response = post(site_b, form(end_time="18:30"))
@@ -437,7 +447,8 @@ class TestRules:
             assert (one.contact_name, one.contact_phone, one.contact_email, one.venue, one.menu, one.dietary_needs, one.message, one.lost_reason) == ("",) * 8
             assert one.guests == 40 and one.status == "lost"  # numbers stay for reports
             texts = " ".join(EnquiryActivity.objects.filter(enquiry=one).values_list("text", flat=True))
-            assert "Ram" not in texts and "vegan" not in texts and "Lost" in texts
+            assert "Ram" not in texts and "vegan" not in texts
+            assert list(EnquiryActivity.objects.filter(enquiry=one, kind="status").values_list("text", flat=True)) == ["Lost"]
 
 
 @pytest.mark.django_db

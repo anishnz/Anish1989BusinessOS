@@ -12,7 +12,7 @@ Open a new chat in the ERP CRM project and type:
 
 ## Current stage
 
-**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board), 2.7 (daily owner summary and star feedback), 2.8 (own domains with DNS check and HTTPS) and 2.9 (website and editor), and the extra task 1.18 (test data, Log in as, safer deleting) are done. Still open for the Step 2 "done" check: real pilot orders through WhatsApp for one week. Now: **Step 3, enquiry, quote and booking flow** (tasks 3.1 to 3.6 agreed 23 October 2026). Next task: 3.1 (enquiries). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
+**Step 1 (shared core) is complete** (tasks 1.1 to 1.17, 22 October 2026). Still open for the Step 1 "done" check: a real WhatsApp test message through Meta (guide 7.8). Now: **Step 2, ordering flow**. Tasks 2.1 (pickup and delivery), 2.2 (stock), 2.3 (WhatsApp messages about orders) 2.4 (AI order taking on WhatsApp), 2.5 (quick reorder and hand-over), 2.6 (live order board), 2.7 (daily owner summary and star feedback), 2.8 (own domains with DNS check and HTTPS) and 2.9 (website and editor), and the extra task 1.18 (test data, Log in as, safer deleting) are done. Still open for the Step 2 "done" check: real pilot orders through WhatsApp for one week. Now: **Step 3, enquiry, quote and booking flow** (tasks 3.1 to 3.6 agreed 23 October 2026). Task 3.1 (enquiries) is done. Next task: 3.2 (packages and the quote builder). See [docs/10-delivery-plan.md](docs/10-delivery-plan.md) and [docs/13-developer-setup.md](docs/13-developer-setup.md).
 
 ## Documentation
 
@@ -286,7 +286,14 @@ Open a new chat in the ERP CRM project and type:
 
 Tasks agreed 23 October 2026 (decisions D-168 to D-171: one shared Events module, bank transfer with payments recorded by staff, quote web page with PDF, per-guest packages plus extras). **Done when:** the catering and events businesses send real quotes and record a paid deposit through the system.
 
-- [ ] 3.1 Enquiries: a form on the business website and enquiries from WhatsApp chats, with event details (type, date, time, venue, guests, dietary needs, budget), status and an enquiry list
+- [x] 3.1 Enquiries: a form on the business website and enquiries from WhatsApp chats, with event details (type, date, time, venue, guests, dietary needs, budget), status and an enquiry list (done 23 Oct 2026)
+  - Decisions D-172 to D-176: own form page at /enquiry/ with an "Ask for a quote" button; spam checks (hidden field, signed time stamp, limits) plus each business's own Cloudflare Turnstile keys; the AI asks the event questions on WhatsApp, and staff can always click "Make enquiry"; statuses New, Contacted, Quoted, Won, Lost (Lost needs a reason); privacy rules for enquiry data
+  - New app `apps.events`: enquiry settings, enquiries and their history; the public form; API `/api/events/enquiries/`; AI tool `save_enquiry`; staff email for new enquiries; personal data removed with the customer's
+  - Vault: new provider Cloudflare Turnstile (group "Website protection") with a connection test
+  - Staff app: **Enquiries** list with tabs and counts, one enquiry page (details, status, notes, history), **Make enquiry** in a chat
+  - Test data: six made-up enquiries per test business, one per status; no email is sent
+  - User guide: new chapter 23 (with 3 pictures); chapters 4, 9, 18 and 22 updated (new website picture)
+  - 1117 tests pass (78 new for enquiries, 1 more in the test data tests) and 18 staff app tests (4 new); 80 of 82 deliberate breaks in task 3.1 are caught by tests (3 tests were made stronger); the other 2 were checks that could never fire (removed); all 8 breaks of the staff app helpers are caught
 - [ ] 3.2 Packages and the quote builder: per-guest packages and extras, quote lines with GST, quote versions
 - [ ] 3.3 The customer's quote page and PDF: a private link sent on WhatsApp or by email, Accept button, expiry date
 - [ ] 3.4 AI quote drafts from the enquiry (a person checks and approves before anything is sent)
